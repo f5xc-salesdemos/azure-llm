@@ -1,0 +1,15 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+.terraform.lock.hcl
+
+# SSH keys
+*.pem
+id_rsa
+id_rsa.pub
+
+# OS
+.DS_Store

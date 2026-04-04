@@ -1,0 +1,95 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+# Suppress needrestart prompts that can interrupt automated installs
+package_reboot_if_required: false
+
+write_files:
+  - path: /etc/needrestart/conf.d/99-cloud-init.conf
+    content: |
+      $nrconf{restart} = 'a';
+      $nrconf{kernelhints} = 0;
+
+  - path: /etc/modprobe.d/nouveau-blacklist.conf
+    content: |
+      blacklist nouveau
+      options nouveau modeset=0
+
+  - path: /opt/setup-gpu.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      exec > /var/log/gpu-setup.log 2>&1
+      export DEBIAN_FRONTEND=noninteractive
+      export NEEDRESTART_MODE=a
+
+      echo "=== GPU Setup Started: $(date) ==="
+
+      # Install NVIDIA CUDA keyring
+      wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+      dpkg -i cuda-keyring_1.1-1_all.deb
+      apt-get update
+
+      # Install NVIDIA driver and CUDA toolkit
+      apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+        cuda-drivers-550 cuda-toolkit-12-4
+
+      # Install NVIDIA Container Toolkit (for Docker GPU passthrough)
+      curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+        | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+        | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+      apt-get update
+      apt-get install -y nvidia-container-toolkit
+
+      # Install Ollama
+      curl -fsSL https://ollama.com/install.sh | sh
+
+      # Create a Python venv and install vLLM for multi-GPU tensor parallelism
+      python3 -m venv /opt/vllm-env
+      /opt/vllm-env/bin/pip install --upgrade pip
+      /opt/vllm-env/bin/pip install vllm
+
+      # Create convenience scripts
+      cat > /usr/local/bin/start-ollama-model <<'SCRIPT'
+      #!/bin/bash
+      MODEL="${1:-richardyoung/kat-dev-72b:Q4_K_M}"
+      echo "Pulling and running $MODEL with Ollama..."
+      CUDA_VISIBLE_DEVICES=0,1,2,3 ollama pull "$MODEL"
+      CUDA_VISIBLE_DEVICES=0,1,2,3 ollama run "$MODEL"
+      SCRIPT
+      chmod +x /usr/local/bin/start-ollama-model
+
+      cat > /usr/local/bin/start-vllm-server <<'SCRIPT'
+      #!/bin/bash
+      MODEL="${1:-moonshotai/Kimi-Dev-72B}"
+      echo "Starting vLLM server with $MODEL on 4x V100 (TP=4)..."
+      /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
+        --model "$MODEL" \
+        --tensor-parallel-size 4 \
+        --gpu-memory-utilization 0.90 \
+        --max-model-len 8192 \
+        --host 0.0.0.0 \
+        --port 8000
+      SCRIPT
+      chmod +x /usr/local/bin/start-vllm-server
+
+      echo "=== GPU Setup Completed: $(date) ==="
+
+packages:
+  - build-essential
+  - python3-pip
+  - python3-venv
+  - git
+  - curl
+  - wget
+  - jq
+  - htop
+  - tmux
+
+runcmd:
+  - bash /opt/setup-gpu.sh
+  - reboot

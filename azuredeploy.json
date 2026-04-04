@@ -1,0 +1,259 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string",
+      "defaultValue": "gpu-llm-vm",
+      "metadata": {
+        "description": "Name of the virtual machine"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azureuser",
+      "metadata": {
+        "description": "Admin username for the VM"
+      }
+    },
+    "sshPublicKey": {
+      "type": "string",
+      "metadata": {
+        "description": "SSH public key for authentication"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_NC24s_v3",
+      "allowedValues": [
+        "Standard_NC6s_v3",
+        "Standard_NC12s_v3",
+        "Standard_NC24s_v3",
+        "Standard_NC4as_T4_v3",
+        "Standard_NC8as_T4_v3",
+        "Standard_NC16as_T4_v3"
+      ],
+      "metadata": {
+        "description": "Size of the VM. Default is 4x V100 for 70B models."
+      }
+    },
+    "zone": {
+      "type": "string",
+      "defaultValue": "1",
+      "allowedValues": [
+        "1",
+        "3"
+      ],
+      "metadata": {
+        "description": "Availability zone (Central US supports 1 and 3 for NCSv3)"
+      }
+    },
+    "osDiskSizeGB": {
+      "type": "int",
+      "defaultValue": 256,
+      "metadata": {
+        "description": "OS disk size in GB. 256GB recommended for model weights."
+      }
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "vnetName": "[concat(parameters('vmName'), '-vnet')]",
+    "subnetName": "default",
+    "nsgName": "[concat(parameters('vmName'), '-nsg')]",
+    "publicIPName": "[concat(parameters('vmName'), '-pip')]",
+    "nicName": "[concat(parameters('vmName'), '-nic')]",
+    "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('nsgName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowSSH",
+            "properties": {
+              "priority": 1000,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "AllowVLLMAPI",
+            "properties": {
+              "priority": 1010,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "8000",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "AllowOllamaAPI",
+            "properties": {
+              "priority": 1020,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "11434",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('vnetName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('publicIPName')]",
+      "location": "[variables('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "zones": [
+        "[parameters('zone')]"
+      ],
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('vmName')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-09-01",
+      "name": "[variables('nicName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2023-09-01",
+      "name": "[parameters('vmName')]",
+      "location": "[variables('location')]",
+      "zones": [
+        "[parameters('zone')]"
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                  "keyData": "[parameters('sshPublicKey')]"
+                }
+              ]
+            }
+          },
+          "customData": "I2Nsb3VkLWNvbmZpZwpwYWNrYWdlX3VwZGF0ZTogdHJ1ZQpwYWNrYWdlX3VwZ3JhZGU6IHRydWUKCiMgU3VwcHJlc3MgbmVlZHJlc3RhcnQgcHJvbXB0cyB0aGF0IGNhbiBpbnRlcnJ1cHQgYXV0b21hdGVkIGluc3RhbGxzCnBhY2thZ2VfcmVib290X2lmX3JlcXVpcmVkOiBmYWxzZQoKd3JpdGVfZmlsZXM6CiAgLSBwYXRoOiAvZXRjL25lZWRyZXN0YXJ0L2NvbmYuZC85OS1jbG91ZC1pbml0LmNvbmYKICAgIGNvbnRlbnQ6IHwKICAgICAgJG5yY29uZntyZXN0YXJ0fSA9ICdhJzsKICAgICAgJG5yY29uZntrZXJuZWxoaW50c30gPSAwOwoKICAtIHBhdGg6IC9ldGMvbW9kcHJvYmUuZC9ub3V2ZWF1LWJsYWNrbGlzdC5jb25mCiAgICBjb250ZW50OiB8CiAgICAgIGJsYWNrbGlzdCBub3V2ZWF1CiAgICAgIG9wdGlvbnMgbm91dmVhdSBtb2Rlc2V0PTAKCiAgLSBwYXRoOiAvb3B0L3NldHVwLWdwdS5zaAogICAgcGVybWlzc2lvbnM6ICIwNzU1IgogICAgY29udGVudDogfAogICAgICAjIS9iaW4vYmFzaAogICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICBleGVjID4gL3Zhci9sb2cvZ3B1LXNldHVwLmxvZyAyPiYxCiAgICAgIGV4cG9ydCBERUJJQU5fRlJPTlRFTkQ9bm9uaW50ZXJhY3RpdmUKICAgICAgZXhwb3J0IE5FRURSRVNUQVJUX01PREU9YQoKICAgICAgZWNobyAiPT09IEdQVSBTZXR1cCBTdGFydGVkOiAkKGRhdGUpID09PSIKCiAgICAgICMgSW5zdGFsbCBOVklESUEgQ1VEQSBrZXlyaW5nCiAgICAgIHdnZXQgLXEgaHR0cHM6Ly9kZXZlbG9wZXIuZG93bmxvYWQubnZpZGlhLmNvbS9jb21wdXRlL2N1ZGEvcmVwb3MvdWJ1bnR1MjIwNC94ODZfNjQvY3VkYS1rZXlyaW5nXzEuMS0xX2FsbC5kZWIKICAgICAgZHBrZyAtaSBjdWRhLWtleXJpbmdfMS4xLTFfYWxsLmRlYgogICAgICBhcHQtZ2V0IHVwZGF0ZQoKICAgICAgIyBJbnN0YWxsIE5WSURJQSBkcml2ZXIgYW5kIENVREEgdG9vbGtpdAogICAgICBhcHQtZ2V0IGluc3RhbGwgLXkgLW8gRHBrZzo6T3B0aW9uczo6PSItLWZvcmNlLWNvbmZkZWYiIC1vIERwa2c6Ok9wdGlvbnM6Oj0iLS1mb3JjZS1jb25mb2xkIiBcCiAgICAgICAgY3VkYS1kcml2ZXJzLTU1MCBjdWRhLXRvb2xraXQtMTItNAoKICAgICAgIyBJbnN0YWxsIE5WSURJQSBDb250YWluZXIgVG9vbGtpdCAoZm9yIERvY2tlciBHUFUgcGFzc3Rocm91Z2gpCiAgICAgIGN1cmwgLWZzU0wgaHR0cHM6Ly9udmlkaWEuZ2l0aHViLmlvL2xpYm52aWRpYS1jb250YWluZXIvZ3Bna2V5IFwKICAgICAgICB8IGdwZyAtLWRlYXJtb3IgLW8gL3Vzci9zaGFyZS9rZXlyaW5ncy9udmlkaWEtY29udGFpbmVyLXRvb2xraXQta2V5cmluZy5ncGcKICAgICAgY3VybCAtcyAtTCBodHRwczovL252aWRpYS5naXRodWIuaW8vbGlibnZpZGlhLWNvbnRhaW5lci9zdGFibGUvZGViL252aWRpYS1jb250YWluZXItdG9vbGtpdC5saXN0IFwKICAgICAgICB8IHNlZCAncyNkZWIgaHR0cHM6Ly8jZGViIFtzaWduZWQtYnk9L3Vzci9zaGFyZS9rZXlyaW5ncy9udmlkaWEtY29udGFpbmVyLXRvb2xraXQta2V5cmluZy5ncGddIGh0dHBzOi8vI2cnIFwKICAgICAgICB8IHRlZSAvZXRjL2FwdC9zb3VyY2VzLmxpc3QuZC9udmlkaWEtY29udGFpbmVyLXRvb2xraXQubGlzdAogICAgICBhcHQtZ2V0IHVwZGF0ZQogICAgICBhcHQtZ2V0IGluc3RhbGwgLXkgbnZpZGlhLWNvbnRhaW5lci10b29sa2l0CgogICAgICAjIEluc3RhbGwgT2xsYW1hCiAgICAgIGN1cmwgLWZzU0wgaHR0cHM6Ly9vbGxhbWEuY29tL2luc3RhbGwuc2ggfCBzaAoKICAgICAgIyBDcmVhdGUgYSBQeXRob24gdmVudiBhbmQgaW5zdGFsbCB2TExNIGZvciBtdWx0aS1HUFUgdGVuc29yIHBhcmFsbGVsaXNtCiAgICAgIHB5dGhvbjMgLW0gdmVudiAvb3B0L3ZsbG0tZW52CiAgICAgIC9vcHQvdmxsbS1lbnYvYmluL3BpcCBpbnN0YWxsIC0tdXBncmFkZSBwaXAKICAgICAgL29wdC92bGxtLWVudi9iaW4vcGlwIGluc3RhbGwgdmxsbQoKICAgICAgIyBDcmVhdGUgY29udmVuaWVuY2Ugc2NyaXB0cwogICAgICBjYXQgPiAvdXNyL2xvY2FsL2Jpbi9zdGFydC1vbGxhbWEtbW9kZWwgPDwnU0NSSVBUJwogICAgICAjIS9iaW4vYmFzaAogICAgICBNT0RFTD0iJHsxOi1yaWNoYXJkeW91bmcva2F0LWRldi03MmI6UTRfS19NfSIKICAgICAgZWNobyAiUHVsbGluZyBhbmQgcnVubmluZyAkTU9ERUwgd2l0aCBPbGxhbWEuLi4iCiAgICAgIENVREFfVklTSUJMRV9ERVZJQ0VTPTAsMSwyLDMgb2xsYW1hIHB1bGwgIiRNT0RFTCIKICAgICAgQ1VEQV9WSVNJQkxFX0RFVklDRVM9MCwxLDIsMyBvbGxhbWEgcnVuICIkTU9ERUwiCiAgICAgIFNDUklQVAogICAgICBjaG1vZCAreCAvdXNyL2xvY2FsL2Jpbi9zdGFydC1vbGxhbWEtbW9kZWwKCiAgICAgIGNhdCA+IC91c3IvbG9jYWwvYmluL3N0YXJ0LXZsbG0tc2VydmVyIDw8J1NDUklQVCcKICAgICAgIyEvYmluL2Jhc2gKICAgICAgTU9ERUw9IiR7MTotbW9vbnNob3RhaS9LaW1pLURldi03MkJ9IgogICAgICBlY2hvICJTdGFydGluZyB2TExNIHNlcnZlciB3aXRoICRNT0RFTCBvbiA0eCBWMTAwIChUUD00KS4uLiIKICAgICAgL29wdC92bGxtLWVudi9iaW4vcHl0aG9uIC1tIHZsbG0uZW50cnlwb2ludHMub3BlbmFpLmFwaV9zZXJ2ZXIgXAogICAgICAgIC0tbW9kZWwgIiRNT0RFTCIgXAogICAgICAgIC0tdGVuc29yLXBhcmFsbGVsLXNpemUgNCBcCiAgICAgICAgLS1ncHUtbWVtb3J5LXV0aWxpemF0aW9uIDAuOTAgXAogICAgICAgIC0tbWF4LW1vZGVsLWxlbiA4MTkyIFwKICAgICAgICAtLWhvc3QgMC4wLjAuMCBcCiAgICAgICAgLS1wb3J0IDgwMDAKICAgICAgU0NSSVBUCiAgICAgIGNobW9kICt4IC91c3IvbG9jYWwvYmluL3N0YXJ0LXZsbG0tc2VydmVyCgogICAgICBlY2hvICI9PT0gR1BVIFNldHVwIENvbXBsZXRlZDogJChkYXRlKSA9PT0iCgpwYWNrYWdlczoKICAtIGJ1aWxkLWVzc2VudGlhbAogIC0gcHl0aG9uMy1waXAKICAtIHB5dGhvbjMtdmVudgogIC0gZ2l0CiAgLSBjdXJsCiAgLSB3Z2V0CiAgLSBqcQogIC0gaHRvcAogIC0gdG11eAoKcnVuY21kOgogIC0gYmFzaCAvb3B0L3NldHVwLWdwdS5zaAogIC0gcmVib290Cg=="
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "0001-com-ubuntu-server-jammy",
+            "sku": "22_04-lts-gen2",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Premium_LRS"
+            },
+            "diskSizeGB": "[parameters('osDiskSizeGB')]"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "publicIP": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))).ipAddress]"
+    },
+    "fqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))).dnsSettings.fqdn]"
+    },
+    "sshCommand": {
+      "type": "string",
+      "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))).ipAddress)]"
+    }
+  }
+}

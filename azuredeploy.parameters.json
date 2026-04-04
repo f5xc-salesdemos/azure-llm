@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "value": "gpu-llm-vm"
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "sshPublicKey": {
+      "value": "YOUR_SSH_PUBLIC_KEY_HERE"
+    },
+    "vmSize": {
+      "value": "Standard_NC24s_v3"
+    },
+    "zone": {
+      "value": "1"
+    },
+    "osDiskSizeGB": {
+      "value": 256
+    }
+  }
+}
