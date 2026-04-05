@@ -197,8 +197,17 @@ V100 constraints:
 - FP16: OOM (70B = 140GB, only 64GB VRAM)
 ```
 
+## TODO
+
+- [ ] **Upgrade to A100**: Request Azure quota increase for `StandardNCADSA100v4Family` (24 cores) in centralus, then change `terraform.tfvars` to `Standard_NC24ads_A100_v4`. A100 80GB at ~$3.67/hr is cheaper and faster than 4x V100 at ~$10/hr. Unlocks AWQ, FlashAttention2, BFloat16, FP8.
+- [ ] **Test Qwen3-235B-A22B**: Requires A100 80GB (235B MoE, ~60GB VRAM in 4-bit). Cannot run on V100.
+- [ ] **Claude Code interactive testing**: Once vLLM + model is running, test `start-claude-code` for real coding tasks
+
 ## Costs
 
-This VM is expensive (~$10/hr). **Always destroy when not in use.**
+| VM SKU | GPU | VRAM | Cost/hr |
+|---|---|---|---|
+| Standard_NC24s_v3 | 4x V100 | 64 GB | ~$10/hr |
+| Standard_NC24ads_A100_v4 | 1x A100 | 80 GB | ~$3.67/hr |
 
-Deploy only when needed, run your workload, then destroy.
+**Always destroy when not in use.** Deploy, run workload, destroy.
