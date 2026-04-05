@@ -1,9 +1,9 @@
 subscription_id     = "YOUR_SUBSCRIPTION_ID"
 resource_group_name = "r-mordaseiwicz-xcsh"
-location            = "southcentralus"
+location            = "centralus"
 vm_name             = "gpu-llm-vm"
-vm_size             = "Standard_NC24ads_A100_v4"
-zone                = ""
+vm_size             = "Standard_NC24s_v3"
+zone                = "1"
 admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 os_disk_size_gb     = 512
