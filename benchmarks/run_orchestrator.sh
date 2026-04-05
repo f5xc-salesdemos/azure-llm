@@ -30,15 +30,15 @@ LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 # Coding models for Claude Code replacement
 # V100 4x16GB (cc 7.0): GPTQ, --enforce-eager, TP=4
 # A100 (cc 8.0): can remove --enforce-eager, use AWQ, single GPU
-declare -a MODEL_SLUGS=("qwen3-coder-30b" "gemma4-27b")
+declare -a MODEL_SLUGS=("qwen3-coder-30b" "gemma4-26b")
 declare -A HF_MODELS=(
-    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct-2507"
-    ["gemma4-27b"]="google/gemma-4-27b-it"
+    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    ["gemma4-26b"]="google/gemma-4-26B-A4B-it"
 )
 # Extra vLLM args per model
 declare -A VLLM_EXTRA=(
     ["qwen3-coder-30b"]="--enforce-eager --trust-remote-code"
-    ["gemma4-27b"]="--enforce-eager"
+    ["gemma4-26b"]="--enforce-eager"
 )
 
 # ==============================================================================
