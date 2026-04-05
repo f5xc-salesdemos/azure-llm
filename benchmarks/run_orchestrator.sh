@@ -25,15 +25,19 @@ RUN_ID="run_$(date +%Y%m%d_%H%M%S)"
 RESULTS_DIR="${SCRIPT_DIR}/results/${RUN_ID}"
 LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 
-# Model definitions: slug, ollama_tag, hf_model_id
-declare -a MODEL_SLUGS=("llama33-70b" "llama4-scout")
-declare -A OLLAMA_TAGS=(
-    ["llama33-70b"]="llama3.3:70b"
-    ["llama4-scout"]="llama4:scout"
-)
+# Model definitions: slug, hf_model_id
+# Focus: coding models for Claude Code replacement on A100 80GB
+declare -a MODEL_SLUGS=("qwen3-coder-30b" "qwen3-235b" "gemma4-27b")
 declare -A HF_MODELS=(
-    ["llama33-70b"]="meta-llama/Llama-3.3-70B-Instruct"
-    ["llama4-scout"]="meta-llama/Llama-4-Scout-17B-16E-Instruct"
+    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct-2507"
+    ["qwen3-235b"]="Qwen/Qwen3-235B-A22B"
+    ["gemma4-27b"]="google/gemma-4-27b-it"
+)
+# Extra vLLM args per model (e.g. quantization, trust-remote-code)
+declare -A VLLM_EXTRA=(
+    ["qwen3-coder-30b"]=""
+    ["qwen3-235b"]=""
+    ["gemma4-27b"]=""
 )
 
 # ==============================================================================
@@ -176,60 +180,28 @@ log "Capturing system information..."
 # ==============================================================================
 
 for slug in "${MODEL_SLUGS[@]}"; do
-    ollama_tag="${OLLAMA_TAGS[$slug]}"
     hf_model="${HF_MODELS[$slug]}"
+    extra="${VLLM_EXTRA[$slug]:-}"
 
     log ""
     log "============================================================"
     log "MODEL: ${slug}"
-    log "  Ollama tag: ${ollama_tag}"
     log "  HuggingFace: ${hf_model}"
+    log "  Extra args: ${extra:-none}"
     log "============================================================"
 
-    # ------------------------------------------------------------------
-    # Phase 1: Ollama
-    # ------------------------------------------------------------------
-    log ""
-    log "--- Phase 1: Ollama / ${slug} ---"
-
     stop_vllm
-    stop_ollama
 
-    log "Starting Ollama service..."
-    sudo systemctl start ollama
-    sleep 5
-
-    log "Pulling model: ${ollama_tag} (this may take a while)..."
-    if timeout "$OLLAMA_PULL_TIMEOUT" ollama pull "$ollama_tag" 2>&1 | tee -a "$LOG_FILE"; then
-        log "Model pulled successfully"
-
-        # Verify Ollama API is serving
-        if wait_for_service "http://localhost:11434/v1/models" 60; then
-            run_benchmark "ollama" "$ollama_tag" "http://localhost:11434/v1" "$slug"
-        else
-            log "ERROR: Ollama API not available. Skipping Ollama benchmark."
-        fi
-    else
-        log "ERROR: Failed to pull Ollama model ${ollama_tag}. Skipping Ollama benchmark for ${slug}."
-    fi
-
-    stop_ollama
-    wait_for_gpu_free "$GPU_FREE_TIMEOUT" || true
-
-    # ------------------------------------------------------------------
-    # Phase 2: vLLM
-    # ------------------------------------------------------------------
-    log ""
-    log "--- Phase 2: vLLM / ${slug} ---"
-
-    log "Starting vLLM server with model: ${hf_model}..."
+    log "Starting vLLM server: ${hf_model}..."
     nohup "${PYTHON}" -m vllm.entrypoints.openai.api_server \
         --model "$hf_model" \
-        --tensor-parallel-size 4 \
         --gpu-memory-utilization 0.90 \
-        --max-model-len 8192 \
+        --max-model-len 16384 \
+        --enable-auto-tool-choice \
+        --tool-call-parser hermes \
         --host 0.0.0.0 \
         --port 8000 \
+        ${extra} \
         > "${RESULTS_DIR}/${slug}_vllm_server.log" 2>&1 &
     VLLM_PID=$!
     log "vLLM server PID: ${VLLM_PID}"
@@ -237,7 +209,7 @@ for slug in "${MODEL_SLUGS[@]}"; do
     if wait_for_service "http://localhost:8000/health" "$VLLM_STARTUP_TIMEOUT"; then
         run_benchmark "vllm" "$hf_model" "http://localhost:8000/v1" "$slug"
     else
-        log "ERROR: vLLM server did not start. Check ${RESULTS_DIR}/${slug}_vllm_server.log"
+        log "ERROR: vLLM server did not start for ${slug}."
         log "Last 20 lines of vLLM log:"
         tail -20 "${RESULTS_DIR}/${slug}_vllm_server.log" 2>/dev/null | tee -a "$LOG_FILE" || true
     fi

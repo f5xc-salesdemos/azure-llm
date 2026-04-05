@@ -22,31 +22,37 @@ variable "vm_name" {
 }
 
 variable "vm_size" {
-  description = "Size of the VM. Standard_NC24s_v3 = 4x V100 (64GB VRAM) for 70B models"
+  description = "Size of the VM. Default: 1x A100 80GB for optimal vLLM inference"
   type        = string
-  default     = "Standard_NC24s_v3"
+  default     = "Standard_NC24ads_A100_v4"
 
   validation {
     condition = contains([
-      "Standard_NC6s_v3",
-      "Standard_NC12s_v3",
-      "Standard_NC24s_v3",
-      "Standard_NC4as_T4_v3",
-      "Standard_NC8as_T4_v3",
-      "Standard_NC16as_T4_v3",
+      # A100 (cc 8.0) — recommended for vLLM (AWQ, FlashAttention2, BFloat16, FP8)
+      "Standard_NC24ads_A100_v4",  # 1x A100 80GB, 24 vCPUs, 220 GiB RAM
+      "Standard_NC48ads_A100_v4",  # 2x A100 80GB, 48 vCPUs, 440 GiB RAM
+      "Standard_NC96ads_A100_v4",  # 4x A100 80GB, 96 vCPUs, 880 GiB RAM
+      # V100 (cc 7.0) — legacy, GPTQ only, no AWQ/FlashAttention2
+      "Standard_NC6s_v3",          # 1x V100 16GB
+      "Standard_NC12s_v3",         # 2x V100 32GB
+      "Standard_NC24s_v3",         # 4x V100 64GB
+      # T4 (cc 7.5) — budget option, AWQ supported but low bandwidth
+      "Standard_NC4as_T4_v3",      # 1x T4 16GB
+      "Standard_NC8as_T4_v3",      # 2x T4 32GB
+      "Standard_NC16as_T4_v3",     # 4x T4 64GB
     ], var.vm_size)
     error_message = "Must be a GPU VM size available in centralus."
   }
 }
 
 variable "zone" {
-  description = "Availability zone (centralus supports 1 and 3 for NCSv3)"
+  description = "Availability zone"
   type        = string
   default     = "1"
 
   validation {
-    condition     = contains(["1", "3"], var.zone)
-    error_message = "Central US supports zones 1 and 3 for NCSv3."
+    condition     = contains(["1", "2", "3"], var.zone)
+    error_message = "Central US supports zones 1, 2, and 3."
   }
 }
 
