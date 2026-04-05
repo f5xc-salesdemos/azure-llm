@@ -168,40 +168,62 @@ Quantization comparison (both are 4-bit, different methods):
 ### Handoff Prompt (copy this to continue)
 
 ```
-I'm continuing the Ollama vs vLLM benchmark project. Here's the exact state:
+I'm continuing the vLLM-based LLM inference platform project. Here's the exact state:
 
-COMPLETED:
-- Ollama benchmarks: Llama 3.3 70B (Q4_K_M) and Llama 4 Scout (Q4_K_M)
-- vLLM benchmark: Llama 3.3 70B (GPTQ 4-bit) — 277.6 tok/s at c=32, 0 errors
-- VM destroyed, results downloaded locally
+PHASE 1 COMPLETE — Ollama vs vLLM:
+- vLLM wins: 277.6 tok/s at c=32 vs Ollama 0.3 tok/s (925x faster, 0 errors vs 99%)
+- Results in benchmarks/results/run_20260405_062728/ (Ollama) and vllm_gptq_20260405_185242/ (vLLM)
 
-REMAINING (optional):
-- Llama 4 Scout vLLM benchmark (Llama 4 GGUF not supported in vLLM 0.19,
-  only low-trust GPTQ exists: farshoreNext/Llama-4-Scout-17B-16E-Instruct-abliterated-v2-GPTQ)
-- May skip since Ollama also failed on Llama 4 Scout (100% timeouts)
+PHASE 2 IN PROGRESS — Testing coding models for Claude Code replacement:
+- VM MAY BE RUNNING at 40.67.170.234 (4x V100, centralus, ~$10/hr)
+  First check: ssh azureuser@40.67.170.234 (if SSH key exists)
+  If VM is gone, redeploy: fill subscription_id in terraform.tfvars, run ./deploy.sh
+- Benchmarks were running: Qwen3-Coder-30B-A3B then Gemma 4 26B-A4B on vLLM
+- Check results: ls /home/azureuser/benchmarks/results/run_*/
+- HF token: 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
+- Claude Code installed at /usr/bin/claude on VM
 
-To re-run or extend benchmarks:
-a. Fill subscription_id in terraform.tfvars, run ./deploy.sh
-b. Wait ~20 min for cloud-init
-c. Set HF token: mkdir -p ~/.cache/huggingface && echo "TOKEN" > ~/.cache/huggingface/token
-d. vLLM GPTQ command that works on V100:
-   /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
-     --model shuyuej/Llama-3.3-70B-Instruct-GPTQ --quantization gptq \
-     --tensor-parallel-size 4 --gpu-memory-utilization 0.95 --max-model-len 2048 \
-     --max-num-seqs 32 --enforce-eager --host 0.0.0.0 --port 8000
+CORRECT MODEL IDS (verified on HuggingFace):
+- Qwen/Qwen3-Coder-30B-A3B-Instruct (MoE, 3.3B active — coding focused)
+- google/gemma-4-26B-A4B-it (MoE, 4B active — latest Gemma 4)
+- google/gemma-4-31B-it (31B dense — needs more VRAM)
 
-V100 constraints:
-- AWQ: NOT supported (needs compute capability 7.5, V100 is 7.0)
-- GGUF in vLLM: OOM (dequantization overhead fills VRAM)
+A100 UPGRADE:
+- Quota approved: 48 cores StandardNCADSA100v4 in southcentralus
+- But ZERO physical capacity in any zone — all allocation failed
+- Terraform ready: change vm_size to Standard_NC24ads_A100_v4, location to southcentralus
+- A100 unlocks: AWQ, FlashAttention2, BFloat16, FP8 at $3.67/hr (vs $10/hr V100)
+
+AGENTIC QUALITY BENCHMARKS (next step):
+- tau-bench (sierra-research/tau2-bench) added to cloud-init for next deploy
+- Use tau-bench to evaluate tool-calling quality, not just throughput
+- SWE-bench for coding task evaluation
+- Goal: find which model works best with Claude Code for interactive coding
+
+CLAUDE CODE + vLLM CONFIG:
+  export ANTHROPIC_BASE_URL=http://localhost:8000
+  export ANTHROPIC_API_KEY=local-vllm
+  export ANTHROPIC_AUTH_TOKEN=local-vllm
+  export ANTHROPIC_DEFAULT_OPUS_MODEL=my-model
+  vLLM must start with: --enable-auto-tool-choice --tool-call-parser hermes
+
+V100 CONSTRAINTS:
+- AWQ: NOT supported (cc 7.0, needs 7.5)
+- GGUF in vLLM: OOM (dequantization fills VRAM)
 - GPTQ: WORKS with --enforce-eager --max-model-len 2048 --max-num-seqs 32
-- FP16: OOM (70B = 140GB, only 64GB VRAM)
+- MoE models (Qwen3-Coder 3.3B active, Gemma4 4B active): should fit in FP16
+
+IMPORTANT: DESTROY VM when done (./destroy.sh) — $10/hr billing
 ```
 
 ## TODO
 
-- [ ] **Upgrade to A100**: Request Azure quota increase for `StandardNCADSA100v4Family` (24 cores) in centralus, then change `terraform.tfvars` to `Standard_NC24ads_A100_v4`. A100 80GB at ~$3.67/hr is cheaper and faster than 4x V100 at ~$10/hr. Unlocks AWQ, FlashAttention2, BFloat16, FP8.
-- [ ] **Test Qwen3-235B-A22B**: Requires A100 80GB (235B MoE, ~60GB VRAM in 4-bit). Cannot run on V100.
-- [ ] **Claude Code interactive testing**: Once vLLM + model is running, test `start-claude-code` for real coding tasks
+- [ ] **Check/collect Phase 2 benchmark results** (Qwen3-Coder, Gemma 4)
+- [ ] **Upgrade to A100** when southcentralus capacity available (or try other regions)
+- [ ] **Run tau-bench** quality evaluation on best-performing models
+- [ ] **Claude Code interactive testing**: `start-claude-code` with local vLLM
+- [ ] **Test Qwen3-235B-A22B**: Requires A100 80GB
+- [ ] **Run SWE-bench** on top model candidates
 
 ## Costs
 
