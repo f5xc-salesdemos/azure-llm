@@ -146,12 +146,24 @@ Quantization comparison (both are 4-bit, different methods):
 - **Ollama**: Q4_K_M (GGUF mixed-precision 4-bit) — Ollama's default
 - **vLLM**: GPTQ (INT4 packed weights) — only 4-bit method that fits on V100
 
-### Current VM State (checkpoint 2026-04-05 18:55 UTC)
+### vLLM Results (GPTQ 4-bit)
 
-**VM is RUNNING** at `20.112.232.231` (billing active ~$10/hr)
-- vLLM GPTQ Llama 3.3 70B benchmark is running via nohup
-- Results saving to: `/home/azureuser/benchmarks/results/vllm_gptq_20260405_185242/`
-- Llama 4 Scout vLLM benchmark still needs to be run after
+| Model | Engine | Result |
+|---|---|---|
+| Llama 3.3 70B (GPTQ 4-bit) | vLLM | **277.6 tok/s at c=32, 0 errors at all levels** |
+
+### Head-to-Head: Ollama vs vLLM — Llama 3.3 70B (4x V100)
+
+| Concurrency | Ollama (tok/s) | Ollama Errors | vLLM (tok/s) | vLLM Errors | vLLM Speedup |
+|---|---|---|---|---|---|
+| 1 | 2.6 | 0 | **24.4** | 0 | 9x |
+| 2 | 0.6 | 4/6 | **32.5** | 0 | 54x |
+| 4 | 0 | 12/12 | **56.6** | 0 | -- |
+| 8 | 1.1 | 22/24 | **100.5** | 0 | 91x |
+| 16 | 0.5 | 47/48 | **157.1** | 0 | 314x |
+| 32 | 0.3 | 95/96 | **277.6** | 0 | 925x |
+
+**Conclusion: vLLM is dramatically better for multi-user workloads.** Ollama collapses under concurrent load (95/96 errors at 32 users), while vLLM scales linearly with zero errors and 277 tok/s aggregate throughput.
 
 ### Handoff Prompt (copy this to continue)
 
@@ -159,36 +171,28 @@ Quantization comparison (both are 4-bit, different methods):
 I'm continuing the Ollama vs vLLM benchmark project. Here's the exact state:
 
 COMPLETED:
-- Ollama benchmarks for Llama 3.3 70B and Llama 4 Scout (results in benchmarks/results/run_20260405_062728/)
-- Ollama used Q4_K_M quantization (GGUF)
+- Ollama benchmarks: Llama 3.3 70B (Q4_K_M) and Llama 4 Scout (Q4_K_M)
+- vLLM benchmark: Llama 3.3 70B (GPTQ 4-bit) — 277.6 tok/s at c=32, 0 errors
+- VM destroyed, results downloaded locally
 
-IN PROGRESS (may be complete by now):
-- vLLM GPTQ Llama 3.3 70B benchmark is running on VM 20.112.232.231
-- Results at: /home/azureuser/benchmarks/results/vllm_gptq_20260405_185242/
-- vLLM server command that worked:
-  /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
-    --model shuyuej/Llama-3.3-70B-Instruct-GPTQ --quantization gptq \
-    --tensor-parallel-size 4 --gpu-memory-utilization 0.95 --max-model-len 2048 \
-    --max-num-seqs 32 --enforce-eager --host 0.0.0.0 --port 8000
+REMAINING (optional):
+- Llama 4 Scout vLLM benchmark (Llama 4 GGUF not supported in vLLM 0.19,
+  only low-trust GPTQ exists: farshoreNext/Llama-4-Scout-17B-16E-Instruct-abliterated-v2-GPTQ)
+- May skip since Ollama also failed on Llama 4 Scout (100% timeouts)
 
-REMAINING:
-1. Check if Llama 3.3 70B vLLM benchmark completed:
-   ssh azureuser@20.112.232.231
-   ls -la /home/azureuser/benchmarks/results/vllm_gptq_*/llama33-70b_vllm.json
-2. Run Llama 4 Scout on vLLM (Llama 4 GGUF not supported in vLLM, need GPTQ):
-   - Only GPTQ available: farshoreNext/Llama-4-Scout-17B-16E-Instruct-abliterated-v2-GPTQ (6 downloads, low trust)
-   - May need to skip Llama 4 Scout vLLM or find a better GPTQ model
-3. Download all results via SCP
-4. Generate comparison report
-5. DESTROY VM (./destroy.sh) to stop $10/hr billing
-6. Commit results to git
+To re-run or extend benchmarks:
+a. Fill subscription_id in terraform.tfvars, run ./deploy.sh
+b. Wait ~20 min for cloud-init
+c. Set HF token: mkdir -p ~/.cache/huggingface && echo "TOKEN" > ~/.cache/huggingface/token
+d. vLLM GPTQ command that works on V100:
+   /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
+     --model shuyuej/Llama-3.3-70B-Instruct-GPTQ --quantization gptq \
+     --tensor-parallel-size 4 --gpu-memory-utilization 0.95 --max-model-len 2048 \
+     --max-num-seqs 32 --enforce-eager --host 0.0.0.0 --port 8000
 
-HF_TOKEN is set at ~/.cache/huggingface/token on the VM.
-SSH: ssh azureuser@20.112.232.231 (key generated in this container session)
-
-CRITICAL V100 constraints learned:
-- AWQ: NOT supported (compute capability 7.0, needs 7.5)
-- GGUF in vLLM: Loads but OOM (dequantization overhead fills VRAM)
+V100 constraints:
+- AWQ: NOT supported (needs compute capability 7.5, V100 is 7.0)
+- GGUF in vLLM: OOM (dequantization overhead fills VRAM)
 - GPTQ: WORKS with --enforce-eager --max-model-len 2048 --max-num-seqs 32
 - FP16: OOM (70B = 140GB, only 64GB VRAM)
 ```
