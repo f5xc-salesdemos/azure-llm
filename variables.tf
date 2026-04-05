@@ -46,14 +46,9 @@ variable "vm_size" {
 }
 
 variable "zone" {
-  description = "Availability zone"
+  description = "Availability zone (set to empty string to let Azure choose)"
   type        = string
-  default     = "1"
-
-  validation {
-    condition     = contains(["1", "2", "3"], var.zone)
-    error_message = "Central US supports zones 1, 2, and 3."
-  }
+  default     = ""
 }
 
 variable "admin_username" {

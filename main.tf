@@ -85,7 +85,7 @@ resource "azurerm_public_ip" "this" {
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = [var.zone]
+  zones               = var.zone != "" ? [var.zone] : []
   domain_name_label   = var.vm_name
 }
 
@@ -107,7 +107,7 @@ resource "azurerm_linux_virtual_machine" "this" {
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
   size                            = var.vm_size
-  zone                            = var.zone
+  zone                            = var.zone != "" ? var.zone : null
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
