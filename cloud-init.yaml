@@ -1,5 +1,4 @@
 #cloud-config
-package_update: true
 package_reboot_if_required: false
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
@@ -54,7 +53,7 @@ write_files:
 - path: /opt/setup-gpu.sh
   permissions: '0755'
   content: "#!/bin/bash\nset -euo pipefail\nexec > /var/log/gpu-setup.log 2>&1\nexport DEBIAN_FRONTEND=noninteractive\nexport NEEDRESTART_MODE=a\n\necho \"=== GPU Setup Started: $(date) ===\"\n\n# ----\
-    \ Wait for apt/dpkg locks to be released ----\nwait_for_apt() {\n    local max_wait=300\n    local waited=0\n    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \\\n          fuser /var/lib/apt/lists/lock\
+    \ Wait for apt/dpkg locks to be released ----\nwait_for_apt() {\n    local max_wait=600\n    local waited=0\n    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \\\n          fuser /var/lib/apt/lists/lock\
     \ >/dev/null 2>&1 || \\\n          fuser /var/cache/apt/archives/lock >/dev/null 2>&1; do\n        if (( waited >= max_wait )); then\n            echo \"ERROR: apt locks not released after ${max_wait}s\"\
     \n            return 1\n        fi\n        echo \"Waiting for apt locks... (${waited}s)\"\n        sleep 10\n        waited=$((waited + 10))\n    done\n    echo \"apt locks are free\"\n}\n\n# ----\
     \ Disable unattended-upgrades to prevent future lock races ----\nsystemctl stop unattended-upgrades.service 2>/dev/null || true\nsystemctl disable unattended-upgrades.service 2>/dev/null || true\nwait_for_apt\n\

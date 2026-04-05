@@ -6,4 +6,4 @@ vm_size             = "Standard_NC24s_v3"
 zone                = "1"
 admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
-os_disk_size_gb     = 256
+os_disk_size_gb     = 512

@@ -118,46 +118,67 @@ Results are saved to `benchmarks/results/run_<timestamp>/`.
 
 ### Completed
 
-- Terraform infrastructure: deploys 4x V100 VM with cloud-init that installs NVIDIA drivers 550, CUDA 12.4, Ollama, vLLM, and benchmark suite
-- Cloud-init hardened against dpkg lock races, unattended-upgrades conflicts, home dir ownership, and python3-venv issues
-- Benchmark suite: async Python client (`benchmark_client.py`) + bash orchestrator (`run_orchestrator.sh`)
-- **Ollama benchmarks complete** for both models (results in `benchmarks/results/run_20260405_062728/`):
+- Terraform infrastructure: deploys 4x V100 VM with cloud-init (NVIDIA 550, CUDA 12.4, Ollama, vLLM)
+- Cloud-init hardened against dpkg lock races, unattended-upgrades, home dir ownership, python3-venv issues
+- Benchmark suite: async Python client + bash orchestrator
+- **Ollama benchmarks complete** for both models (results in `benchmarks/results/run_20260405_062728/`)
+- HuggingFace Meta Llama access approved
+
+### Ollama Results
 
 | Model | Engine | Result |
 |---|---|---|
-| Llama 3.3 70B | Ollama | 2.6 tok/s at concurrency=1, collapses at higher concurrency (95/96 errors at c=32) |
-| Llama 4 Scout | Ollama | 100% timeouts at all concurrency levels (109B MoE too large for Ollama on 4x V100) |
+| Llama 3.3 70B (Q4_K_M) | Ollama | 2.6 tok/s at c=1, collapses at higher concurrency (95/96 errors at c=32) |
+| Llama 4 Scout (Q4_K_M) | Ollama | 100% timeouts at all levels (109B MoE too large for Ollama on 4x V100) |
 
-### Remaining: vLLM Benchmarks
+### V100 Compatibility Notes (critical for vLLM)
 
-vLLM benchmarks are blocked on **Meta Llama HuggingFace access approval**. The HF token is valid but the gated model access request is pending review.
+| Quantization | V100 (cc 7.0) | Notes |
+|---|---|---|
+| FP16 (unquantized) | OOM | 70B FP16 = ~140GB, 4x V100 = 64GB |
+| AWQ 4-bit | Not supported | Requires compute capability >= 7.5 |
+| GPTQ 4-bit | Supported | Min capability 6.0 |
+| GGUF Q4_K_M | Supported | Same format as Ollama — fairest comparison |
+
+**For fair comparison: use GGUF Q4_K_M on both Ollama and vLLM** (identical quantization).
+
+### Remaining: vLLM GGUF Benchmarks
 
 ### Handoff Prompt (copy this to continue)
 
 ```
-I'm continuing the Ollama vs vLLM multi-user benchmark project. Here's where we left off:
+I'm continuing the Ollama vs vLLM benchmark project. Ollama benchmarks are done.
+Now I need to run vLLM benchmarks using GGUF Q4_K_M (same quantization as Ollama for fair comparison).
 
-1. Ollama benchmarks are DONE — results saved in benchmarks/results/run_20260405_062728/
-2. vLLM benchmarks need to be run — they were blocked by HuggingFace gated model access (403)
-3. My HF token is approved now (check by running: curl -s -H "Authorization: Bearer hf_YOUR_TOKEN" https://huggingface.co/api/models/meta-llama/Llama-3.3-70B-Instruct)
+V100 constraints discovered:
+- FP16 70B: OOM (140GB won't fit in 64GB VRAM)
+- AWQ: Not supported on V100 (needs compute capability 7.5, V100 is 7.0)
+- GGUF Q4_K_M: Works — and matches Ollama's quantization exactly
 
-Steps to complete:
-a. Deploy the VM: fill in subscription_id in terraform.tfvars, run ./deploy.sh
-b. Wait ~20 min for cloud-init (GPU drivers + software install)
-c. SSH in and set the HF token:
+Steps:
+a. Fill in subscription_id in terraform.tfvars, run ./deploy.sh (disk is now 512GB)
+b. Wait ~20 min for cloud-init
+c. SSH in and set HF token:
+   sudo chown azureuser:azureuser /home/azureuser
    mkdir -p ~/.cache/huggingface && echo "YOUR_HF_TOKEN" > ~/.cache/huggingface/token
    export HF_TOKEN=YOUR_HF_TOKEN
-d. Run vLLM benchmarks only — start vLLM server for each model with:
+d. Download GGUF files:
+   /opt/vllm-env/bin/python -c "
+   from huggingface_hub import hf_hub_download
+   hf_hub_download('bartowski/Llama-3.3-70B-Instruct-GGUF', 'Llama-3.3-70B-Instruct-Q4_K_M.gguf')
+   "
+e. Start vLLM with local GGUF file:
    /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
-     --model meta-llama/Llama-3.3-70B-Instruct \
-     --tensor-parallel-size 4 --gpu-memory-utilization 0.90 --max-model-len 8192 \
-     --host 0.0.0.0 --port 8000
-   Then run: /opt/vllm-env/bin/python benchmarks/benchmark_client.py \
-     --base-url http://localhost:8000/v1 --model meta-llama/Llama-3.3-70B-Instruct \
+     --model /path/to/Llama-3.3-70B-Instruct-Q4_K_M.gguf \
+     --tokenizer meta-llama/Llama-3.3-70B-Instruct \
+     --tensor-parallel-size 4 --gpu-memory-utilization 0.95 --max-model-len 4096 \
+     --enforce-eager --host 0.0.0.0 --port 8000
+f. Run benchmark:
+   /opt/vllm-env/bin/python benchmarks/benchmark_client.py \
+     --base-url http://localhost:8000/v1 --model Llama-3.3-70B-Instruct-Q4_K_M \
      --engine vllm --output benchmarks/results/llama33-70b_vllm.json
-   Repeat for meta-llama/Llama-4-Scout-17B-16E-Instruct
-e. Download results via SCP and compare with Ollama results
-f. Destroy VM with ./destroy.sh
+g. Repeat for Llama 4 Scout GGUF (unsloth/Llama-4-Scout-17B-16E-Instruct-GGUF)
+h. Download results, compare with Ollama, destroy VM
 ```
 
 ## Costs
