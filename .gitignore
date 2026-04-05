@@ -11,5 +11,10 @@ tfplan
 id_rsa
 id_rsa.pub
 
+# Benchmark results
+benchmarks/results/*.json
+benchmarks/results/*.txt
+benchmarks/results/run_*/
+
 # OS
 .DS_Store

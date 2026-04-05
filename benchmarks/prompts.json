@@ -1,0 +1,75 @@
+[
+  {
+    "id": "simple_qa",
+    "max_tokens": 50,
+    "messages": [
+      {"role": "user", "content": "What is the capital of France and what is its population?"}
+    ]
+  },
+  {
+    "id": "code_generation",
+    "max_tokens": 300,
+    "messages": [
+      {"role": "user", "content": "Write a Python function that implements binary search on a sorted list. Include type hints and handle edge cases like empty lists."}
+    ]
+  },
+  {
+    "id": "reasoning",
+    "max_tokens": 200,
+    "messages": [
+      {"role": "user", "content": "A farmer has 17 sheep. All but 9 die. How many sheep are left? Explain your reasoning step by step."}
+    ]
+  },
+  {
+    "id": "creative_writing",
+    "max_tokens": 250,
+    "messages": [
+      {"role": "user", "content": "Write an opening paragraph for a science fiction story about the first human colony on Europa discovering something unexpected beneath the ice."}
+    ]
+  },
+  {
+    "id": "summarization",
+    "max_tokens": 100,
+    "messages": [
+      {"role": "user", "content": "Summarize the following in exactly 2 sentences: The Industrial Revolution, which began in Britain in the late 18th century, fundamentally transformed economies from agrarian to industrial. It introduced mechanized manufacturing, leading to urbanization as workers moved from rural areas to cities for factory jobs. This period saw innovations like the steam engine, spinning jenny, and power loom, which dramatically increased production capacity. While it created unprecedented wealth and economic growth, it also led to poor working conditions, child labor, and significant environmental pollution that would take centuries to address."}
+    ]
+  },
+  {
+    "id": "technical_explanation",
+    "max_tokens": 300,
+    "messages": [
+      {"role": "user", "content": "Explain the TCP three-way handshake process in detail, including what happens at each step and why it is necessary for reliable communication."}
+    ]
+  },
+  {
+    "id": "translation",
+    "max_tokens": 200,
+    "messages": [
+      {"role": "user", "content": "Translate the following English text to Spanish, maintaining the formal tone: 'We are pleased to announce that our company has achieved record revenue this quarter. Our dedicated team of engineers and designers have worked tirelessly to deliver innovative products that exceed customer expectations.'"}
+    ]
+  },
+  {
+    "id": "math_problem",
+    "max_tokens": 250,
+    "messages": [
+      {"role": "user", "content": "A train travels from City A to City B at 60 km/h and returns at 40 km/h. If the total journey takes 5 hours, what is the distance between the two cities? Show your work."}
+    ]
+  },
+  {
+    "id": "long_analysis",
+    "max_tokens": 500,
+    "messages": [
+      {"role": "user", "content": "Analyze the pros and cons of microservices architecture versus monolithic architecture for a startup building a SaaS product. Consider factors like development speed, scalability, operational complexity, and team size."}
+    ]
+  },
+  {
+    "id": "multi_turn",
+    "max_tokens": 200,
+    "messages": [
+      {"role": "system", "content": "You are a helpful database administrator."},
+      {"role": "user", "content": "My PostgreSQL query is running slow on a table with 50 million rows."},
+      {"role": "assistant", "content": "There are several things to check. First, do you have appropriate indexes on the columns used in your WHERE clause and JOIN conditions?"},
+      {"role": "user", "content": "I have a B-tree index on the primary key but the query filters on a timestamp column and a status enum. What indexes should I add?"}
+    ]
+  }
+]
