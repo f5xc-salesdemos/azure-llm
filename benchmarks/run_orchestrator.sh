@@ -30,17 +30,16 @@ LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 # Coding models for Claude Code replacement
 # V100 4x16GB (cc 7.0): GPTQ, --enforce-eager, TP=4
 # A100 (cc 8.0): can remove --enforce-eager, use AWQ, single GPU
-# V100 compatible models (GPTQ 4-bit for large, FP16 for small)
-# A100: can use FP16/AWQ versions of these same models
-declare -a MODEL_SLUGS=("qwen3-coder-30b-gptq" "qwen25-coder-14b")
+# A100 80GB: all models fit in FP16, no quantization needed
+declare -a MODEL_SLUGS=("qwen3-coder-30b" "qwen25-coder-14b")
 declare -A HF_MODELS=(
-    ["qwen3-coder-30b-gptq"]="btbtyler09/Qwen3-Coder-30B-A3B-Instruct-gptq-4bit"
+    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct"
     ["qwen25-coder-14b"]="Qwen/Qwen2.5-Coder-14B-Instruct"
 )
 # Extra vLLM args per model
 declare -A VLLM_EXTRA=(
-    ["qwen3-coder-30b-gptq"]="--quantization gptq --enforce-eager --trust-remote-code"
-    ["qwen25-coder-14b"]="--enforce-eager"
+    ["qwen3-coder-30b"]="--trust-remote-code"
+    ["qwen25-coder-14b"]=""
 )
 
 # ==============================================================================
@@ -198,10 +197,8 @@ for slug in "${MODEL_SLUGS[@]}"; do
     log "Starting vLLM server: ${hf_model}..."
     nohup "${PYTHON}" -m vllm.entrypoints.openai.api_server \
         --model "$hf_model" \
-        --tensor-parallel-size 4 \
-        --gpu-memory-utilization 0.95 \
-        --max-model-len 4096 \
-        --max-num-seqs 32 \
+        --gpu-memory-utilization 0.90 \
+        --max-model-len 16384 \
         --enable-auto-tool-choice \
         --tool-call-parser hermes \
         --host 0.0.0.0 \
