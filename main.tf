@@ -201,6 +201,18 @@ resource "azurerm_network_security_group" "phi" {
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "AllowQwen3FromSubnet"
+    priority                   = 1040
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = tostring(var.qwen3_port)
+    source_address_prefix      = local.subnet_cidr
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_public_ip" "phi" {
@@ -280,6 +292,11 @@ resource "azurerm_linux_virtual_machine" "phi" {
     xlam_max_model_len          = var.xlam_max_model_len
     xlam_gpu_memory_utilization = var.xlam_gpu_memory_utilization
     xlam_port                   = var.xlam_port
+    qwen3_model_id               = var.qwen3_model_id
+    qwen3_served_name            = var.qwen3_served_name
+    qwen3_max_model_len          = var.qwen3_max_model_len
+    qwen3_gpu_memory_utilization = var.qwen3_gpu_memory_utilization
+    qwen3_port                   = var.qwen3_port
   }))
 }
 
@@ -382,5 +399,9 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     xlam_port           = var.xlam_port
     xlam_served_name    = var.xlam_served_name
     xlam_max_model_len  = var.xlam_max_model_len
+    qwen3_ip            = "10.0.0.11"
+    qwen3_port          = var.qwen3_port
+    qwen3_served_name   = var.qwen3_served_name
+    qwen3_max_model_len = var.qwen3_max_model_len
   }))
 }

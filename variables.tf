@@ -122,7 +122,7 @@ variable "gemma_tool_call_parser" {
 variable "phi_vm_size" {
   description = "VM size for the sub-agent inference server"
   type        = string
-  default     = "Standard_NC48ads_A100_v4" # 2x A100 80GB, 48 vCPU, 440 GiB
+  default     = "Standard_NC96ads_A100_v4" # 4x A100 80GB, 96 vCPU, 880 GiB
 }
 
 variable "phi_zone" {
@@ -234,6 +234,37 @@ variable "xlam_port" {
   description = "Port for xLAM vLLM API"
   type        = number
   default     = 8002
+}
+
+# Model 4: Qwen3-32B (port 8003) — documentation / markdown / OpenAPI specialist
+variable "qwen3_model_id" {
+  description = "HuggingFace model ID for Qwen3-32B"
+  type        = string
+  default     = "Qwen/Qwen3-32B"
+}
+
+variable "qwen3_served_name" {
+  description = "Model name exposed by Qwen3 vLLM API"
+  type        = string
+  default     = "qwen3-32b"
+}
+
+variable "qwen3_max_model_len" {
+  description = "Maximum context length for Qwen3"
+  type        = number
+  default     = 32768
+}
+
+variable "qwen3_gpu_memory_utilization" {
+  description = "GPU memory fraction for Qwen3 (dedicated GPU 2)"
+  type        = number
+  default     = 0.90
+}
+
+variable "qwen3_port" {
+  description = "Port for Qwen3 vLLM API"
+  type        = number
+  default     = 8003
 }
 
 ###############################################################################

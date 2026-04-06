@@ -140,6 +140,17 @@ write_files:
               "limit": { "context": ${xlam_max_model_len}, "output": 4096 }
             }
           }
+        },
+        "vllm-docs": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "Qwen3-32B (${qwen3_ip})",
+          "options": { "baseURL": "http://${qwen3_ip}:${qwen3_port}/v1", "apiKey": "local-vllm" },
+          "models": {
+            "${qwen3_served_name}": {
+              "name": "${qwen3_served_name} (Docs/Markdown/OpenAPI)",
+              "limit": { "context": ${qwen3_max_model_len}, "output": 8192 }
+            }
+          }
         }
       },
       "model": "vllm/${gemma_served_name}"
@@ -228,6 +239,7 @@ write_files:
     echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
     echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
     echo -n "xLAM     (${xlam_ip}:${xlam_port}):    "; curl -sf http://${xlam_ip}:${xlam_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Qwen3    (${qwen3_ip}:${qwen3_port}):    "; curl -sf http://${qwen3_ip}:${qwen3_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers
 

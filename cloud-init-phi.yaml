@@ -1,7 +1,9 @@
 #cloud-config
-# Sub-agent server: 3 models on 2x A100 80GB
-#   GPU 0 (shared): Phi-4-mini (port ${phi_port}) + Qwen2.5-VL-7B (port ${qwen_vl_port})
+# Sub-agent server: 4 models on 4x A100 80GB
+#   GPU 0 (shared):    Phi-4-mini (port ${phi_port}) + Qwen2.5-VL-7B (port ${qwen_vl_port})
 #   GPU 1 (dedicated): xLAM-2-32B (port ${xlam_port})
+#   GPU 2 (dedicated): Qwen3-32B  (port ${qwen3_port}) — docs/markdown/OpenAPI
+#   GPU 3: unused
 package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
@@ -73,7 +75,7 @@ write_files:
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/gpu-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-06-v7-phi-qwenvl-dual"
+    CLOUD_INIT_VERSION="2026-04-06-v8-quad-model"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
@@ -306,6 +308,59 @@ write_files:
     WantedBy=multi-user.target
     SYSTEMD
 
+    # ======================================================================
+    # Model 4: Qwen3-32B (port ${qwen3_port}) — documentation / markdown / OpenAPI
+    # Dedicated GPU 2 (CUDA_VISIBLE_DEVICES=2)
+    # ======================================================================
+    cat > /usr/local/bin/start-vllm-qwen3 <<'SCRIPT'
+    #!/bin/bash
+    echo "Starting vLLM: ${qwen3_model_id} (TP=1, ${qwen3_max_model_len} ctx, port ${qwen3_port}, GPU 2)..."
+    export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+    exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
+      --model ${qwen3_model_id} \
+      --served-model-name ${qwen3_served_name} \
+      --tensor-parallel-size 1 \
+      --max-model-len ${qwen3_max_model_len} \
+      --gpu-memory-utilization ${qwen3_gpu_memory_utilization} \
+      --enable-auto-tool-choice \
+      --tool-call-parser qwen3_xml \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --enable-chunked-prefill \
+      --no-enable-log-requests \
+      --disable-log-stats \
+      --host 0.0.0.0 \
+      --port ${qwen3_port}
+    SCRIPT
+    chmod +x /usr/local/bin/start-vllm-qwen3
+
+    cat > /etc/systemd/system/vllm-qwen3.service <<'SYSTEMD'
+    [Unit]
+    Description=vLLM ${qwen3_served_name} Documentation / Markdown / OpenAPI (port ${qwen3_port}, GPU 2)
+    After=network.target nvidia-persistenced.service vllm-xlam.service
+    Wants=nvidia-persistenced.service
+
+    [Service]
+    Type=simple
+    User=${admin_username}
+    Environment=HF_TOKEN=${hf_token}
+    Environment=CUDA_VISIBLE_DEVICES=2
+    Environment=VLLM_ATTENTION_BACKEND=FLASH_ATTN
+    Environment=VLLM_USE_V1=1
+    Environment=OMP_NUM_THREADS=1
+    Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
+    ExecStartPre=/bin/sleep 45
+    ExecStart=/usr/local/bin/start-vllm-qwen3
+    Restart=on-failure
+    RestartSec=30
+    LimitNOFILE=2097152
+    LimitMEMLOCK=infinity
+    TimeoutStartSec=600
+
+    [Install]
+    WantedBy=multi-user.target
+    SYSTEMD
+
     # ---- Health check ----
     cat > /usr/local/bin/check-vllm <<'SCRIPT'
     #!/bin/bash
@@ -313,13 +368,14 @@ write_files:
     echo -n "Phi     (GPU 0, :${phi_port}):    "; curl -sf http://localhost:${phi_port}/health && echo "OK" || echo "DOWN"
     echo -n "Qwen VL (GPU 0, :${qwen_vl_port}):    "; curl -sf http://localhost:${qwen_vl_port}/health && echo "OK" || echo "DOWN"
     echo -n "xLAM    (GPU 1, :${xlam_port}):    "; curl -sf http://localhost:${xlam_port}/health && echo "OK" || echo "DOWN"
+    echo -n "Qwen3   (GPU 2, :${qwen3_port}):    "; curl -sf http://localhost:${qwen3_port}/health && echo "OK" || echo "DOWN"
     echo "=== GPU ==="
     nvidia-smi --query-gpu=index,name,memory.used,memory.total,temperature.gpu --format=csv,noheader
     SCRIPT
     chmod +x /usr/local/bin/check-vllm
 
     systemctl daemon-reload
-    systemctl enable vllm-phi.service vllm-qwenvl.service vllm-xlam.service
+    systemctl enable vllm-phi.service vllm-qwenvl.service vllm-xlam.service vllm-qwen3.service
 
     # ---- Journald retention ----
     mkdir -p /etc/systemd/journald.conf.d
@@ -331,8 +387,8 @@ write_files:
     systemctl restart systemd-journald
 
     echo "=== Sub-Agent GPU Server Setup Completed: $(date) ==="
-    echo "Services: vllm-phi (:${phi_port}), vllm-qwenvl (:${qwen_vl_port}), vllm-xlam (:${xlam_port})"
-    echo "Commands: start-vllm-phi, start-vllm-qwenvl, start-vllm-xlam, check-vllm"
+    echo "Services: vllm-phi (:${phi_port}), vllm-qwenvl (:${qwen_vl_port}), vllm-xlam (:${xlam_port}), vllm-qwen3 (:${qwen3_port})"
+    echo "Commands: start-vllm-phi, start-vllm-qwenvl, start-vllm-xlam, start-vllm-qwen3, check-vllm"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - bash /opt/setup-gpu.sh
