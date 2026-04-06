@@ -122,7 +122,7 @@ variable "gemma_tool_call_parser" {
 variable "phi_vm_size" {
   description = "VM size for the sub-agent inference server"
   type        = string
-  default     = "Standard_NC24ads_A100_v4" # 1x A100 80GB, 24 vCPU, 220 GiB
+  default     = "Standard_NC48ads_A100_v4" # 2x A100 80GB, 48 vCPU, 440 GiB
 }
 
 variable "phi_zone" {
@@ -132,9 +132,9 @@ variable "phi_zone" {
 }
 
 variable "phi_disk_size" {
-  description = "OS disk size in GB for Phi VM (two model caches ~30GB)"
+  description = "OS disk size in GB for Phi VM (three model caches ~100GB)"
   type        = number
-  default     = 128
+  default     = 256
 }
 
 # Model 1: Phi-4-mini (port 8000) — GitHub operations sub-agent
@@ -203,6 +203,37 @@ variable "qwen_vl_port" {
   description = "Port for Qwen VL vLLM API"
   type        = number
   default     = 8001
+}
+
+# Model 3: xLAM-2-32B (port 8002) — function calling / API orchestration
+variable "xlam_model_id" {
+  description = "HuggingFace model ID for xLAM"
+  type        = string
+  default     = "Salesforce/xLAM-2-32b-fc-r"
+}
+
+variable "xlam_served_name" {
+  description = "Model name exposed by xLAM vLLM API"
+  type        = string
+  default     = "xlam-32b"
+}
+
+variable "xlam_max_model_len" {
+  description = "Maximum context length for xLAM"
+  type        = number
+  default     = 32768
+}
+
+variable "xlam_gpu_memory_utilization" {
+  description = "GPU memory fraction for xLAM (dedicated GPU 1)"
+  type        = number
+  default     = 0.90
+}
+
+variable "xlam_port" {
+  description = "Port for xLAM vLLM API"
+  type        = number
+  default     = 8002
 }
 
 ###############################################################################

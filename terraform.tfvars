@@ -8,8 +8,8 @@ gemma_vm_size       = "Standard_NC96ads_A100_v4"
 gemma_zone          = "2"
 gemma_disk_size     = 256
 
-# Phi VM — 1x A100 80GB (pending quota increase to 120)
-phi_vm_size         = "Standard_NC24ads_A100_v4"
+# Phi VM — 2x A100 80GB (Phi + Qwen on GPU 0, xLAM-32B on GPU 1)
+phi_vm_size         = "Standard_NC48ads_A100_v4"
 phi_zone            = "2"
 
 # Workstation — T4 for Chrome/Playwright (pending T4 quota)

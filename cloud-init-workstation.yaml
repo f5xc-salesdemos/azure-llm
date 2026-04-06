@@ -129,6 +129,17 @@ write_files:
               "limit": { "context": ${qwen_vl_max_model_len}, "output": 4096 }
             }
           }
+        },
+        "vllm-xlam": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "xLAM-32B (${xlam_ip})",
+          "options": { "baseURL": "http://${xlam_ip}:${xlam_port}/v1", "apiKey": "local-vllm" },
+          "models": {
+            "${xlam_served_name}": {
+              "name": "${xlam_served_name} (Function Calling)",
+              "limit": { "context": ${xlam_max_model_len}, "output": 4096 }
+            }
+          }
         }
       },
       "model": "vllm/${gemma_served_name}"
@@ -216,6 +227,7 @@ write_files:
     echo -n "Gemma    (${gemma_ip}:${gemma_port}):    "; curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
     echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
     echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
+    echo -n "xLAM     (${xlam_ip}:${xlam_port}):    "; curl -sf http://${xlam_ip}:${xlam_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers
 

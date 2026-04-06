@@ -189,6 +189,18 @@ resource "azurerm_network_security_group" "phi" {
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "AllowXLAMFromSubnet"
+    priority                   = 1030
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = tostring(var.xlam_port)
+    source_address_prefix      = local.subnet_cidr
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_public_ip" "phi" {
@@ -263,6 +275,11 @@ resource "azurerm_linux_virtual_machine" "phi" {
     qwen_vl_max_model_len          = var.qwen_vl_max_model_len
     qwen_vl_gpu_memory_utilization = var.qwen_vl_gpu_memory_utilization
     qwen_vl_port                   = var.qwen_vl_port
+    xlam_model_id               = var.xlam_model_id
+    xlam_served_name            = var.xlam_served_name
+    xlam_max_model_len          = var.xlam_max_model_len
+    xlam_gpu_memory_utilization = var.xlam_gpu_memory_utilization
+    xlam_port                   = var.xlam_port
   }))
 }
 
@@ -361,5 +378,9 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     qwen_vl_port        = var.qwen_vl_port
     qwen_vl_served_name = var.qwen_vl_served_name
     qwen_vl_max_model_len = var.qwen_vl_max_model_len
+    xlam_ip             = "10.0.0.11"
+    xlam_port           = var.xlam_port
+    xlam_served_name    = var.xlam_served_name
+    xlam_max_model_len  = var.xlam_max_model_len
   }))
 }
