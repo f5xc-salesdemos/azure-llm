@@ -1,4 +1,3 @@
-subscription_id     = "YOUR_SUBSCRIPTION_ID"
 resource_group_name = "r-mordaseiwicz-xcsh"
 location            = "centralus"
 vm_name             = "gpu-llm-vm"

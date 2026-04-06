@@ -64,7 +64,13 @@ variable "ssh_public_key_path" {
 }
 
 variable "os_disk_size_gb" {
-  description = "OS disk size in GB. 256GB recommended for model weights."
+  description = "OS disk size in GB. 512GB recommended for model weights."
   type        = number
-  default     = 256
+  default     = 512
+}
+
+variable "hf_token" {
+  description = "HuggingFace API token for downloading gated models (Meta Llama, Google Gemma)"
+  type        = string
+  sensitive   = true
 }

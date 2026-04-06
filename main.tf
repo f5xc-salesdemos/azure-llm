@@ -133,5 +133,7 @@ resource "azurerm_linux_virtual_machine" "this" {
     version   = "latest"
   }
 
-  custom_data = base64encode(file("${path.module}/cloud-init.yaml"))
+  custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
+    hf_token = var.hf_token
+  }))
 }

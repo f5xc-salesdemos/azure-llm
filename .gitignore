@@ -6,6 +6,10 @@
 tfplan
 .terraform.lock.hcl
 
+# Secrets (never commit)
+secrets.auto.tfvars
+*.secret.tfvars
+
 # SSH keys
 *.pem
 id_rsa
