@@ -75,15 +75,15 @@ write_files:
     \ gemma4 tool parser)...\"\necho \"This may take 5-10 minutes on first run (downloading model)...\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/azureuser/.cache/huggingface/token 2>/dev/null)}\"\nexec\
     \ /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \\\n  --model google/gemma-4-31B-it \\\n  --served-model-name gemma-4-31b \\\n  --tensor-parallel-size 2 \\\n  --max-model-len 131072\
     \ \\\n  --gpu-memory-utilization 0.95 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser gemma4 \\\n  --reasoning-parser gemma4 \\\n  --default-chat-template-kwargs '{\"enable_thinking\": true}'\
-    \ \\\n  --async-scheduling \\\n  --mm-processor-kwargs '{\"max_soft_tokens\": 560}' \\\n  --limit-mm-per-prompt image=4 \\\n  --host 0.0.0.0 \\\n  --port 8000\nSCRIPT\nchmod +x /usr/local/bin/start-vllm-gemma4\n\
+    \ \\\n  --async-scheduling \\\n  --mm-processor-kwargs '{\"max_soft_tokens\": 560}' \\\n  --limit-mm-per-prompt '{\"image\": 4}' \\\n  --host 0.0.0.0 \\\n  --port 8000\nSCRIPT\nchmod +x /usr/local/bin/start-vllm-gemma4\n\
     \n# Option 2: Hermes tool parser (fallback if gemma4 parser is buggy)\ncat > /usr/local/bin/start-vllm-gemma4-hermes <<'SCRIPT'\n#!/bin/bash\necho \"Starting vLLM with Gemma 4 31B (hermes tool parser\
     \ fallback)...\"\necho \"This may take 5-10 minutes on first run (downloading model)...\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/azureuser/.cache/huggingface/token 2>/dev/null)}\"\nexec /opt/vllm-env/bin/python\
     \ -m vllm.entrypoints.openai.api_server \\\n  --model google/gemma-4-31B-it \\\n  --served-model-name gemma-4-31b \\\n  --tensor-parallel-size 2 \\\n  --max-model-len 131072 \\\n  --gpu-memory-utilization\
-    \ 0.95 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser hermes \\\n  --async-scheduling \\\n  --mm-processor-kwargs '{\"max_soft_tokens\": 560}' \\\n  --limit-mm-per-prompt image=4 \\\n  --host\
-    \ 0.0.0.0 \\\n  --port 8000\nSCRIPT\nchmod +x /usr/local/bin/start-vllm-gemma4-hermes\n\n# Claude Code launcher\ncat > /usr/local/bin/start-claude-code <<'SCRIPT'\n#!/bin/bash\necho \"Waiting for vLLM\
-    \ to be ready...\"\nfor i in $(seq 1 120); do\n  if curl -sf http://localhost:8000/health > /dev/null 2>&1; then\n    echo \"vLLM is ready. Launching Claude Code...\"\n    exec claude\n  fi\n  sleep\
-    \ 5\ndone\necho \"ERROR: vLLM not ready after 10 minutes. Start it with: start-vllm-gemma4\"\nexit 1\nSCRIPT\nchmod +x /usr/local/bin/start-claude-code\n\n# ---- Systemd service for auto-start vLLM\
-    \ ----\ncat > /etc/systemd/system/vllm-gemma4.service <<'SYSTEMD'\n[Unit]\nDescription=vLLM Gemma 4 31B Inference Server\nAfter=network.target nvidia-persistenced.service\n\n[Service]\nType=simple\n\
+    \ 0.95 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser hermes \\\n  --async-scheduling \\\n  --mm-processor-kwargs '{\"max_soft_tokens\": 560}' \\\n  --limit-mm-per-prompt '{\"image\": 4}'\
+    \ \\\n  --host 0.0.0.0 \\\n  --port 8000\nSCRIPT\nchmod +x /usr/local/bin/start-vllm-gemma4-hermes\n\n# Claude Code launcher\ncat > /usr/local/bin/start-claude-code <<'SCRIPT'\n#!/bin/bash\necho \"\
+    Waiting for vLLM to be ready...\"\nfor i in $(seq 1 120); do\n  if curl -sf http://localhost:8000/health > /dev/null 2>&1; then\n    echo \"vLLM is ready. Launching Claude Code...\"\n    exec claude\n\
+    \  fi\n  sleep 5\ndone\necho \"ERROR: vLLM not ready after 10 minutes. Start it with: start-vllm-gemma4\"\nexit 1\nSCRIPT\nchmod +x /usr/local/bin/start-claude-code\n\n# ---- Systemd service for auto-start\
+    \ vLLM ----\ncat > /etc/systemd/system/vllm-gemma4.service <<'SYSTEMD'\n[Unit]\nDescription=vLLM Gemma 4 31B Inference Server\nAfter=network.target nvidia-persistenced.service\n\n[Service]\nType=simple\n\
     User=azureuser\nEnvironment=HF_TOKEN=${hf_token}\nExecStart=/usr/local/bin/start-vllm-gemma4\nRestart=on-failure\nRestartSec=30\nLimitNOFILE=65536\nLimitMEMLOCK=infinity\n\n[Install]\nWantedBy=multi-user.target\n\
     SYSTEMD\nsystemctl daemon-reload\nsystemctl enable vllm-gemma4.service\n\necho \"=== GPU Setup Completed: $(date) ===\"\n"
 - path: /home/azureuser/benchmarks/test-claude-code.sh

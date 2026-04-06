@@ -67,6 +67,22 @@ variable "os_disk_size_gb" {
   default     = 512
 }
 
+variable "os_image" {
+  description = "VM OS image reference"
+  type = object({
+    publisher = string
+    offer     = string
+    sku       = string
+    version   = string
+  })
+  default = {
+    publisher = "Canonical"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server"
+    version   = "latest"
+  }
+}
+
 variable "hf_token" {
   description = "HuggingFace API token for downloading gated models (Meta Llama, Google Gemma)"
   type        = string

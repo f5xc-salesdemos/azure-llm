@@ -127,10 +127,10 @@ resource "azurerm_linux_virtual_machine" "this" {
   }
 
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "ubuntu-24_04-lts"
-    sku       = "server"
-    version   = "latest"
+    publisher = var.os_image.publisher
+    offer     = var.os_image.offer
+    sku       = var.os_image.sku
+    version   = var.os_image.version
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
