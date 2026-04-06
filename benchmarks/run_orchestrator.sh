@@ -30,16 +30,23 @@ LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 # Coding models for Claude Code replacement
 # V100 4x16GB (cc 7.0): GPTQ, --enforce-eager, TP=4
 # A100 (cc 8.0): can remove --enforce-eager, use AWQ, single GPU
-# A100 80GB: all models fit in FP16, no quantization needed
-declare -a MODEL_SLUGS=("qwen3-coder-30b" "qwen25-coder-14b")
+# A100 80GB: coding models optimized for tool-calling and thinking
+declare -a MODEL_SLUGS=("qwen3-coder-next" "qwen35-122b")
 declare -A HF_MODELS=(
-    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct"
-    ["qwen25-coder-14b"]="Qwen/Qwen2.5-Coder-14B-Instruct"
+    ["qwen3-coder-next"]="Qwen/Qwen3-Coder-Next"
+    ["qwen35-122b"]="Qwen/Qwen3.5-122B-A10B"
 )
 # Extra vLLM args per model
+# Qwen3-Coder-Next: uses qwen3_coder tool parser, needs trust-remote-code
+# Qwen3.5-122B: general purpose with strong BFCL tool-calling score
 declare -A VLLM_EXTRA=(
-    ["qwen3-coder-30b"]="--trust-remote-code"
-    ["qwen25-coder-14b"]=""
+    ["qwen3-coder-next"]="--trust-remote-code --tool-call-parser qwen3_coder"
+    ["qwen35-122b"]=""
+)
+# Override tool parser per model (default is hermes)
+declare -A TOOL_PARSER=(
+    ["qwen3-coder-next"]="qwen3_coder"
+    ["qwen35-122b"]="hermes"
 )
 
 # ==============================================================================
@@ -184,11 +191,13 @@ log "Capturing system information..."
 for slug in "${MODEL_SLUGS[@]}"; do
     hf_model="${HF_MODELS[$slug]}"
     extra="${VLLM_EXTRA[$slug]:-}"
+    tool_parser="${TOOL_PARSER[$slug]:-hermes}"
 
     log ""
     log "============================================================"
     log "MODEL: ${slug}"
     log "  HuggingFace: ${hf_model}"
+    log "  Tool parser: ${tool_parser}"
     log "  Extra args: ${extra:-none}"
     log "============================================================"
 
@@ -200,7 +209,7 @@ for slug in "${MODEL_SLUGS[@]}"; do
         --gpu-memory-utilization 0.90 \
         --max-model-len 16384 \
         --enable-auto-tool-choice \
-        --tool-call-parser hermes \
+        --tool-call-parser "$tool_parser" \
         --host 0.0.0.0 \
         --port 8000 \
         ${extra} \
