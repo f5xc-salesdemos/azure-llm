@@ -165,6 +165,25 @@ Quantization comparison (both are 4-bit, different methods):
 
 **Conclusion: vLLM is dramatically better for multi-user workloads.** Ollama collapses under concurrent load (95/96 errors at 32 users), while vLLM scales linearly with zero errors and 277 tok/s aggregate throughput.
 
+### Phase 2: A100 80GB — Coding Model Comparison
+
+| Model | c=1 tok/s | c=1 TTFT | c=32 tok/s | c=32 TTFT | Errors | VRAM |
+|---|---|---|---|---|---|---|
+| **Qwen3-Coder-30B (BF16)** | **352** | **20ms** | **1,924** | **80ms** | **0** | 74.5 GB |
+| Qwen2.5-Coder-14B (BF16) | 139 | 42ms | 1,675 | 85ms | 0 | 73.5 GB |
+
+**Winner: Qwen3-Coder-30B** — 2.5x faster at c=1, 15% faster at c=32, with a 20ms TTFT (vs 42ms).
+
+### A100 vs V100 Cost-Performance
+
+| Config | c=32 tok/s | Cost/hr | tok/s per dollar |
+|---|---|---|---|
+| **Qwen3-Coder-30B, 1x A100** | **1,924** | **$3.67** | **524** |
+| Llama 3.3 70B GPTQ, 4x V100 | 278 | $10.00 | 28 |
+| Llama 3.3 70B Ollama, 4x V100 | 0.3 | $10.00 | 0.03 |
+
+**A100 is 19x more cost-effective than V100 for inference.**
+
 ### Handoff Prompt (copy this to continue)
 
 ```
@@ -218,12 +237,15 @@ IMPORTANT: DESTROY VM when done (./destroy.sh) — $10/hr billing
 
 ## TODO
 
-- [ ] **Check/collect Phase 2 benchmark results** (Qwen3-Coder, Gemma 4)
-- [ ] **Upgrade to A100** when southcentralus capacity available (or try other regions)
-- [ ] **Run tau-bench** quality evaluation on best-performing models
+- [x] ~~Check/collect Phase 2 benchmark results~~ — Qwen3-Coder-30B wins
+- [x] ~~Upgrade to A100~~ — Central US zone 2, $3.67/hr
+- [ ] **Test Qwen3-Coder-Next** (80B MoE, 3B active, 70.6% SWE-bench — #1 open-source)
+- [ ] **Test Qwen3.5-122B-A10B** (122B MoE, 10B active, best tool-calling: 72.2 BFCL-V4)
+- [ ] **Test gpt-oss-120b** (120B, matches o4-mini, designed for single 80GB GPU)
+- [ ] **Run tau-bench** quality evaluation on top models
+- [ ] **Run BFCL** (Berkeley Function Calling Leaderboard) for tool-calling quality
 - [ ] **Claude Code interactive testing**: `start-claude-code` with local vLLM
-- [ ] **Test Qwen3-235B-A22B**: Requires A100 80GB
-- [ ] **Run SWE-bench** on top model candidates
+- [ ] **Run SWE-bench Lite** on top model candidates
 
 ## Costs
 
