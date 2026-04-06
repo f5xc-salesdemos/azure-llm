@@ -54,6 +54,14 @@ declare -A TOOL_PARSER=(
     ["glm47-flash"]="glm47"
     ["llama4-scout"]="llama4_pythonic"
 )
+# Per-model max context (based on A100 80GB VRAM budget after weights)
+# FP8 models have smaller weights = more room for KV cache = longer context
+declare -A MAX_MODEL_LEN=(
+    ["qwen3-coder-next-fp8"]="32768"
+    ["gemma4-31b"]="8192"
+    ["glm47-flash"]="8192"
+    ["llama4-scout"]="8192"
+)
 
 # ==============================================================================
 # Helper functions
@@ -198,12 +206,14 @@ for slug in "${MODEL_SLUGS[@]}"; do
     hf_model="${HF_MODELS[$slug]}"
     extra="${VLLM_EXTRA[$slug]:-}"
     tool_parser="${TOOL_PARSER[$slug]:-hermes}"
+    max_len="${MAX_MODEL_LEN[$slug]:-8192}"
 
     log ""
     log "============================================================"
     log "MODEL: ${slug}"
     log "  HuggingFace: ${hf_model}"
     log "  Tool parser: ${tool_parser}"
+    log "  Max context: ${max_len}"
     log "  Extra args: ${extra:-none}"
     log "============================================================"
 
@@ -213,7 +223,7 @@ for slug in "${MODEL_SLUGS[@]}"; do
     nohup "${PYTHON}" -m vllm.entrypoints.openai.api_server \
         --model "$hf_model" \
         --gpu-memory-utilization 0.90 \
-        --max-model-len 16384 \
+        --max-model-len "$max_len" \
         --enable-auto-tool-choice \
         --tool-call-parser "$tool_parser" \
         --host 0.0.0.0 \
