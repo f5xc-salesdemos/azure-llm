@@ -1,0 +1,15 @@
+# Copy this file to terraform.tfvars and fill in your values
+# Create secrets.auto.tfvars for sensitive values (gitignored)
+
+resource_group_name = "my-llm-rg"
+location            = "centralus"
+vm_name             = "gpu-llm-vm"
+vm_size             = "Standard_NC48ads_A100_v4"  # 2x A100 80GB ($7.34/hr)
+zone                = "2"                          # empty string = Azure picks
+admin_username      = "azureuser"
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+os_disk_size_gb     = 512
+
+# Create secrets.auto.tfvars (gitignored) with:
+# subscription_id = "your-azure-subscription-id"
+# hf_token        = "hf_your_huggingface_token"

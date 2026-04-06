@@ -4,15 +4,13 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  description = "Name of the resource group"
+  description = "Name of the Azure resource group"
   type        = string
-  default     = "r-mordaseiwicz-xcsh"
 }
 
 variable "location" {
-  description = "Azure region"
+  description = "Azure region (e.g., centralus, eastus, westus2)"
   type        = string
-  default     = "centralus"
 }
 
 variable "vm_name" {
