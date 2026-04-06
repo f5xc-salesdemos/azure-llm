@@ -22,10 +22,17 @@ rm -rf /usr/local/go && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.
 export PATH="/usr/local/go/bin:$PATH"
 echo 'export PATH="/usr/local/go/bin:$PATH"' >> /etc/profile.d/go.sh
 
-# ---- Rust (stable) ----
+# ---- Rust (stable, system-wide) ----
+export RUSTUP_HOME=/usr/local/rustup
+export CARGO_HOME=/usr/local/cargo
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-export PATH="/root/.cargo/bin:$PATH"
-echo 'export PATH="/root/.cargo/bin:$PATH"' >> /etc/profile.d/rust.sh
+cat > /etc/profile.d/rust.sh <<'RUSTENV'
+export RUSTUP_HOME=/usr/local/rustup
+export CARGO_HOME=/usr/local/cargo
+export PATH="/usr/local/cargo/bin:$PATH"
+RUSTENV
+chmod 755 /usr/local/rustup /usr/local/cargo
+chmod -R a+rX /usr/local/rustup /usr/local/cargo
 
 # ---- Java (OpenJDK headless) ----
 apt-get install -y default-jdk-headless
