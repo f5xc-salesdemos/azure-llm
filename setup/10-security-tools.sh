@@ -55,15 +55,26 @@ curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh 
 # syft (SBOM generator)
 curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-# ---- Python OSINT & security tools ----
-pip3 install --break-system-packages \
-  sherlock-project maigret \
-  dnsrecon sublist3r \
-  scoutsuite \
-  impacket pwntools scapy \
-  volatility3 \
-  oletools pdfid \
-  hashid arjun 2>/dev/null || true
+# ---- Python OSINT & security tools (uv tool for isolation + speed) ----
+export PATH="/root/.local/bin:$PATH"
+command -v uv &>/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Fast installs (pure Python, no compilation)
+uv tool install sherlock-project 2>/dev/null || true
+uv tool install maigret 2>/dev/null || true
+uv tool install dnsrecon 2>/dev/null || true
+uv tool install hashid 2>/dev/null || true
+uv tool install arjun 2>/dev/null || true
+uv tool install oletools 2>/dev/null || true
+uv tool install pdfid 2>/dev/null || true
+
+# Heavier installs (C compilation — isolated to avoid conflicts)
+uv tool install scoutsuite 2>/dev/null || true
+uv tool install impacket 2>/dev/null || true
+uv tool install pwntools 2>/dev/null || true
+
+# pip for tools that need system-level integration
+pip3 install --break-system-packages scapy volatility3 sublist3r 2>/dev/null || true
 
 # ---- testssl.sh (SSL/TLS testing) ----
 git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl 2>/dev/null || true
