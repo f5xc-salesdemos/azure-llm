@@ -48,7 +48,7 @@ declare -A HF_MODELS=(
     ["glm47-flash"]="zai-org/GLM-4.7-Flash"
 )
 declare -A VLLM_EXTRA=(
-    ["gemma4-31b-awq"]="--quantization awq"
+    ["gemma4-31b-awq"]=""
     ["gemma4-31b-bf16"]=""
     ["llama4-scout"]=""
     ["glm47-flash"]="--reasoning-parser glm45"

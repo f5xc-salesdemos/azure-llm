@@ -1,0 +1,1728 @@
+{
+  "metadata": {
+    "engine": "vllm",
+    "model": "zai-org/GLM-4.7-Flash",
+    "base_url": "http://localhost:8000/v1",
+    "timestamp": "2026-04-06T07:23:12Z",
+    "concurrency_levels": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "iterations": 3,
+    "warmup_requests": 2,
+    "timeout_seconds": 180,
+    "prompt_count": 10
+  },
+  "concurrency_results": {
+    "1": {
+      "concurrency": 1,
+      "ttft_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "total_latency_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens_per_second": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "aggregate_throughput_tps": 0.0,
+      "total_requests": 3,
+      "failed_requests": 3
+    },
+    "2": {
+      "concurrency": 2,
+      "ttft_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "total_latency_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens_per_second": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "aggregate_throughput_tps": 0.0,
+      "total_requests": 6,
+      "failed_requests": 6
+    },
+    "4": {
+      "concurrency": 4,
+      "ttft_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "total_latency_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens_per_second": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "aggregate_throughput_tps": 0.0,
+      "total_requests": 12,
+      "failed_requests": 12
+    },
+    "8": {
+      "concurrency": 8,
+      "ttft_ms": {
+        "mean": 5336.7,
+        "p50": 5336.7,
+        "p95": 5336.7,
+        "p99": 5336.7,
+        "min": 5336.7,
+        "max": 5336.7
+      },
+      "total_latency_ms": {
+        "mean": 5637.06,
+        "p50": 5637.06,
+        "p95": 5637.06,
+        "p99": 5637.06,
+        "min": 5637.06,
+        "max": 5637.06
+      },
+      "tokens_per_second": {
+        "mean": 2.66,
+        "p50": 2.66,
+        "p95": 2.66,
+        "p99": 2.66,
+        "min": 2.66,
+        "max": 2.66
+      },
+      "aggregate_throughput_tps": 2.26,
+      "total_requests": 24,
+      "failed_requests": 23
+    },
+    "16": {
+      "concurrency": 16,
+      "ttft_ms": {
+        "mean": 3515.94,
+        "p50": 3515.94,
+        "p95": 3515.94,
+        "p99": 3515.94,
+        "min": 3515.94,
+        "max": 3515.94
+      },
+      "total_latency_ms": {
+        "mean": 5421.15,
+        "p50": 5421.15,
+        "p95": 5421.15,
+        "p99": 5421.15,
+        "min": 5421.15,
+        "max": 5421.15
+      },
+      "tokens_per_second": {
+        "mean": 16.6,
+        "p50": 16.6,
+        "p95": 16.6,
+        "p99": 16.6,
+        "min": 16.6,
+        "max": 16.6
+      },
+      "aggregate_throughput_tps": 8.2,
+      "total_requests": 48,
+      "failed_requests": 47
+    },
+    "32": {
+      "concurrency": 32,
+      "ttft_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "total_latency_ms": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens_per_second": {
+        "mean": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "min": 0,
+        "max": 0
+      },
+      "aggregate_throughput_tps": 0.0,
+      "total_requests": 96,
+      "failed_requests": 96
+    }
+  },
+  "raw_results": {
+    "1": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ],
+    "2": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ],
+    "4": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ],
+    "8": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 5336.7,
+        "total_latency_ms": 5637.06,
+        "tokens_generated": 15,
+        "tokens_per_second": 2.66,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ],
+    "16": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 3515.94,
+        "total_latency_ms": 5421.15,
+        "tokens_generated": 90,
+        "tokens_per_second": 16.6,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ],
+    "32": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 0.0,
+        "total_latency_ms": 0.0,
+        "tokens_generated": 0,
+        "tokens_per_second": 0.0,
+        "error": "no tokens received"
+      }
+    ]
+  }
+}
