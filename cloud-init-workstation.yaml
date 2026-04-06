@@ -118,6 +118,17 @@ write_files:
               "limit": { "context": ${phi_max_model_len}, "output": 4096 }
             }
           }
+        },
+        "vllm-vision": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "Qwen2.5-VL (${qwen_vl_ip})",
+          "options": { "baseURL": "http://${qwen_vl_ip}:${qwen_vl_port}/v1", "apiKey": "local-vllm" },
+          "models": {
+            "${qwen_vl_served_name}": {
+              "name": "${qwen_vl_served_name}",
+              "limit": { "context": ${qwen_vl_max_model_len}, "output": 4096 }
+            }
+          }
         }
       },
       "model": "vllm/${gemma_served_name}"
@@ -202,10 +213,9 @@ write_files:
     cat > /usr/local/bin/check-llm-servers <<'SCRIPT'
     #!/bin/bash
     echo "=== LLM Server Status ==="
-    echo -n "Gemma (${gemma_ip}:${gemma_port}): "
-    curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
-    echo -n "Phi   (${phi_ip}:${phi_port}): "
-    curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Gemma    (${gemma_ip}:${gemma_port}):    "; curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers
 

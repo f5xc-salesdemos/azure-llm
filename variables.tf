@@ -116,11 +116,11 @@ variable "gemma_tool_call_parser" {
 }
 
 ###############################################################################
-# Phi VM — GitHub operations sub-agent (1x A100 80GB)
+# Phi VM — sub-agent server (1x A100 80GB, two models)
 ###############################################################################
 
 variable "phi_vm_size" {
-  description = "VM size for the Phi inference server"
+  description = "VM size for the sub-agent inference server"
   type        = string
   default     = "Standard_NC24ads_A100_v4" # 1x A100 80GB, 24 vCPU, 220 GiB
 }
@@ -132,11 +132,12 @@ variable "phi_zone" {
 }
 
 variable "phi_disk_size" {
-  description = "OS disk size in GB for Phi VM (model cache ~10GB)"
+  description = "OS disk size in GB for Phi VM (two model caches ~30GB)"
   type        = number
   default     = 128
 }
 
+# Model 1: Phi-4-mini (port 8000) — GitHub operations sub-agent
 variable "phi_model_id" {
   description = "HuggingFace model ID for Phi"
   type        = string
@@ -156,15 +157,52 @@ variable "phi_max_model_len" {
 }
 
 variable "phi_gpu_memory_utilization" {
-  description = "GPU memory fraction for Phi"
+  description = "GPU memory fraction for Phi (shares GPU with Qwen VL)"
   type        = number
-  default     = 0.90
+  default     = 0.45
 }
 
 variable "phi_tool_call_parser" {
   description = "vLLM tool call parser for Phi"
   type        = string
   default     = "hermes"
+}
+
+variable "phi_port" {
+  description = "Port for Phi vLLM API"
+  type        = number
+  default     = 8000
+}
+
+# Model 2: Qwen2.5-VL-7B (port 8001) — vision/multimodal sub-agent
+variable "qwen_vl_model_id" {
+  description = "HuggingFace model ID for Qwen2.5-VL"
+  type        = string
+  default     = "Qwen/Qwen2.5-VL-7B-Instruct"
+}
+
+variable "qwen_vl_served_name" {
+  description = "Model name exposed by Qwen VL vLLM API"
+  type        = string
+  default     = "qwen2.5-vl-7b"
+}
+
+variable "qwen_vl_max_model_len" {
+  description = "Maximum context length for Qwen VL"
+  type        = number
+  default     = 32768
+}
+
+variable "qwen_vl_gpu_memory_utilization" {
+  description = "GPU memory fraction for Qwen VL (shares GPU with Phi)"
+  type        = number
+  default     = 0.45
+}
+
+variable "qwen_vl_port" {
+  description = "Port for Qwen VL vLLM API"
+  type        = number
+  default     = 8001
 }
 
 ###############################################################################

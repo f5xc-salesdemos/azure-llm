@@ -1,29 +1,83 @@
 #cloud-config
+# Sub-agent server: Phi-4-mini (port ${phi_port}) + Qwen2.5-VL-7B (port ${qwen_vl_port})
+# Single A100 80GB shared between two vLLM processes
+package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
-  content: '$nrconf{restart} = ''a'';
-
+  content: |
+    $nrconf{restart} = 'a';
     $nrconf{kernelhints} = 0;
-
-    '
 - path: /etc/modprobe.d/nouveau-blacklist.conf
-  content: 'blacklist nouveau
-
+  content: |
+    blacklist nouveau
     options nouveau modeset=0
-
-    '
+- path: /etc/sysctl.d/99-vllm.conf
+  permissions: '0644'
+  content: |
+    # === vLLM Dedicated Inference Server Tuning ===
+    kernel.numa_balancing = 0
+    vm.swappiness = 0
+    vm.overcommit_memory = 1
+    vm.max_map_count = 1000000
+    vm.nr_hugepages = 16384
+    vm.dirty_ratio = 80
+    vm.dirty_background_ratio = 5
+    vm.dirty_expire_centisecs = 3000
+    vm.dirty_writeback_centisecs = 500
+    vm.vfs_cache_pressure = 50
+    vm.zone_reclaim_mode = 0
+    net.core.rmem_max = 268435456
+    net.core.wmem_max = 268435456
+    net.core.rmem_default = 67108864
+    net.core.wmem_default = 67108864
+    net.ipv4.tcp_rmem = 4096 87380 134217728
+    net.ipv4.tcp_wmem = 4096 65536 134217728
+    net.core.somaxconn = 65535
+    net.core.netdev_max_backlog = 65535
+    net.ipv4.tcp_max_syn_backlog = 65535
+    net.ipv4.tcp_fin_timeout = 15
+    net.ipv4.tcp_tw_reuse = 1
+    net.ipv4.ip_local_port_range = 1024 65535
+    net.ipv4.tcp_fastopen = 3
+    net.ipv4.tcp_slow_start_after_idle = 0
+    net.ipv4.tcp_mtu_probing = 1
+    net.ipv4.tcp_timestamps = 1
+    fs.file-max = 2097152
+    fs.nr_open = 2097152
+- path: /etc/systemd/system/vllm-thp.service
+  content: |
+    [Unit]
+    Description=Set THP to madvise for vLLM
+    After=sysinit.target
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/bash -c 'echo madvise > /sys/kernel/mm/transparent_hugepage/enabled; echo madvise > /sys/kernel/mm/transparent_hugepage/defrag'
+    RemainAfterExit=yes
+    [Install]
+    WantedBy=multi-user.target
+- path: /etc/systemd/system/vllm-io.service
+  content: |
+    [Unit]
+    Description=I/O tuning for vLLM inference
+    After=sysinit.target
+    [Service]
+    Type=oneshot
+    ExecStart=/bin/bash -c 'for d in /sys/block/sd*/queue/read_ahead_kb /sys/block/nvme*/queue/read_ahead_kb; do echo 2048 > $d 2>/dev/null; done'
+    RemainAfterExit=yes
+    [Install]
+    WantedBy=multi-user.target
 - path: /opt/setup-gpu.sh
   permissions: '0755'
   content: |
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/gpu-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-06-v5-phi-dedicated"
+    CLOUD_INIT_VERSION="2026-04-06-v7-phi-qwenvl-dual"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
 
-    echo "=== Phi GPU Server Setup Started: $(date) ==="
+    echo "=== Sub-Agent GPU Server Setup Started: $(date) ==="
 
     # ---- Wait for apt/dpkg locks ----
     wait_for_apt() {
@@ -45,15 +99,28 @@ write_files:
     # ---- System packages (minimal) ----
     wait_for_apt
     apt-get update -y
-    apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
     apt-get install -y build-essential python3-pip python3-venv git curl wget jq htop tmux
 
-    # ---- OS-level performance tuning ----
+    # ---- Disable unnecessary services ----
+    systemctl disable --now snapd.service snapd.socket 2>/dev/null || true
+    systemctl disable --now accounts-daemon.service 2>/dev/null || true
+    systemctl disable --now apport.service 2>/dev/null || true
+    systemctl disable --now motd-news.timer 2>/dev/null || true
+    systemctl disable --now fwupd.service 2>/dev/null || true
+    systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target 2>/dev/null || true
+
+    # ---- OS tuning (immediate) ----
     echo 0 > /proc/sys/kernel/numa_balancing
     echo madvise > /sys/kernel/mm/transparent_hugepage/enabled
-    cat >> /etc/sysctl.d/99-vllm.conf <<'SYSCTL'
-    kernel.numa_balancing = 0
-    SYSCTL
+    echo madvise > /sys/kernel/mm/transparent_hugepage/defrag
+    echo 16384 > /proc/sys/vm/nr_hugepages
+    sysctl --system
+    for dev in /sys/block/sd*/queue/read_ahead_kb; do echo 2048 > "$dev" 2>/dev/null || true; done
+    systemctl enable vllm-thp.service vllm-io.service 2>/dev/null || true
+
+    # ---- GRUB boot params ----
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash iommu=pt hugepagesz=2M hugepages=16384 transparent_hugepage=madvise processor.max_cstate=1 intel_idle.max_cstate=0"/' /etc/default/grub
+    update-grub 2>/dev/null || true
 
     # ---- NVIDIA CUDA 12.8 ----
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
@@ -72,6 +139,7 @@ write_files:
       --extra-index-url https://download.pytorch.org/whl/cu129 \
       --index-strategy unsafe-best-match
     uv pip install --python /opt/vllm-env/bin/python transformers==5.5.0
+    uv pip install --python /opt/vllm-env/bin/python qwen-vl-utils 2>/dev/null || true
 
     # ---- HuggingFace token ----
     mkdir -p /home/${admin_username}/.cache/huggingface
@@ -79,47 +147,135 @@ write_files:
     chmod 600 /home/${admin_username}/.cache/huggingface/token
     chown -R ${admin_username}:${admin_username} /home/${admin_username}/.cache
 
-    # ---- vLLM start script ----
-    cat > /usr/local/bin/start-vllm <<'SCRIPT'
+    # ======================================================================
+    # Model 1: Phi-4-mini (port ${phi_port}) — GitHub operations sub-agent
+    # ======================================================================
+    cat > /usr/local/bin/start-vllm-phi <<'SCRIPT'
     #!/bin/bash
-    echo "Starting vLLM: ${model_id} (TP=1, ${max_model_len} ctx)..."
+    echo "Starting vLLM: ${phi_model_id} (TP=1, ${phi_max_model_len} ctx, port ${phi_port})..."
     export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
-      --model ${model_id} \
-      --served-model-name ${served_name} \
+      --model ${phi_model_id} \
+      --served-model-name ${phi_served_name} \
       --tensor-parallel-size 1 \
-      --max-model-len ${max_model_len} \
-      --gpu-memory-utilization ${gpu_memory_utilization} \
+      --max-model-len ${phi_max_model_len} \
+      --gpu-memory-utilization ${phi_gpu_memory_utilization} \
       --enable-auto-tool-choice \
-      --tool-call-parser ${tool_call_parser} \
+      --tool-call-parser ${phi_tool_call_parser} \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --enable-chunked-prefill \
+      --no-enable-log-requests \
+      --disable-log-stats \
+      --max-num-seqs 256 \
       --host 0.0.0.0 \
-      --port ${vllm_port}
+      --port ${phi_port}
     SCRIPT
-    chmod +x /usr/local/bin/start-vllm
+    chmod +x /usr/local/bin/start-vllm-phi
 
-    # ---- Systemd service (auto-start on boot) ----
-    cat > /etc/systemd/system/vllm.service <<'SYSTEMD'
+    cat > /etc/systemd/system/vllm-phi.service <<'SYSTEMD'
     [Unit]
-    Description=vLLM ${served_name} Inference Server
-    After=network.target nvidia-persistenced.service
+    Description=vLLM ${phi_served_name} Sub-Agent (port ${phi_port})
+    After=network.target nvidia-persistenced.service vllm-thp.service
+    Wants=nvidia-persistenced.service vllm-thp.service
 
     [Service]
     Type=simple
     User=${admin_username}
     Environment=HF_TOKEN=${hf_token}
-    ExecStart=/usr/local/bin/start-vllm
+    Environment=VLLM_ATTENTION_BACKEND=FLASH_ATTN
+    Environment=VLLM_USE_V1=1
+    Environment=OMP_NUM_THREADS=1
+    Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
+    ExecStart=/usr/local/bin/start-vllm-phi
     Restart=on-failure
     RestartSec=30
-    LimitNOFILE=65536
+    LimitNOFILE=2097152
     LimitMEMLOCK=infinity
+    TimeoutStartSec=600
 
     [Install]
     WantedBy=multi-user.target
     SYSTEMD
-    systemctl daemon-reload
-    systemctl enable vllm.service
 
-    echo "=== Phi GPU Server Setup Completed: $(date) ==="
+    # ======================================================================
+    # Model 2: Qwen2.5-VL-7B (port ${qwen_vl_port}) — vision/multimodal
+    # ======================================================================
+    cat > /usr/local/bin/start-vllm-qwenvl <<'SCRIPT'
+    #!/bin/bash
+    echo "Starting vLLM: ${qwen_vl_model_id} (TP=1, ${qwen_vl_max_model_len} ctx, port ${qwen_vl_port})..."
+    export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+    exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
+      --model ${qwen_vl_model_id} \
+      --served-model-name ${qwen_vl_served_name} \
+      --tensor-parallel-size 1 \
+      --max-model-len ${qwen_vl_max_model_len} \
+      --gpu-memory-utilization ${qwen_vl_gpu_memory_utilization} \
+      --enable-auto-tool-choice \
+      --tool-call-parser hermes \
+      --async-scheduling \
+      --enable-prefix-caching \
+      --enable-chunked-prefill \
+      --no-enable-log-requests \
+      --disable-log-stats \
+      --limit-mm-per-prompt '{"image": 4, "video": 0}' \
+      --host 0.0.0.0 \
+      --port ${qwen_vl_port}
+    SCRIPT
+    chmod +x /usr/local/bin/start-vllm-qwenvl
+
+    cat > /etc/systemd/system/vllm-qwenvl.service <<'SYSTEMD'
+    [Unit]
+    Description=vLLM ${qwen_vl_served_name} Vision/Multimodal (port ${qwen_vl_port})
+    After=network.target nvidia-persistenced.service vllm-phi.service
+    Wants=nvidia-persistenced.service
+
+    [Service]
+    Type=simple
+    User=${admin_username}
+    Environment=HF_TOKEN=${hf_token}
+    Environment=VLLM_ATTENTION_BACKEND=FLASH_ATTN
+    Environment=VLLM_USE_V1=1
+    Environment=OMP_NUM_THREADS=1
+    Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
+    ExecStartPre=/bin/sleep 30
+    ExecStart=/usr/local/bin/start-vllm-qwenvl
+    Restart=on-failure
+    RestartSec=30
+    LimitNOFILE=2097152
+    LimitMEMLOCK=infinity
+    TimeoutStartSec=600
+
+    [Install]
+    WantedBy=multi-user.target
+    SYSTEMD
+
+    # ---- Health check ----
+    cat > /usr/local/bin/check-vllm <<'SCRIPT'
+    #!/bin/bash
+    echo "=== Sub-Agent Server Health Check ==="
+    echo -n "Phi (${phi_port}):      "; curl -sf http://localhost:${phi_port}/health && echo " OK" || echo " DOWN"
+    echo -n "Qwen VL (${qwen_vl_port}):  "; curl -sf http://localhost:${qwen_vl_port}/health && echo " OK" || echo " DOWN"
+    echo "=== GPU ==="
+    nvidia-smi --query-gpu=index,name,memory.used,memory.total,temperature.gpu --format=csv,noheader
+    SCRIPT
+    chmod +x /usr/local/bin/check-vllm
+
+    systemctl daemon-reload
+    systemctl enable vllm-phi.service vllm-qwenvl.service
+
+    # ---- Journald retention ----
+    mkdir -p /etc/systemd/journald.conf.d
+    cat > /etc/systemd/journald.conf.d/vllm.conf <<'JOURNAL'
+    [Journal]
+    SystemMaxUse=500M
+    MaxRetentionSec=7day
+    JOURNAL
+    systemctl restart systemd-journald
+
+    echo "=== Sub-Agent GPU Server Setup Completed: $(date) ==="
+    echo "Services: vllm-phi (port ${phi_port}), vllm-qwenvl (port ${qwen_vl_port})"
+    echo "Commands: start-vllm-phi, start-vllm-qwenvl, check-vllm"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - bash /opt/setup-gpu.sh

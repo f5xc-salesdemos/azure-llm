@@ -167,13 +167,25 @@ resource "azurerm_network_security_group" "phi" {
   }
 
   security_rule {
-    name                       = "AllowVLLMFromSubnet"
+    name                       = "AllowPhiVLLMFromSubnet"
     priority                   = 1010
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = tostring(var.vllm_port)
+    destination_port_range     = tostring(var.phi_port)
+    source_address_prefix      = local.subnet_cidr
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowQwenVLFromSubnet"
+    priority                   = 1020
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = tostring(var.qwen_vl_port)
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
@@ -238,14 +250,19 @@ resource "azurerm_linux_virtual_machine" "phi" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-phi.yaml", {
-    admin_username        = var.admin_username
-    hf_token              = var.hf_token
-    model_id              = var.phi_model_id
-    served_name           = var.phi_served_name
-    max_model_len         = var.phi_max_model_len
-    gpu_memory_utilization = var.phi_gpu_memory_utilization
-    tool_call_parser      = var.phi_tool_call_parser
-    vllm_port             = var.vllm_port
+    admin_username             = var.admin_username
+    hf_token                   = var.hf_token
+    phi_model_id               = var.phi_model_id
+    phi_served_name            = var.phi_served_name
+    phi_max_model_len          = var.phi_max_model_len
+    phi_gpu_memory_utilization = var.phi_gpu_memory_utilization
+    phi_tool_call_parser       = var.phi_tool_call_parser
+    phi_port                   = var.phi_port
+    qwen_vl_model_id               = var.qwen_vl_model_id
+    qwen_vl_served_name            = var.qwen_vl_served_name
+    qwen_vl_max_model_len          = var.qwen_vl_max_model_len
+    qwen_vl_gpu_memory_utilization = var.qwen_vl_gpu_memory_utilization
+    qwen_vl_port                   = var.qwen_vl_port
   }))
 }
 
@@ -336,9 +353,13 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     gemma_port       = var.vllm_port
     gemma_served_name = var.gemma_served_name
     gemma_max_model_len = var.gemma_max_model_len
-    phi_ip           = "10.0.0.11"
-    phi_port         = var.vllm_port
-    phi_served_name  = var.phi_served_name
-    phi_max_model_len = var.phi_max_model_len
+    phi_ip              = "10.0.0.11"
+    phi_port            = var.phi_port
+    phi_served_name     = var.phi_served_name
+    phi_max_model_len   = var.phi_max_model_len
+    qwen_vl_ip          = "10.0.0.11"
+    qwen_vl_port        = var.qwen_vl_port
+    qwen_vl_served_name = var.qwen_vl_served_name
+    qwen_vl_max_model_len = var.qwen_vl_max_model_len
   }))
 }
