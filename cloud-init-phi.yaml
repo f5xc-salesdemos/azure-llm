@@ -1,0 +1,126 @@
+#cloud-config
+write_files:
+- path: /etc/needrestart/conf.d/99-cloud-init.conf
+  content: '$nrconf{restart} = ''a'';
+
+    $nrconf{kernelhints} = 0;
+
+    '
+- path: /etc/modprobe.d/nouveau-blacklist.conf
+  content: 'blacklist nouveau
+
+    options nouveau modeset=0
+
+    '
+- path: /opt/setup-gpu.sh
+  permissions: '0755'
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+    exec > /var/log/gpu-setup.log 2>&1
+    CLOUD_INIT_VERSION="2026-04-06-v5-phi-dedicated"
+    echo "Cloud-init version: $CLOUD_INIT_VERSION"
+    export DEBIAN_FRONTEND=noninteractive
+    export NEEDRESTART_MODE=a
+
+    echo "=== Phi GPU Server Setup Started: $(date) ==="
+
+    # ---- Wait for apt/dpkg locks ----
+    wait_for_apt() {
+        local max_wait=600 waited=0
+        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
+              fuser /var/lib/apt/lists/lock >/dev/null 2>&1 || \
+              fuser /var/cache/apt/archives/lock >/dev/null 2>&1; do
+            if (( waited >= max_wait )); then echo "ERROR: apt locks not released after $${max_wait}s"; return 1; fi
+            echo "Waiting for apt locks... ($${waited}s)"; sleep 10; waited=$((waited + 10))
+        done
+    }
+
+    # ---- Disable unattended-upgrades ----
+    systemctl stop unattended-upgrades.service 2>/dev/null || true
+    systemctl disable unattended-upgrades.service 2>/dev/null || true
+    wait_for_apt
+    apt-get remove -y unattended-upgrades 2>/dev/null || true
+
+    # ---- System packages (minimal) ----
+    wait_for_apt
+    apt-get update -y
+    apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+    apt-get install -y build-essential python3-pip python3-venv git curl wget jq htop tmux
+
+    # ---- OS-level performance tuning ----
+    echo 0 > /proc/sys/kernel/numa_balancing
+    echo madvise > /sys/kernel/mm/transparent_hugepage/enabled
+    cat >> /etc/sysctl.d/99-vllm.conf <<'SYSCTL'
+    kernel.numa_balancing = 0
+    SYSCTL
+
+    # ---- NVIDIA CUDA 12.8 ----
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+    dpkg -i cuda-keyring_1.1-1_all.deb
+    apt-get update
+    apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
+      cuda-drivers cuda-toolkit-12-8
+
+    # ---- Python venv + vLLM nightly ----
+    python3 -m venv /opt/vllm-env
+    /opt/vllm-env/bin/pip install --upgrade pip
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="/root/.local/bin:$PATH"
+    uv pip install --python /opt/vllm-env/bin/python -U vllm --pre \
+      --extra-index-url https://wheels.vllm.ai/nightly/cu129 \
+      --extra-index-url https://download.pytorch.org/whl/cu129 \
+      --index-strategy unsafe-best-match
+    uv pip install --python /opt/vllm-env/bin/python transformers==5.5.0
+
+    # ---- HuggingFace token ----
+    mkdir -p /home/${admin_username}/.cache/huggingface
+    echo "${hf_token}" > /home/${admin_username}/.cache/huggingface/token
+    chmod 600 /home/${admin_username}/.cache/huggingface/token
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.cache
+
+    # ---- vLLM start script ----
+    cat > /usr/local/bin/start-vllm <<'SCRIPT'
+    #!/bin/bash
+    echo "Starting vLLM: ${model_id} (TP=1, ${max_model_len} ctx)..."
+    export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+    exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
+      --model ${model_id} \
+      --served-model-name ${served_name} \
+      --tensor-parallel-size 1 \
+      --max-model-len ${max_model_len} \
+      --gpu-memory-utilization ${gpu_memory_utilization} \
+      --enable-auto-tool-choice \
+      --tool-call-parser ${tool_call_parser} \
+      --host 0.0.0.0 \
+      --port ${vllm_port}
+    SCRIPT
+    chmod +x /usr/local/bin/start-vllm
+
+    # ---- Systemd service (auto-start on boot) ----
+    cat > /etc/systemd/system/vllm.service <<'SYSTEMD'
+    [Unit]
+    Description=vLLM ${served_name} Inference Server
+    After=network.target nvidia-persistenced.service
+
+    [Service]
+    Type=simple
+    User=${admin_username}
+    Environment=HF_TOKEN=${hf_token}
+    ExecStart=/usr/local/bin/start-vllm
+    Restart=on-failure
+    RestartSec=30
+    LimitNOFILE=65536
+    LimitMEMLOCK=infinity
+
+    [Install]
+    WantedBy=multi-user.target
+    SYSTEMD
+    systemctl daemon-reload
+    systemctl enable vllm.service
+
+    echo "=== Phi GPU Server Setup Completed: $(date) ==="
+runcmd:
+- chown ${admin_username}:${admin_username} /home/${admin_username}
+- bash /opt/setup-gpu.sh
+- reboot

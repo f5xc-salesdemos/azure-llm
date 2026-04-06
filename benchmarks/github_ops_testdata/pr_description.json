@@ -1,0 +1,170 @@
+[
+  {
+    "id": "pr_desc_001",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/setup/05-programming-languages.sh b/setup/05-programming-languages.sh\nindex 0b56562..6b98444 100755\n--- a/setup/05-programming-languages.sh\n+++ b/setup/05-programming-languages.sh\n@@ -22,10 +22,17 @@\n export PATH=\"/usr/local/go/bin:$PATH\"\n echo 'export PATH=\"/usr/local/go/bin:$PATH\"' >> /etc/profile.d/go.sh\n \n-# ---- Rust (stable) ----\n+# ---- Rust (stable, system-wide) ----\n+export RUSTUP_HOME=/usr/local/rustup\n+export CARGO_HOME=/usr/local/cargo\n curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable\n-export PATH=\"/root/.cargo/bin:$PATH\"\n-echo 'export PATH=\"/root/.cargo/bin:$PATH\"' >> /etc/profile.d/rust.sh\n+cat > /etc/profile.d/rust.sh <<'RUSTENV'\n+export RUSTUP_HOME=/usr/local/rustup\n+export CARGO_HOME=/usr/local/cargo\n+export PATH=\"/usr/local/cargo/bin:$PATH\"\n+RUSTENV\n+chmod 755 /usr/local/rustup /usr/local/cargo\n+chmod -R a+rX /usr/local/rustup /usr/local/cargo",
+      "context": "Infrastructure repo for Azure GPU VM provisioning with modular setup scripts"
+    },
+    "expected": {
+      "title_keywords": ["rust", "install", "system", "fix"],
+      "description_must_mention": ["/usr/local", "root", "cargo"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_002",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/setup/12-shell-environment.sh b/setup/12-shell-environment.sh\nindex 4f1949b..0549d84 100755\n--- a/setup/12-shell-environment.sh\n+++ b/setup/12-shell-environment.sh\n@@ -35,10 +35,8 @@\n git clone --depth=1 https://github.com/tmux-plugins/tpm /etc/skel/.tmux/plugins/tpm 2>/dev/null || true\n \n-# Neovim\n-curl -Lo /usr/local/bin/nvim \"https://github.com/neovim/neovim/releases/latest/download/nvim.appimage\" 2>/dev/null && \\\n-  chmod +x /usr/local/bin/nvim || \\\n-  apt-get install -y neovim\n+# Neovim (apt preferred -- AppImage often fails on Ubuntu 24.04)\n+apt-get install -y neovim",
+      "context": "Setup scripts for Azure GPU VMs running Ubuntu 24.04"
+    },
+    "expected": {
+      "title_keywords": ["neovim", "apt", "appimage", "fix"],
+      "description_must_mention": ["AppImage", "Ubuntu 24.04", "apt"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_003",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/setup/10-security-tools.sh b/setup/10-security-tools.sh\nindex 7db012f..00b8890 100755\n--- a/setup/10-security-tools.sh\n+++ b/setup/10-security-tools.sh\n@@ -55,15 +55,26 @@\n curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin\n \n-# ---- Python OSINT & security tools ----\n-pip3 install --break-system-packages \\\n-  sherlock-project maigret \\\n-  dnsrecon sublist3r \\\n-  scoutsuite \\\n-  impacket pwntools scapy \\\n-  volatility3 \\\n-  oletools pdfid \\\n-  hashid arjun 2>/dev/null || true\n+# ---- Python OSINT & security tools (uv tool for isolation + speed) ----\n+export PATH=\"/root/.local/bin:$PATH\"\n+command -v uv &>/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh\n+\n+# Fast installs (pure Python, no compilation)\n+uv tool install sherlock-project 2>/dev/null || true\n+uv tool install maigret 2>/dev/null || true\n+uv tool install dnsrecon 2>/dev/null || true\n+uv tool install hashid 2>/dev/null || true\n+uv tool install arjun 2>/dev/null || true\n+uv tool install oletools 2>/dev/null || true\n+uv tool install pdfid 2>/dev/null || true\n+\n+# Heavier installs (C compilation -- isolated to avoid conflicts)\n+uv tool install scoutsuite 2>/dev/null || true\n+uv tool install impacket 2>/dev/null || true\n+uv tool install pwntools 2>/dev/null || true\n+\n+# pip for tools that need system-level integration\n+pip3 install --break-system-packages scapy volatility3 sublist3r 2>/dev/null || true",
+      "context": "Security tools installation for penetration testing VM"
+    },
+    "expected": {
+      "title_keywords": ["security", "uv", "pip", "isolat"],
+      "description_must_mention": ["uv tool", "pip", "isolated"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_004",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/variables.tf b/variables.tf\n--- a/variables.tf\n+++ b/variables.tf\n@@ -64,7 +64,13 @@\n variable \"os_disk_size_gb\" {\n-  description = \"OS disk size in GB. 256GB recommended for model weights.\"\n+  description = \"OS disk size in GB. 512GB recommended for model weights.\"\n   type        = number\n-  default     = 256\n+  default     = 512\n+}\n+\n+variable \"hf_token\" {\n+  description = \"HuggingFace API token for downloading gated models (Meta Llama, Google Gemma)\"\n+  type        = string\n+  sensitive   = true\n }",
+      "context": "Terraform configuration for Azure GPU VM"
+    },
+    "expected": {
+      "title_keywords": ["terraform", "hf_token", "variable", "disk"],
+      "description_must_mention": ["HuggingFace", "token", "disk size"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_005",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/.gitignore b/.gitignore\n--- a/.gitignore\n+++ b/.gitignore\n@@ -6,6 +6,10 @@\n tfplan\n .terraform.lock.hcl\n \n+# Secrets (never commit)\n+secrets.auto.tfvars\n+*.secret.tfvars\n+\n # SSH keys\n *.pem\n id_rsa",
+      "context": "Infrastructure-as-code repository with Terraform secrets"
+    },
+    "expected": {
+      "title_keywords": ["gitignore", "secret", "tfvars"],
+      "description_must_mention": ["secrets", "gitignore", "tfvars"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_006",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/main.tf b/main.tf\n--- a/main.tf\n+++ b/main.tf\n@@ -133,5 +133,7 @@\n   }\n \n-  custom_data = base64encode(file(\"${path.module}/cloud-init.yaml\"))\n+  custom_data = base64encode(templatefile(\"${path.module}/cloud-init.yaml\", {\n+    hf_token = var.hf_token\n+  }))\n }",
+      "context": "Terraform IaC for Azure VM with cloud-init provisioning"
+    },
+    "expected": {
+      "title_keywords": ["terraform", "templatefile", "inject", "token"],
+      "description_must_mention": ["templatefile", "hf_token", "cloud-init"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_007",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/benchmarks/benchmark_client.py b/benchmarks/benchmark_client.py\n--- a/benchmarks/benchmark_client.py\n+++ b/benchmarks/benchmark_client.py\n@@ -1,6 +1,8 @@\n+import asyncio\n import json\n import statistics\n+import time\n from dataclasses import asdict, dataclass, field\n \n+import aiohttp\n+from tabulate import tabulate\n \n @dataclass\n class RequestResult:\n     prompt_id: str\n     ttft_ms: float = 0.0\n     total_latency_ms: float = 0.0\n     tokens_generated: int = 0\n     tokens_per_second: float = 0.0\n     error: str | None = None",
+      "context": "Async benchmark client for LLM inference engine comparison"
+    },
+    "expected": {
+      "title_keywords": ["benchmark", "async", "client"],
+      "description_must_mention": ["async", "benchmark", "aiohttp"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_008",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/setup/08-ai-ml-stack.sh b/setup/08-ai-ml-stack.sh\n--- a/setup/08-ai-ml-stack.sh\n+++ b/setup/08-ai-ml-stack.sh\n@@ -10,8 +10,12 @@\n python3 -m venv /opt/vllm-env\n-pip install vllm\n+# vLLM nightly for Gemma 4 support (requires transformers 5.5.0)\n+curl -LsSf https://astral.sh/uv/install.sh | sh\n+export PATH=\"/root/.local/bin:$PATH\"\n+uv pip install --python /opt/vllm-env/bin/python -U vllm --pre \\\n+  --extra-index-url https://wheels.vllm.ai/nightly/cu129 \\\n+  --extra-index-url https://download.pytorch.org/whl/cu129 \\\n+  --index-strategy unsafe-best-match\n+uv pip install --python /opt/vllm-env/bin/python transformers==5.5.0",
+      "context": "AI/ML stack setup for GPU VM with vLLM inference server"
+    },
+    "expected": {
+      "title_keywords": ["vllm", "nightly", "uv", "install"],
+      "description_must_mention": ["vLLM", "nightly", "transformers"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_009",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/terraform.tfvars b/terraform.tfvars\n--- a/terraform.tfvars\n+++ b/terraform.tfvars\n@@ -3,4 +3,5 @@\n vm_name             = \"gpu-llm-vm\"\n-vm_size             = \"Standard_NC24ads_A100_v4\"\n+vm_size             = \"Standard_NC48ads_A100_v4\"\n zone                = \"2\"\n+os_disk_size_gb     = 512",
+      "context": "Azure GPU VM sizing for LLM inference workloads"
+    },
+    "expected": {
+      "title_keywords": ["vm", "a100", "upgrade", "size"],
+      "description_must_mention": ["NC48", "A100", "disk"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_010",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/cloud-init.yaml b/cloud-init.yaml\n--- a/cloud-init.yaml\n+++ b/cloud-init.yaml\n@@ -100,6 +100,33 @@\n+- path: /etc/skel/.claude/settings.json\n+  permissions: '0644'\n+  content: \"{\\n  \\\"defaultMode\\\": \\\"bypassPermissions\\\",\\n  \\\"permissions\\\": {\\n    \\\"allow\\\": [\\\"Bash\\\", \\\"Edit\\\", \\\"Write\\\", \\\"mcp__*\\\"]\\n  },\\n  \\\"env\\\": {\\n    \\\"ANTHROPIC_BASE_URL\\\": \\\"http://localhost:8000\\\",\\n    \\\"ANTHROPIC_API_KEY\\\": \\\"local-vllm\\\"\\n  }\\n}\"\n+- path: /etc/skel/.claude.json\n+  permissions: '0644'\n+  content: \"{\\n  \\\"hasCompletedOnboarding\\\": true,\\n  \\\"theme\\\": \\\"dark-daltonized\\\"\\n}\"",
+      "context": "Cloud-init provisioning for Claude Code CLI on GPU VMs"
+    },
+    "expected": {
+      "title_keywords": ["claude", "config", "skel", "users"],
+      "description_must_mention": ["/etc/skel", "Claude Code", "settings"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_011",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/benchmarks/run_orchestrator.sh b/benchmarks/run_orchestrator.sh\n--- a/benchmarks/run_orchestrator.sh\n+++ b/benchmarks/run_orchestrator.sh\n@@ -43,8 +43,10 @@\n-declare -a MODEL_SLUGS=(\"gemma4-31b\" \"glm47-flash\")\n+declare -a MODEL_SLUGS=(\"gemma4-31b-awq\" \"gemma4-31b-bf16\" \"llama4-scout\" \"glm47-flash\")\n declare -A HF_MODELS=(\n-    [\"gemma4-31b\"]=\"google/gemma-4-31B-it\"\n+    [\"gemma4-31b-awq\"]=\"cyankiwi/gemma-4-31B-it-AWQ-4bit\"\n+    [\"gemma4-31b-bf16\"]=\"google/gemma-4-31B-it\"\n+    [\"llama4-scout\"]=\"meta-llama/Llama-4-Scout-17B-16E-Instruct\"\n     [\"glm47-flash\"]=\"zai-org/GLM-4.7-Flash\"\n )",
+      "context": "Benchmark orchestrator for comparing LLM models on A100 GPUs"
+    },
+    "expected": {
+      "title_keywords": ["benchmark", "model", "matrix", "awq"],
+      "description_must_mention": ["AWQ", "Llama 4", "models"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  },
+  {
+    "id": "pr_desc_012",
+    "category": "pr_description",
+    "input": {
+      "diff": "diff --git a/setup/07-gpu-drivers.sh b/setup/07-gpu-drivers.sh\n--- a/setup/07-gpu-drivers.sh\n+++ b/setup/07-gpu-drivers.sh\n@@ -5,7 +5,7 @@\n # CUDA toolkit\n-apt-get install -y cuda-toolkit-12-4\n+apt-get install -y cuda-toolkit-12-8\n \n # NVIDIA container toolkit\n distribution=$(. /etc/os-release;echo $ID$VERSION_ID)\n@@ -15,3 +15,6 @@\n apt-get update\n apt-get install -y nvidia-container-toolkit\n nvidia-ctk runtime configure --runtime=docker\n+\n+# Verify GPU access\n+nvidia-smi || echo 'WARNING: nvidia-smi failed - GPU may not be available yet'",
+      "context": "GPU driver setup for CUDA workloads on Azure VMs"
+    },
+    "expected": {
+      "title_keywords": ["cuda", "12-8", "gpu", "driver"],
+      "description_must_mention": ["CUDA", "12-8", "nvidia"],
+      "format": "markdown"
+    },
+    "max_tokens": 500
+  }
+]

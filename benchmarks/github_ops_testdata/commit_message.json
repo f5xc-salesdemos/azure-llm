@@ -1,0 +1,182 @@
+[
+  {
+    "id": "commit_001",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/05-programming-languages.sh b/setup/05-programming-languages.sh\n--- a/setup/05-programming-languages.sh\n+++ b/setup/05-programming-languages.sh\n@@ -22,10 +22,17 @@\n-# ---- Rust (stable) ----\n+# ---- Rust (stable, system-wide) ----\n+export RUSTUP_HOME=/usr/local/rustup\n+export CARGO_HOME=/usr/local/cargo\n curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable\n-export PATH=\"/root/.cargo/bin:$PATH\"\n+cat > /etc/profile.d/rust.sh <<'RUSTENV'\n+export RUSTUP_HOME=/usr/local/rustup\n+export CARGO_HOME=/usr/local/cargo\n+export PATH=\"/usr/local/cargo/bin:$PATH\"\n+RUSTENV\n+chmod 755 /usr/local/rustup /usr/local/cargo",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "fix",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["rust", "system", "install", "path"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_002",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/12-shell-environment.sh b/setup/12-shell-environment.sh\n--- a/setup/12-shell-environment.sh\n+++ b/setup/12-shell-environment.sh\n@@ -35,10 +35,8 @@\n-# Neovim\n-curl -Lo /usr/local/bin/nvim \"https://github.com/neovim/neovim/releases/latest/download/nvim.appimage\" 2>/dev/null && \\\n-  chmod +x /usr/local/bin/nvim || \\\n-  apt-get install -y neovim\n+# Neovim (apt preferred -- AppImage often fails on Ubuntu 24.04)\n+apt-get install -y neovim",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "fix",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["neovim", "apt", "appimage"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_003",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/10-security-tools.sh b/setup/10-security-tools.sh\n--- a/setup/10-security-tools.sh\n+++ b/setup/10-security-tools.sh\n@@ -55,15 +55,26 @@\n-# ---- Python OSINT & security tools ----\n-pip3 install --break-system-packages \\\n-  sherlock-project maigret dnsrecon sublist3r scoutsuite \\\n-  impacket pwntools scapy volatility3 oletools pdfid hashid arjun\n+# ---- Python OSINT & security tools (uv tool for isolation + speed) ----\n+command -v uv &>/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh\n+uv tool install sherlock-project 2>/dev/null || true\n+uv tool install maigret 2>/dev/null || true\n+uv tool install dnsrecon 2>/dev/null || true",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "refactor",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["security", "uv", "pip", "isolat"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_004",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/variables.tf b/variables.tf\n--- a/variables.tf\n+++ b/variables.tf\n@@ -64,7 +64,13 @@\n variable \"os_disk_size_gb\" {\n-  default     = 256\n+  default     = 512\n+}\n+\n+variable \"hf_token\" {\n+  description = \"HuggingFace API token for downloading gated models\"\n+  type        = string\n+  sensitive   = true\n }",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["hf_token", "variable", "terraform", "disk"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_005",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/.gitignore b/.gitignore\n--- a/.gitignore\n+++ b/.gitignore\n@@ -6,6 +6,10 @@\n+# Secrets (never commit)\n+secrets.auto.tfvars\n+*.secret.tfvars",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "chore",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["gitignore", "secret", "tfvars"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_006",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/main.tf b/main.tf\n--- a/main.tf\n+++ b/main.tf\n@@ -133,5 +133,7 @@\n-  custom_data = base64encode(file(\"${path.module}/cloud-init.yaml\"))\n+  custom_data = base64encode(templatefile(\"${path.module}/cloud-init.yaml\", {\n+    hf_token = var.hf_token\n+  }))",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["templatefile", "inject", "token", "cloud-init"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_007",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/terraform.tfvars b/terraform.tfvars\n--- a/terraform.tfvars\n+++ b/terraform.tfvars\n@@ -3,4 +3,5 @@\n-vm_size             = \"Standard_NC24ads_A100_v4\"\n+vm_size             = \"Standard_NC48ads_A100_v4\"\n+os_disk_size_gb     = 512",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["vm", "upgrade", "a100", "48"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_008",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/07-gpu-drivers.sh b/setup/07-gpu-drivers.sh\n--- a/setup/07-gpu-drivers.sh\n+++ b/setup/07-gpu-drivers.sh\n@@ -5,7 +5,7 @@\n-apt-get install -y cuda-toolkit-12-4\n+apt-get install -y cuda-toolkit-12-8\n+\n+# Verify GPU access\n+nvidia-smi || echo 'WARNING: nvidia-smi failed'",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "fix",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["cuda", "12-8", "gpu"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_009",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/benchmarks/run_orchestrator.sh b/benchmarks/run_orchestrator.sh\n--- a/benchmarks/run_orchestrator.sh\n+++ b/benchmarks/run_orchestrator.sh\n@@ -43,8 +43,10 @@\n-declare -a MODEL_SLUGS=(\"gemma4-31b\" \"glm47-flash\")\n+declare -a MODEL_SLUGS=(\"gemma4-31b-awq\" \"gemma4-31b-bf16\" \"llama4-scout\" \"glm47-flash\")\n declare -A HF_MODELS=(\n-    [\"gemma4-31b\"]=\"google/gemma-4-31B-it\"\n+    [\"gemma4-31b-awq\"]=\"cyankiwi/gemma-4-31B-it-AWQ-4bit\"\n+    [\"gemma4-31b-bf16\"]=\"google/gemma-4-31B-it\"\n+    [\"llama4-scout\"]=\"meta-llama/Llama-4-Scout-17B-16E-Instruct\"",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["model", "benchmark", "awq", "llama"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_010",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/cloud-init.yaml b/cloud-init.yaml\n--- a/cloud-init.yaml\n+++ b/cloud-init.yaml\n@@ -100,6 +100,20 @@\n+- path: /etc/skel/.claude/settings.json\n+  permissions: '0644'\n+  content: \"{\\n  \\\"defaultMode\\\": \\\"bypassPermissions\\\",\\n  \\\"env\\\": {\\n    \\\"ANTHROPIC_BASE_URL\\\": \\\"http://localhost:8000\\\"\\n  }\\n}\"",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["claude", "skel", "config"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_011",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/08-ai-ml-stack.sh b/setup/08-ai-ml-stack.sh\n--- a/setup/08-ai-ml-stack.sh\n+++ b/setup/08-ai-ml-stack.sh\n@@ -10,8 +10,12 @@\n-pip install vllm\n+# vLLM nightly for Gemma 4 support (requires transformers 5.5.0)\n+uv pip install --python /opt/vllm-env/bin/python -U vllm --pre \\\n+  --extra-index-url https://wheels.vllm.ai/nightly/cu129 \\\n+  --index-strategy unsafe-best-match\n+uv pip install --python /opt/vllm-env/bin/python transformers==5.5.0",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["vllm", "nightly", "gemma", "transformers"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "commit_012",
+    "category": "commit_message",
+    "input": {
+      "diff": "diff --git a/setup/15-linters-formatters-lsp.sh b/setup/15-linters-formatters-lsp.sh\nnew file mode 100755\n--- /dev/null\n+++ b/setup/15-linters-formatters-lsp.sh\n@@ -0,0 +1,108 @@\n+#!/bin/bash\n+# SECTION 15: LINTERS, FORMATTERS & LSP SERVERS\n+# Install code quality tools for multiple languages\n+\n+# Python\n+uv tool install ruff\n+uv tool install pyright\n+\n+# JavaScript/TypeScript\n+npm install -g eslint prettier typescript-language-server\n+\n+# Shell\n+apt-get install -y shellcheck\n+GO111MODULE=on go install mvdan.cc/sh/v3/cmd/shfmt@latest",
+      "context": "conventional commits format"
+    },
+    "expected": {
+      "type": "feat",
+      "scope_relevant": true,
+      "conventional_format": true,
+      "keywords": ["linter", "formatter", "lsp"]
+    },
+    "max_tokens": 200
+  }
+]

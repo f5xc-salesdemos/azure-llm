@@ -1,3 +1,7 @@
+###############################################################################
+# Shared
+###############################################################################
+
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
@@ -9,48 +13,12 @@ variable "resource_group_name" {
 }
 
 variable "location" {
-  description = "Azure region (e.g., centralus, eastus, westus2)"
+  description = "Azure region"
   type        = string
-}
-
-variable "vm_name" {
-  description = "Name of the virtual machine"
-  type        = string
-  default     = "gpu-llm-vm"
-}
-
-variable "vm_size" {
-  description = "Size of the VM. Default: 1x A100 80GB for optimal vLLM inference"
-  type        = string
-  default     = "Standard_NC24ads_A100_v4"
-
-  validation {
-    condition = contains([
-      # A100 (cc 8.0) — recommended for vLLM (AWQ, FlashAttention2, BFloat16, FP8)
-      "Standard_NC24ads_A100_v4",  # 1x A100 80GB, 24 vCPUs, 220 GiB RAM
-      "Standard_NC48ads_A100_v4",  # 2x A100 80GB, 48 vCPUs, 440 GiB RAM
-      "Standard_NC96ads_A100_v4",  # 4x A100 80GB, 96 vCPUs, 880 GiB RAM
-      # V100 (cc 7.0) — legacy, GPTQ only, no AWQ/FlashAttention2
-      "Standard_NC6s_v3",          # 1x V100 16GB
-      "Standard_NC12s_v3",         # 2x V100 32GB
-      "Standard_NC24s_v3",         # 4x V100 64GB
-      # T4 (cc 7.5) — budget option, AWQ supported but low bandwidth
-      "Standard_NC4as_T4_v3",      # 1x T4 16GB
-      "Standard_NC8as_T4_v3",      # 2x T4 32GB
-      "Standard_NC16as_T4_v3",     # 4x T4 64GB
-    ], var.vm_size)
-    error_message = "Must be a GPU VM size available in centralus."
-  }
-}
-
-variable "zone" {
-  description = "Availability zone (set to empty string to let Azure choose)"
-  type        = string
-  default     = ""
 }
 
 variable "admin_username" {
-  description = "Admin username for the VM"
+  description = "Admin username for all VMs"
   type        = string
   default     = "azureuser"
 }
@@ -61,14 +29,8 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
-variable "os_disk_size_gb" {
-  description = "OS disk size in GB. 512GB recommended for model weights."
-  type        = number
-  default     = 512
-}
-
 variable "os_image" {
-  description = "VM OS image reference"
+  description = "VM OS image reference (shared across all VMs)"
   type = object({
     publisher = string
     offer     = string
@@ -84,43 +46,145 @@ variable "os_image" {
 }
 
 variable "hf_token" {
-  description = "HuggingFace API token for downloading gated models (Meta Llama, Google Gemma)"
+  description = "HuggingFace API token for downloading gated models"
   type        = string
   sensitive   = true
 }
 
-variable "model_id" {
-  description = "HuggingFace model ID for vLLM to serve"
+variable "vllm_port" {
+  description = "Port for vLLM API server (same on both GPU VMs)"
+  type        = number
+  default     = 8000
+}
+
+###############################################################################
+# Gemma VM — primary inference server (4x A100 80GB)
+###############################################################################
+
+variable "gemma_vm_size" {
+  description = "VM size for the Gemma inference server"
+  type        = string
+  default     = "Standard_NC96ads_A100_v4" # 4x A100 80GB, 96 vCPU, 880 GiB
+}
+
+variable "gemma_zone" {
+  description = "Availability zone for Gemma VM"
+  type        = string
+  default     = "2"
+}
+
+variable "gemma_disk_size" {
+  description = "OS disk size in GB for Gemma VM (model cache ~80GB)"
+  type        = number
+  default     = 256
+}
+
+variable "gemma_model_id" {
+  description = "HuggingFace model ID for Gemma"
   type        = string
   default     = "google/gemma-4-31B-it"
 }
 
-variable "served_model_name" {
-  description = "Model name exposed by vLLM API (used in Claude Code config)"
+variable "gemma_served_name" {
+  description = "Model name exposed by Gemma vLLM API"
   type        = string
   default     = "gemma-4-31b"
 }
 
-variable "max_model_len" {
-  description = "Maximum context length in tokens"
+variable "gemma_max_model_len" {
+  description = "Maximum context length for Gemma (256K with 4x A100)"
   type        = number
-  default     = 131072
+  default     = 262144
 }
 
-variable "gpu_memory_utilization" {
-  description = "Fraction of GPU memory for model + KV cache (0.0-1.0)"
+variable "gemma_gpu_memory_utilization" {
+  description = "GPU memory fraction for Gemma"
   type        = number
   default     = 0.95
 }
 
-variable "tool_call_parser" {
-  description = "vLLM tool call parser (gemma4, hermes, llama4_pythonic, qwen3_coder, glm47)"
+variable "gemma_tp_size" {
+  description = "Tensor parallel size for Gemma (number of GPUs)"
+  type        = number
+  default     = 4
+}
+
+variable "gemma_tool_call_parser" {
+  description = "vLLM tool call parser for Gemma"
   type        = string
   default     = "gemma4"
 }
 
-variable "vllm_port" {
-  description = "Port for vLLM API server"
+###############################################################################
+# Phi VM — GitHub operations sub-agent (1x A100 80GB)
+###############################################################################
+
+variable "phi_vm_size" {
+  description = "VM size for the Phi inference server"
+  type        = string
+  default     = "Standard_NC24ads_A100_v4" # 1x A100 80GB, 24 vCPU, 220 GiB
+}
+
+variable "phi_zone" {
+  description = "Availability zone for Phi VM"
+  type        = string
+  default     = "2"
+}
+
+variable "phi_disk_size" {
+  description = "OS disk size in GB for Phi VM (model cache ~10GB)"
   type        = number
-  default     = 8000
+  default     = 128
+}
+
+variable "phi_model_id" {
+  description = "HuggingFace model ID for Phi"
+  type        = string
+  default     = "microsoft/Phi-4-mini-instruct"
+}
+
+variable "phi_served_name" {
+  description = "Model name exposed by Phi vLLM API"
+  type        = string
+  default     = "phi-4-mini"
+}
+
+variable "phi_max_model_len" {
+  description = "Maximum context length for Phi"
+  type        = number
+  default     = 16384
+}
+
+variable "phi_gpu_memory_utilization" {
+  description = "GPU memory fraction for Phi"
+  type        = number
+  default     = 0.90
+}
+
+variable "phi_tool_call_parser" {
+  description = "vLLM tool call parser for Phi"
+  type        = string
+  default     = "hermes"
+}
+
+###############################################################################
+# Workstation VM — developer tools (1x T4 16GB for Chrome/Playwright)
+###############################################################################
+
+variable "workstation_vm_size" {
+  description = "VM size for the developer workstation"
+  type        = string
+  default     = "Standard_NC8as_T4_v3" # 1x T4 16GB, 8 vCPU, 56 GiB
+}
+
+variable "workstation_zone" {
+  description = "Availability zone for Workstation VM"
+  type        = string
+  default     = "2"
+}
+
+variable "workstation_disk_size" {
+  description = "OS disk size in GB for Workstation VM"
+  type        = number
+  default     = 512
 }

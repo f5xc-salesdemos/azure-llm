@@ -1,0 +1,215 @@
+#cloud-config
+# Workstation VM — developer tools, Claude Code, OpenCode, benchmarks
+# T4 GPU for Chrome/Playwright rendering only (no vLLM serving)
+# Connects to Gemma (${gemma_ip}:${gemma_port}) and Phi (${phi_ip}:${phi_port}) over VNet
+write_files:
+- path: /etc/needrestart/conf.d/99-cloud-init.conf
+  content: '$nrconf{restart} = ''a'';
+
+    $nrconf{kernelhints} = 0;
+
+    '
+- path: /opt/setup-workstation.sh
+  permissions: '0755'
+  content: |
+    #!/bin/bash
+    set -euo pipefail
+    exec > /var/log/workstation-setup.log 2>&1
+    CLOUD_INIT_VERSION="2026-04-06-v5-workstation"
+    echo "Cloud-init version: $CLOUD_INIT_VERSION"
+    export DEBIAN_FRONTEND=noninteractive
+    export NEEDRESTART_MODE=a
+
+    echo "=== Workstation Setup Started: $(date) ==="
+
+    # ---- Wait for apt/dpkg locks ----
+    wait_for_apt() {
+        local max_wait=600 waited=0
+        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
+              fuser /var/lib/apt/lists/lock >/dev/null 2>&1 || \
+              fuser /var/cache/apt/archives/lock >/dev/null 2>&1; do
+            if (( waited >= max_wait )); then echo "ERROR: apt locks not released after $${max_wait}s"; return 1; fi
+            echo "Waiting for apt locks... ($${waited}s)"; sleep 10; waited=$((waited + 10))
+        done
+    }
+
+    # ---- Disable unattended-upgrades ----
+    systemctl stop unattended-upgrades.service 2>/dev/null || true
+    systemctl disable unattended-upgrades.service 2>/dev/null || true
+    wait_for_apt
+    apt-get remove -y unattended-upgrades 2>/dev/null || true
+
+    # ---- System packages ----
+    wait_for_apt
+    apt-get update -y
+    apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+    apt-get install -y build-essential python3-pip python3-venv git curl wget jq htop tmux \
+      neovim shellcheck ripgrep fd-find bat
+
+    # ---- NVIDIA drivers (T4 for Chrome GPU rendering, not inference) ----
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+    dpkg -i cuda-keyring_1.1-1_all.deb
+    apt-get update
+    apt-get install -y cuda-drivers
+
+    # ---- Node.js 20 + Claude Code + OpenCode ----
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs || (dpkg --configure -a && apt-get install -y -f nodejs)
+    npm install -g @anthropic-ai/claude-code opencode-ai
+
+    # ---- Python tools (uv) ----
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="/root/.local/bin:$PATH"
+    uv tool install ruff 2>/dev/null || true
+
+    # ---- GitHub CLI ----
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      | tee /etc/apt/sources.list.d/github-cli.list
+    apt-get update
+    apt-get install -y gh
+
+    # ---- Claude Code configuration ----
+    mkdir -p /etc/skel/.claude /home/${admin_username}/.claude
+    cat > /etc/skel/.claude/settings.json <<'SETTINGS'
+    {
+      "defaultMode": "bypassPermissions",
+      "skipDangerousModePermissionPrompt": true,
+      "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*"] },
+      "model": "sonnet",
+      "env": {
+        "ANTHROPIC_BASE_URL": "http://${gemma_ip}:${gemma_port}",
+        "ANTHROPIC_API_KEY": "local-vllm",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "${gemma_served_name}",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "${gemma_served_name}",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "${gemma_served_name}"
+      }
+    }
+    SETTINGS
+    cp -r /etc/skel/.claude /home/${admin_username}/.claude 2>/dev/null || true
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.claude
+
+    # ---- OpenCode configuration (dual provider) ----
+    mkdir -p /home/${admin_username}/.opencode/agents /home/${admin_username}/.opencode/skills/github-ops
+
+    cat > /home/${admin_username}/.opencode/opencode.json <<'OCCONF'
+    {
+      "$$schema": "https://opencode.ai/config.json",
+      "provider": {
+        "vllm": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "Gemma 4 31B (${gemma_ip})",
+          "options": { "baseURL": "http://${gemma_ip}:${gemma_port}/v1", "apiKey": "local-vllm" },
+          "models": {
+            "${gemma_served_name}": {
+              "name": "${gemma_served_name}",
+              "limit": { "context": ${gemma_max_model_len}, "output": 8192 }
+            }
+          }
+        },
+        "vllm-subagent": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "Phi-4-mini (${phi_ip})",
+          "options": { "baseURL": "http://${phi_ip}:${phi_port}/v1", "apiKey": "local-vllm" },
+          "models": {
+            "${phi_served_name}": {
+              "name": "${phi_served_name}",
+              "limit": { "context": ${phi_max_model_len}, "output": 4096 }
+            }
+          }
+        }
+      },
+      "model": "vllm/${gemma_served_name}"
+    }
+    OCCONF
+
+    cat > /home/${admin_username}/.opencode/agents/github-ops.md <<'AGENT'
+    ---
+    description: GitHub operations specialist — PR descriptions, code review, issue triage, commit messages, gh CLI commands
+    mode: subagent
+    model: vllm-subagent/${phi_served_name}
+    temperature: 0.3
+    permission:
+      bash:
+        "gh *": allow
+        "git log *": allow
+        "git diff *": allow
+        "git status": allow
+        "*": deny
+      edit: deny
+      webfetch: deny
+    ---
+
+    You are a specialized GitHub operations agent running on ${phi_served_name}. Your expertise:
+    - PR descriptions from diffs, code review for bugs/security, issue triage with JSON, conventional commit messages, gh CLI commands.
+    AGENT
+
+    cat > /home/${admin_username}/.opencode/skills/github-ops/SKILL.md <<'SKILL'
+    ---
+    name: github-ops
+    description: GitHub operations toolkit — PR descriptions, code review, issue triage, commit messages, and gh CLI command generation
+    compatibility: opencode
+    metadata:
+      model: ${phi_served_name}
+      endpoint: "http://${phi_ip}:${phi_port}/v1"
+    ---
+
+    # GitHub Operations Skill
+
+    Use this skill for any GitHub-related operation.
+
+    ## When to use
+    - Writing PR titles and descriptions from diffs
+    - Reviewing code for bugs and security issues
+    - Triaging issues with labels and priority
+    - Generating conventional commit messages
+    - Constructing gh CLI commands
+
+    ## PR Description Workflow
+    1. Run git diff to get the changes
+    2. Write a concise title (under 70 chars)
+    3. Write a markdown body: what changed, why, and testing notes
+
+    ## Code Review Workflow
+    1. Read the code carefully
+    2. Check for: injection, auth issues, resource leaks, race conditions
+    3. For each issue: state bug type, severity (critical/high/medium/low), and fix
+
+    ## Issue Triage
+    Respond with JSON: {"labels": [...], "priority": "high|medium|low", "category": "..."}
+
+    ## Commit Messages
+    Conventional Commits: type(scope): description
+    Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
+
+    ## gh CLI Reference
+    - gh pr create --draft --title "..." --body "..."
+    - gh issue create --title "..." --label bug
+    - gh pr merge 42 --squash --delete-branch
+    - gh release create v1.0.0 --generate-notes
+    SKILL
+
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.opencode
+
+    # ---- HuggingFace token ----
+    mkdir -p /home/${admin_username}/.cache/huggingface
+    echo "${hf_token}" > /home/${admin_username}/.cache/huggingface/token
+    chmod 600 /home/${admin_username}/.cache/huggingface/token
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.cache
+
+    # ---- Health check script ----
+    cat > /usr/local/bin/check-llm-servers <<'SCRIPT'
+    #!/bin/bash
+    echo "=== LLM Server Status ==="
+    echo -n "Gemma (${gemma_ip}:${gemma_port}): "
+    curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Phi   (${phi_ip}:${phi_port}): "
+    curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
+    SCRIPT
+    chmod +x /usr/local/bin/check-llm-servers
+
+    echo "=== Workstation Setup Completed: $(date) ==="
+runcmd:
+- chown ${admin_username}:${admin_username} /home/${admin_username}
+- bash /opt/setup-workstation.sh

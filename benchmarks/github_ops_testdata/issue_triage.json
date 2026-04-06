@@ -1,0 +1,142 @@
+[
+  {
+    "id": "triage_001",
+    "category": "issue_triage",
+    "input": {
+      "title": "vLLM OOM when loading Llama 4 Scout on single A100",
+      "body": "Getting CUDA OOM error when trying to load Llama 4 Scout 17B-16E on a single A100 80GB. The model has 109B total params (MoE) which requires ~218GB in BF16. Error: torch.cuda.OutOfMemoryError. Need to use tensor parallelism or quantization."
+    },
+    "expected": {
+      "labels": ["bug", "gpu", "vllm"],
+      "priority": "high",
+      "category": "infrastructure"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_002",
+    "category": "issue_triage",
+    "input": {
+      "title": "Add support for Qwen3-Coder model in benchmark orchestrator",
+      "body": "The new Qwen3-Coder-30B-A3B model was released with excellent tool-calling support. We should add it to the model matrix in run_orchestrator.sh for benchmarking. It uses a MoE architecture with only 3.3B active params."
+    },
+    "expected": {
+      "labels": ["enhancement", "benchmark"],
+      "priority": "medium",
+      "category": "feature"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_003",
+    "category": "issue_triage",
+    "input": {
+      "title": "cloud-init fails: dpkg lock held by unattended-upgrades",
+      "body": "On fresh Ubuntu 24.04 VMs, cloud-init runcmd scripts fail because unattended-upgrades holds the dpkg lock. The setup scripts try apt-get install but get 'Could not get lock /var/lib/dpkg/lock-frontend'. Need to disable unattended-upgrades first and wait for locks."
+    },
+    "expected": {
+      "labels": ["bug", "cloud-init", "ubuntu"],
+      "priority": "high",
+      "category": "infrastructure"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_004",
+    "category": "issue_triage",
+    "input": {
+      "title": "Document terraform.tfvars.example with all required variables",
+      "body": "New users don't know what variables to set in terraform.tfvars. We need a documented example file showing subscription_id, hf_token, vm_size, and other required vars with descriptions."
+    },
+    "expected": {
+      "labels": ["documentation"],
+      "priority": "low",
+      "category": "docs"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_005",
+    "category": "issue_triage",
+    "input": {
+      "title": "Benchmark results show 0 tokens/s for concurrent requests",
+      "body": "When running benchmark_client.py with concurrency > 16, some requests return 0 tokens/s. The vLLM server logs show 'Request timed out'. This happens more with larger context lengths. System: 2x A100 80GB, vLLM 0.19.1."
+    },
+    "expected": {
+      "labels": ["bug", "benchmark", "performance"],
+      "priority": "medium",
+      "category": "performance"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_006",
+    "category": "issue_triage",
+    "input": {
+      "title": "Security: HF token exposed in cloud-init user-data",
+      "body": "The HuggingFace token is injected via Terraform templatefile into cloud-init.yaml and ends up in the VM's user-data metadata. Anyone with VM metadata access can read it. Should use Azure Key Vault or instance metadata service instead."
+    },
+    "expected": {
+      "labels": ["security", "terraform"],
+      "priority": "high",
+      "category": "security"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_007",
+    "category": "issue_triage",
+    "input": {
+      "title": "How to run benchmarks on V100 GPUs?",
+      "body": "I have access to 4x V100 16GB instead of A100. Can the benchmark orchestrator be adapted? I know AWQ doesn't work on V100 (cc 7.0) but GPTQ should. What VM size should I use in terraform.tfvars?"
+    },
+    "expected": {
+      "labels": ["question", "benchmark"],
+      "priority": "low",
+      "category": "question"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_008",
+    "category": "issue_triage",
+    "input": {
+      "title": "Reduce A100 VM cost with spot instances",
+      "body": "At $7.34/hr the A100 VM is expensive for development. Azure spot instances can reduce cost by 60-90%. We should add a terraform variable for spot pricing with auto-eviction handling. Risk: spot VMs can be evicted with 30s notice."
+    },
+    "expected": {
+      "labels": ["enhancement", "cost", "terraform"],
+      "priority": "medium",
+      "category": "feature"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_009",
+    "category": "issue_triage",
+    "input": {
+      "title": "setup/05-programming-languages.sh: Rust installed to /root only",
+      "body": "The Rust installation uses default rustup which installs to /root/.cargo. Other users (like azureuser) can't access cargo or rustc. Need to install system-wide to /usr/local/rustup and /usr/local/cargo with proper PATH exports."
+    },
+    "expected": {
+      "labels": ["bug", "setup"],
+      "priority": "medium",
+      "category": "infrastructure"
+    },
+    "max_tokens": 300
+  },
+  {
+    "id": "triage_010",
+    "category": "issue_triage",
+    "input": {
+      "title": "Add Gemma 4 multimodal benchmark with image inputs",
+      "body": "Gemma 4 31B supports vision (image understanding). We should add benchmark test cases with image inputs to measure multimodal performance. The vLLM server already has --limit-mm-per-prompt configured for up to 4 images per request."
+    },
+    "expected": {
+      "labels": ["enhancement", "benchmark", "multimodal"],
+      "priority": "medium",
+      "category": "feature"
+    },
+    "max_tokens": 300
+  }
+]

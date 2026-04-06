@@ -85,7 +85,7 @@ write_files:
     \ then\n    echo \"vLLM is ready. Launching Claude Code...\"\n    exec claude\n  fi\n  sleep 5\ndone\necho \"ERROR: vLLM not ready after 10 minutes. Start it with: start-vllm-gemma4\"\nexit 1\nSCRIPT\n\
     chmod +x /usr/local/bin/start-claude-code\n\n# ---- Systemd service for auto-start vLLM ----\ncat > /etc/systemd/system/vllm-gemma4.service <<'SYSTEMD'\n[Unit]\nDescription=vLLM Gemma 4 31B Inference\
     \ Server\nAfter=network.target nvidia-persistenced.service\n\n[Service]\nType=simple\nUser=${admin_username}\nEnvironment=HF_TOKEN=${hf_token}\nExecStart=/usr/local/bin/start-vllm-gemma4\nRestart=on-failure\n\
-    RestartSec=30\nLimitNOFILE=65536\nLimitMEMLOCK=infinity\n\n[Install]\nWantedBy=multi-user.target\nSYSTEMD\nsystemctl daemon-reload\nsystemctl enable vllm-gemma4.service\n\necho \"=== GPU Setup Completed:\
+    RestartSec=30\nLimitNOFILE=65536\nLimitMEMLOCK=infinity\n\n[Install]\nWantedBy=multi-user.target\nSYSTEMD\nsystemctl daemon-reload\nsystemctl enable vllm-gemma4.service\n\n# ---- Sub-agent: ${subagent_served_name} (GitHub operations, port ${subagent_port}) ----\ncat > /usr/local/bin/start-vllm-subagent <<'SCRIPT'\n#!/bin/bash\necho \"Starting vLLM sub-agent: ${subagent_model_id} on port ${subagent_port}...\"\necho \"Model download may take 5-10 minutes on first run.\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}\"\nexec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \\\n  --model ${subagent_model_id} \\\n  --served-model-name ${subagent_served_name} \\\n  --tensor-parallel-size 1 \\\n  --max-model-len ${subagent_max_model_len} \\\n  --gpu-memory-utilization 0.15 \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser ${subagent_tool_call_parser} \\\n  --host 0.0.0.0 \\\n  --port ${subagent_port}\nSCRIPT\nchmod +x /usr/local/bin/start-vllm-subagent\n\ncat > /etc/systemd/system/vllm-subagent.service <<'SYSTEMD'\n[Unit]\nDescription=vLLM Sub-Agent (${subagent_served_name}) — GitHub Operations\nAfter=network.target nvidia-persistenced.service vllm-gemma4.service\n\n[Service]\nType=simple\nUser=${admin_username}\nEnvironment=HF_TOKEN=${hf_token}\nExecStartPre=/bin/sleep 30\nExecStart=/usr/local/bin/start-vllm-subagent\nRestart=on-failure\nRestartSec=30\nLimitNOFILE=65536\nLimitMEMLOCK=infinity\n\n[Install]\nWantedBy=multi-user.target\nSYSTEMD\nsystemctl daemon-reload\nsystemctl enable vllm-subagent.service\n\n# ---- OpenCode (AI coding agent) ----\nnpm install -g opencode-ai 2>/dev/null || true\n\necho \"=== GPU Setup Completed:\
     \ $(date) ===\"\n"
 - path: /home/${admin_username}/benchmarks/test-claude-code.sh
   permissions: '0755'
@@ -98,8 +98,7 @@ write_files:
     \ \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"model\":\"${served_model_name}\",\n    \"messages\":[{\"role\":\"user\",\"content\":\"What is 2+2? Use the calculator tool.\"}],\n  \
     \  \"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"calculator\",\"description\":\"Calculate math\",\"parameters\":{\"type\":\"object\",\"properties\":{\"expression\":{\"type\":\"string\"\
     }}}}}],\n    \"max_tokens\":100\n  }' 2>/dev/null)\nif echo \"$RESP\" | grep -q \"tool_calls\\|function\"; then\n    echo \"PASS (tool call detected)\"\nelif echo \"$RESP\" | grep -q \"choices\"; then\n\
-    \    echo \"WARN (response ok but no tool call - model may prefer text answer)\"\nelse\n    echo \"FAIL\"\n    echo \"$RESP\" | head -5\nfi\n\necho \"\"\necho \"=== All tests passed ===\"\necho \"Claude\
-    \ Code is ready. Run: claude\"\necho \"Or use: start-claude-code\"\n"
+    \    echo \"WARN (response ok but no tool call - model may prefer text answer)\"\nelse\n    echo \"FAIL\"\n    echo \"$RESP\" | head -5\nfi\n\n# Test 5: Sub-agent health\necho -n \"5. Sub-agent health check... \"\nif curl -sf http://localhost:${subagent_port}/health > /dev/null 2>&1; then\n    echo \"PASS\"\nelse\n    echo \"SKIP - sub-agent not running. Start with: start-vllm-subagent\"\nfi\n\n# Test 6: Sub-agent model\necho -n \"6. Sub-agent model... \"\nSUB_MODELS=$(curl -s http://localhost:${subagent_port}/v1/models 2>/dev/null)\nif echo \"$SUB_MODELS\" | grep -q \"${subagent_served_name}\"; then\n    echo \"PASS (${subagent_served_name})\"\nelif curl -sf http://localhost:${subagent_port}/health > /dev/null 2>&1; then\n    echo \"FAIL - sub-agent running but model not found\"\nelse\n    echo \"SKIP\"\nfi\n\necho \"\"\necho \"=== Tests complete ===\"\necho \"Main model: http://localhost:${vllm_port} (${served_model_name})\"\necho \"Sub-agent:  http://localhost:${subagent_port} (${subagent_served_name})\"\necho \"Claude Code is ready. Run: claude\"\n"
 - path: /etc/skel/.claude/settings.json
   permissions: '0644'
   content: "{\n  \"defaultMode\": \"bypassPermissions\",\n  \"skipDangerousModePermissionPrompt\": true,\n  \"permissions\": {\n    \"allow\": [\n      \"Bash\",\n      \"Edit\",\n      \"Write\",\n   \
@@ -116,22 +115,52 @@ write_files:
     : 1,\n      \"hasClaudeMdExternalIncludesApproved\": true,\n      \"hasClaudeMdExternalIncludesWarningShown\": true\n    }\n  }\n}"
 - path: /etc/skel/.claude/CLAUDE.md
   permissions: '0644'
-  content: "# GPU VM Context\n\nYou are running on an Azure GPU VM with vLLM serving ${model_id}.\n\n- GPU: check with nvidia-smi\n- vLLM API: http://localhost:${vllm_port}\n- Model: ${served_model_name}\n\
-    - Context window: ${max_model_len} tokens\n\n## Available Tools\n\n- claude \u2014 Claude Code CLI (pre-configured for local vLLM)\n- start-vllm-gemma4 \u2014 Start vLLM with native gemma4 tool parser\n\
-    - start-vllm-gemma4-hermes \u2014 Start vLLM with hermes tool parser (fallback)\n- start-claude-code \u2014 Wait for vLLM then launch Claude Code\n"
+  content: "# GPU VM Context\n\nYou are running on an Azure GPU VM with two vLLM instances.\n\n## Main Model\n- vLLM API: http://localhost:${vllm_port}\n- Model: ${served_model_name} (${model_id})\n\
+    - Context: ${max_model_len} tokens, TP=2 (both GPUs)\n\n## Sub-Agent (GitHub Operations)\n- vLLM API: http://localhost:${subagent_port}\n- Model: ${subagent_served_name} (${subagent_model_id})\n\
+    - Context: ${subagent_max_model_len} tokens, TP=1 (single GPU)\n- Purpose: PR descriptions, code review, issue triage, commit messages, gh CLI\n\n## Commands\n\n- start-vllm-gemma4 \u2014 Main model\
+    \ (port ${vllm_port})\n- start-vllm-subagent \u2014 Sub-agent (port ${subagent_port})\n- start-claude-code \u2014 Wait for vLLM then launch Claude Code\n- systemctl status vllm-gemma4 \u2014 Main model service\n\
+    - systemctl status vllm-subagent \u2014 Sub-agent service\n"
 - path: /etc/claude-code/CLAUDE.md
   permissions: '0644'
   content: "# Claude Code Tool Awareness (GPU VM)\n\nThis file is the managed policy CLAUDE.md, installed at\n/etc/claude-code/CLAUDE.md during VM build. It is loaded in every\nClaude Code session at the\
     \ highest priority tier.\n\n## Tool Naming Convention\n\nAll Claude Code tools use PascalCase. NEVER use snake_case.\n\n| Correct | WRONG | Purpose |\n| --- | --- | --- |\n| Read | read_file, cat |\
     \ Read file contents |\n| Write | write_file, create_file | Create/overwrite files |\n| Edit | edit_file, sed | Edit existing files |\n| Bash | bash, run_command | Run shell commands |\n| Glob | glob,\
     \ find_files | Find files by pattern |\n| Grep | grep, search_files | Search file contents |\n| Agent | agent, task | Launch subagent tasks |\n\n## Local LLM Backend\n\nThis VM runs vLLM with a local\
-    \ model. The API is at http://localhost:${vllm_port}.\nDo not attempt to contact api.anthropic.com \u2014 all requests go to the local vLLM server.\n\n## Bash Tool Escaping\n\nThe Bash tool escapes\
+    \ model. Main API at http://localhost:${vllm_port}, sub-agent at http://localhost:${subagent_port}.\nDo not attempt to contact api.anthropic.com \u2014 all requests go to local vLLM servers.\n\n## Bash Tool Escaping\n\nThe Bash tool escapes\
     \ ! to \\! on all platforms. Avoid ! in generated Bash commands.\nUse | not instead of != in jq. Use cmd || { handle; } instead of if ! cmd.\n"
+- path: /home/${admin_username}/.opencode/opencode.json
+  permissions: '0644'
+  content: "{\n  \"$$schema\": \"https://opencode.ai/config.json\",\n  \"provider\": {\n    \"vllm\": {\n      \"npm\": \"@ai-sdk/openai-compatible\",\n      \"name\": \"vLLM Main (${served_model_name})\",\n\
+    \      \"options\": {\n        \"baseURL\": \"http://localhost:${vllm_port}/v1\",\n        \"apiKey\": \"local-vllm\"\n      },\n      \"models\": {\n        \"${served_model_name}\": {\n          \"name\"\
+    : \"${served_model_name}\",\n          \"limit\": { \"context\": ${max_model_len}, \"output\": 8192 }\n        }\n      }\n    },\n    \"vllm-subagent\": {\n      \"npm\": \"@ai-sdk/openai-compatible\"\
+    ,\n      \"name\": \"vLLM Sub-Agent (${subagent_served_name})\",\n      \"options\": {\n        \"baseURL\": \"http://localhost:${subagent_port}/v1\",\n        \"apiKey\": \"local-vllm\"\n      },\n \
+    \     \"models\": {\n        \"${subagent_served_name}\": {\n          \"name\": \"${subagent_served_name} (GitHub Ops)\",\n          \"limit\": { \"context\": ${subagent_max_model_len}, \"output\": 4096\
+    \ }\n        }\n      }\n    }\n  },\n  \"model\": \"vllm/${served_model_name}\"\n}"
+- path: /home/${admin_username}/.opencode/agents/github-ops.md
+  permissions: '0644'
+  content: "---\ndescription: GitHub operations specialist \u2014 PR descriptions, code review, issue triage, commit messages, gh CLI commands\nmode: subagent\nmodel: vllm-subagent/${subagent_served_name}\n\
+    temperature: 0.3\npermission:\n  bash:\n    \"gh *\": allow\n    \"git log *\": allow\n    \"git diff *\": allow\n    \"git status\": allow\n    \"*\": deny\n  edit: deny\n  webfetch: deny\n---\n\nYou\
+    \ are a specialized GitHub operations agent running on a local ${subagent_served_name} model. Your expertise:\n\n- **PR descriptions**: Given a git diff, write a title and markdown description explaining\
+    \ what changed and why\n- **Code review**: Analyze code for bugs, security vulnerabilities, and suggest specific fixes with severity ratings\n- **Issue triage**: Classify issues with labels, priority, and\
+    \ category. Respond with JSON.\n- **Commit messages**: Generate conventional commit messages (type(scope): description) from diffs\n- **gh CLI**: Generate correct gh commands for any GitHub operation\n\n\
+    ## Rules\n\n- Use gh CLI exclusively \u2014 never curl or raw API calls\n- Follow Conventional Commits: feat|fix|docs|refactor|chore|test(scope): description\n- Prioritize security issues over style in\
+    \ reviews\n- Keep commit message first lines under 72 characters\n"
+- path: /home/${admin_username}/.opencode/skills/github-ops/SKILL.md
+  permissions: '0644'
+  content: "---\nname: github-ops\ndescription: GitHub operations toolkit \u2014 PR descriptions, code review, issue triage, commit messages, and gh CLI command generation\ncompatibility: opencode\nmetadata:\n\
+    \  model: ${subagent_served_name}\n  port: \"${subagent_port}\"\n---\n\n# GitHub Operations Skill\n\nUse this skill for any GitHub-related operation.\n\n## When to use\n\n- Writing PR titles and descriptions\
+    \ from diffs\n- Reviewing code for bugs and security issues\n- Triaging issues with labels and priority\n- Generating conventional commit messages\n- Constructing gh CLI commands\n\n## PR Description Workflow\n\
+    \n1. Run git diff to get the changes\n2. Identify the files and purpose of the change\n3. Write a concise title (under 70 chars)\n4. Write a markdown body: what changed, why, and testing notes\n\n## Code\
+    \ Review Workflow\n\n1. Read the code carefully\n2. Check for: injection vulnerabilities, auth issues, resource leaks, race conditions, error handling\n3. For each issue: state the bug type, severity, and\
+    \ a specific fix\n\n## Issue Triage\n\nRespond with JSON: {\"labels\": [...], \"priority\": \"high|medium|low\", \"category\": \"...\"}\n\n## Commit Messages\n\nFollow Conventional Commits: type(scope):\
+    \ short description\nTypes: feat, fix, docs, refactor, chore, test, style, perf, ci, build\n"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - chown -R ${admin_username}:${admin_username} /home/${admin_username}/.claude
 - chown -R ${admin_username}:${admin_username} /home/${admin_username}/benchmarks
 - mkdir -p /home/${admin_username}/benchmarks/results
 - chown -R ${admin_username}:${admin_username} /home/${admin_username}/benchmarks/results
+- mkdir -p /home/${admin_username}/.opencode/agents /home/${admin_username}/.opencode/skills/github-ops
+- chown -R ${admin_username}:${admin_username} /home/${admin_username}/.opencode
 - bash /opt/setup-gpu.sh
 - reboot

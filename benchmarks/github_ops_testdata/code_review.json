@@ -1,0 +1,183 @@
+[
+  {
+    "id": "review_001",
+    "category": "code_review",
+    "input": {
+      "code": "def connect(host, port, user):\n    import subprocess\n    cmd = f'ssh {user}@{host} -p {port}'\n    subprocess.call(cmd, shell=True)\n    return True",
+      "language": "python",
+      "file_path": "utils/connection.py"
+    },
+    "expected": {
+      "bugs": ["command_injection"],
+      "bug_descriptions": ["shell=True with f-string allows command injection via host/user/port"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_002",
+    "category": "code_review",
+    "input": {
+      "code": "def get_user(user_id):\n    query = f\"SELECT * FROM users WHERE id = '{user_id}'\"\n    cursor.execute(query)\n    return cursor.fetchone()",
+      "language": "python",
+      "file_path": "models/user.py"
+    },
+    "expected": {
+      "bugs": ["sql_injection"],
+      "bug_descriptions": ["String interpolation in SQL query allows SQL injection"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_003",
+    "category": "code_review",
+    "input": {
+      "code": "function renderComment(comment) {\n  const el = document.getElementById('comments');\n  el.insertAdjacentHTML('beforeend', '<div>' + comment.body + '</div>');\n}",
+      "language": "javascript",
+      "file_path": "static/js/comments.js",
+      "note": "INTENTIONAL VULNERABILITY - benchmark test case for code review quality evaluation"
+    },
+    "expected": {
+      "bugs": ["xss"],
+      "bug_descriptions": ["Inserting unsanitized user input as HTML enables cross-site scripting"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_004",
+    "category": "code_review",
+    "input": {
+      "code": "def read_config(path):\n    user_path = os.path.join('/etc/app/config', path)\n    with open(user_path) as f:\n        return f.read()",
+      "language": "python",
+      "file_path": "config/loader.py"
+    },
+    "expected": {
+      "bugs": ["path_traversal"],
+      "bug_descriptions": ["os.path.join with user input allows path traversal via ../"],
+      "severity": "high"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_005",
+    "category": "code_review",
+    "input": {
+      "code": "import yaml\n\ndef load_settings(data):\n    config = yaml.load(data)\n    return config.get('settings', {})",
+      "language": "python",
+      "file_path": "utils/settings.py"
+    },
+    "expected": {
+      "bugs": ["insecure_deserialization"],
+      "bug_descriptions": ["yaml.load without Loader parameter allows arbitrary code execution"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_006",
+    "category": "code_review",
+    "input": {
+      "code": "def download_file(url):\n    conn = http.client.HTTPSConnection(url.split('/')[2])\n    conn.request('GET', '/' + '/'.join(url.split('/')[3:]))\n    response = conn.getresponse()\n    data = response.read()\n    return data",
+      "language": "python",
+      "file_path": "utils/downloader.py"
+    },
+    "expected": {
+      "bugs": ["resource_leak"],
+      "bug_descriptions": ["HTTP connection is never closed; response not properly handled"],
+      "severity": "medium"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_007",
+    "category": "code_review",
+    "input": {
+      "code": "def process_items(items):\n    results = []\n    for i in range(1, len(items)):\n        if items[i] > items[i-1]:\n            results.append(items[i] - items[i-1])\n    return results",
+      "language": "python",
+      "file_path": "utils/processor.py"
+    },
+    "expected": {
+      "bugs": ["off_by_one"],
+      "bug_descriptions": ["Loop starts at index 1, skipping comparison of first element pair; last element always excluded from results"],
+      "severity": "low"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_008",
+    "category": "code_review",
+    "input": {
+      "code": "API_KEY = 'sk-proj-abc123def456ghi789'\nDATABASE_URL = 'postgresql://admin:p@ssw0rd@prod-db.internal:5432/myapp'\n\ndef get_client():\n    return openai.Client(api_key=API_KEY)",
+      "language": "python",
+      "file_path": "config/constants.py"
+    },
+    "expected": {
+      "bugs": ["hardcoded_credentials"],
+      "bug_descriptions": ["API key and database password hardcoded in source code"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_009",
+    "category": "code_review",
+    "input": {
+      "code": "import threading\n\ncounter = 0\n\ndef increment():\n    global counter\n    for _ in range(1000000):\n        counter += 1\n\nthreads = [threading.Thread(target=increment) for _ in range(4)]\nfor t in threads: t.start()\nfor t in threads: t.join()\nprint(counter)",
+      "language": "python",
+      "file_path": "utils/counter.py"
+    },
+    "expected": {
+      "bugs": ["race_condition"],
+      "bug_descriptions": ["Shared mutable counter without synchronization causes race condition"],
+      "severity": "high"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_010",
+    "category": "code_review",
+    "input": {
+      "code": "func handleRequest(w http.ResponseWriter, r *http.Request) {\n    body, _ := io.ReadAll(r.Body)\n    var data map[string]interface{}\n    json.Unmarshal(body, &data)\n    name := data[\"name\"].(string)\n    fmt.Fprintf(w, \"Hello, %s\", name)\n}",
+      "language": "go",
+      "file_path": "handlers/api.go"
+    },
+    "expected": {
+      "bugs": ["missing_error_handling", "nil_dereference"],
+      "bug_descriptions": ["Errors from ReadAll and Unmarshal are ignored; type assertion without nil check causes panic"],
+      "severity": "high"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_011",
+    "category": "code_review",
+    "input": {
+      "code": "def parse_age(age_str):\n    age = int(age_str)\n    if age > 0 and age < 150:\n        return age\n    return None\n\ndef process_form(data):\n    age = parse_age(data.get('age', ''))\n    message = f'User is {age} years old'\n    return message",
+      "language": "python",
+      "file_path": "forms/handler.py"
+    },
+    "expected": {
+      "bugs": ["unhandled_exception", "type_confusion"],
+      "bug_descriptions": ["int() raises ValueError on non-numeric input; None return used in f-string without check"],
+      "severity": "medium"
+    },
+    "max_tokens": 800
+  },
+  {
+    "id": "review_012",
+    "category": "code_review",
+    "input": {
+      "code": "app.get('/api/admin/users', (req, res) => {\n  const users = db.query('SELECT * FROM users');\n  res.json(users);\n});\n\napp.post('/api/admin/delete-user', (req, res) => {\n  db.query('DELETE FROM users WHERE id = ' + req.body.id);\n  res.json({ success: true });\n});",
+      "language": "javascript",
+      "file_path": "routes/admin.js"
+    },
+    "expected": {
+      "bugs": ["missing_auth", "sql_injection"],
+      "bug_descriptions": ["Admin endpoints have no authentication middleware; DELETE query uses string concatenation"],
+      "severity": "critical"
+    },
+    "max_tokens": 800
+  }
+]

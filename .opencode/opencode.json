@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "vllm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "vLLM Main (Gemma 4 31B)",
+      "options": {
+        "baseURL": "http://localhost:8000/v1",
+        "apiKey": "local-vllm"
+      },
+      "models": {
+        "gemma-4-31b": {
+          "name": "Gemma 4 31B",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          }
+        }
+      }
+    },
+    "vllm-subagent": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "vLLM Sub-Agent (Phi-4-mini)",
+      "options": {
+        "baseURL": "http://localhost:8001/v1",
+        "apiKey": "local-vllm"
+      },
+      "models": {
+        "phi-4-mini": {
+          "name": "Phi-4-mini (GitHub Ops)",
+          "limit": {
+            "context": 16384,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+  "model": "vllm/gemma-4-31b"
+}

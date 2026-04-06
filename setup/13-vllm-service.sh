@@ -94,4 +94,57 @@ SYSTEMD
 systemctl daemon-reload
 systemctl enable vllm.service
 
-echo "vLLM service configured: start-vllm, start-vllm-hermes, start-claude-code"
+# ==============================================================================
+# Sub-agent: Phi-4-mini for GitHub operations (port 8001, TP=1, single GPU)
+# ==============================================================================
+
+SUBAGENT_MODEL_ID="${SUBAGENT_MODEL_ID:-microsoft/Phi-4-mini-instruct}"
+SUBAGENT_SERVED_NAME="${SUBAGENT_SERVED_NAME:-phi-4-mini}"
+SUBAGENT_MAX_MODEL_LEN="${SUBAGENT_MAX_MODEL_LEN:-16384}"
+SUBAGENT_TOOL_CALL_PARSER="${SUBAGENT_TOOL_CALL_PARSER:-hermes}"
+SUBAGENT_PORT="${SUBAGENT_PORT:-8001}"
+
+cat > /usr/local/bin/start-vllm-subagent <<SCRIPT
+#!/bin/bash
+echo "Starting vLLM sub-agent: ${SUBAGENT_MODEL_ID} on port ${SUBAGENT_PORT}..."
+echo "Model download may take 5-10 minutes on first run."
+export HF_TOKEN="\${HF_TOKEN:-\$(cat /home/${ADMIN_USERNAME}/.cache/huggingface/token 2>/dev/null)}"
+exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \\
+  --model ${SUBAGENT_MODEL_ID} \\
+  --served-model-name ${SUBAGENT_SERVED_NAME} \\
+  --tensor-parallel-size 1 \\
+  --max-model-len ${SUBAGENT_MAX_MODEL_LEN} \\
+  --gpu-memory-utilization 0.15 \\
+  --enable-auto-tool-choice \\
+  --tool-call-parser ${SUBAGENT_TOOL_CALL_PARSER} \\
+  --host 0.0.0.0 \\
+  --port ${SUBAGENT_PORT}
+SCRIPT
+chmod +x /usr/local/bin/start-vllm-subagent
+
+cat > /etc/systemd/system/vllm-subagent.service <<SYSTEMD
+[Unit]
+Description=vLLM Sub-Agent (${SUBAGENT_SERVED_NAME}) — GitHub Operations
+After=network.target nvidia-persistenced.service vllm.service
+
+[Service]
+Type=simple
+User=${ADMIN_USERNAME}
+Environment=HF_TOKEN=${HF_TOKEN:-}
+ExecStartPre=/bin/sleep 30
+ExecStart=/usr/local/bin/start-vllm-subagent
+Restart=on-failure
+RestartSec=30
+LimitNOFILE=65536
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD
+systemctl daemon-reload
+systemctl enable vllm-subagent.service
+
+echo "vLLM services configured:"
+echo "  Main:      start-vllm (port ${VLLM_PORT})"
+echo "  Sub-agent: start-vllm-subagent (port ${SUBAGENT_PORT})"
+echo "  Claude:    start-claude-code"

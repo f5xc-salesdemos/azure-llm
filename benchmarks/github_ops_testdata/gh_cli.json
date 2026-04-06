@@ -1,0 +1,142 @@
+[
+  {
+    "id": "ghcli_001",
+    "category": "gh_cli",
+    "input": {
+      "task": "Create a draft pull request from the current branch to main with title 'Fix vLLM startup race condition'"
+    },
+    "expected": {
+      "command_pattern": "gh pr create",
+      "required_flags": ["--draft", "--title"],
+      "must_not_contain": ["curl", "git push origin"],
+      "valid_flags": ["--draft", "--title", "--body", "--base", "--head", "--assignee", "--label", "--reviewer"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_002",
+    "category": "gh_cli",
+    "input": {
+      "task": "List all open issues labeled 'bug' in the current repository"
+    },
+    "expected": {
+      "command_pattern": "gh issue list",
+      "required_flags": ["--label", "bug"],
+      "must_not_contain": ["curl", "api.github.com"],
+      "valid_flags": ["--label", "--state", "--limit", "--json", "--jq", "--assignee"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_003",
+    "category": "gh_cli",
+    "input": {
+      "task": "Merge pull request #42 using squash merge strategy"
+    },
+    "expected": {
+      "command_pattern": "gh pr merge",
+      "required_flags": ["--squash", "42"],
+      "must_not_contain": ["curl", "git merge"],
+      "valid_flags": ["--squash", "--rebase", "--merge", "--delete-branch", "--auto", "--body"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_004",
+    "category": "gh_cli",
+    "input": {
+      "task": "Create a new issue with title 'GPU OOM on model load' and label it as 'bug' and 'gpu'"
+    },
+    "expected": {
+      "command_pattern": "gh issue create",
+      "required_flags": ["--title", "--label"],
+      "must_not_contain": ["curl", "api.github.com"],
+      "valid_flags": ["--title", "--body", "--label", "--assignee", "--project", "--milestone"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_005",
+    "category": "gh_cli",
+    "input": {
+      "task": "View the status of the most recent GitHub Actions workflow run"
+    },
+    "expected": {
+      "command_pattern": "gh run",
+      "required_flags": [],
+      "must_not_contain": ["curl", "api.github.com/actions"],
+      "valid_flags": ["list", "view", "--limit", "--json", "--jq", "--workflow", "--status"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_006",
+    "category": "gh_cli",
+    "input": {
+      "task": "Create a new release v2.0.0 with auto-generated release notes from the main branch"
+    },
+    "expected": {
+      "command_pattern": "gh release create",
+      "required_flags": ["v2.0.0", "--generate-notes"],
+      "must_not_contain": ["curl", "git tag"],
+      "valid_flags": ["--generate-notes", "--target", "--title", "--notes", "--draft", "--prerelease"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_007",
+    "category": "gh_cli",
+    "input": {
+      "task": "Add user 'octocat' as a reviewer to pull request #15"
+    },
+    "expected": {
+      "command_pattern": "gh pr edit",
+      "required_flags": ["--add-reviewer", "15"],
+      "must_not_contain": ["curl", "api.github.com"],
+      "valid_flags": ["--add-reviewer", "--remove-reviewer", "--add-assignee", "--add-label", "--title", "--body"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_008",
+    "category": "gh_cli",
+    "input": {
+      "task": "Fork the repository 'opencode-ai/opencode' to your account and clone it locally"
+    },
+    "expected": {
+      "command_pattern": "gh repo fork",
+      "required_flags": ["opencode-ai/opencode", "--clone"],
+      "must_not_contain": ["git clone https://"],
+      "valid_flags": ["--clone", "--remote", "--org", "--fork-name"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_009",
+    "category": "gh_cli",
+    "input": {
+      "task": "Close issue #7 with a comment explaining it was fixed in PR #12"
+    },
+    "expected": {
+      "command_pattern": "gh issue close",
+      "required_flags": ["7", "--comment"],
+      "must_not_contain": ["curl", "api.github.com"],
+      "valid_flags": ["--comment", "--reason"]
+    },
+    "max_tokens": 200
+  },
+  {
+    "id": "ghcli_010",
+    "category": "gh_cli",
+    "input": {
+      "task": "Get the diff of pull request #25 to review the changes"
+    },
+    "expected": {
+      "command_pattern": "gh pr diff",
+      "required_flags": ["25"],
+      "must_not_contain": ["curl", "git diff"],
+      "valid_flags": ["--color", "--patch"]
+    },
+    "max_tokens": 200
+  }
+]
