@@ -134,6 +134,13 @@ resource "azurerm_linux_virtual_machine" "this" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-    hf_token = var.hf_token
+    hf_token              = var.hf_token
+    model_id              = var.model_id
+    served_model_name     = var.served_model_name
+    max_model_len         = var.max_model_len
+    gpu_memory_utilization = var.gpu_memory_utilization
+    tool_call_parser      = var.tool_call_parser
+    vllm_port             = var.vllm_port
+    admin_username        = var.admin_username
   }))
 }

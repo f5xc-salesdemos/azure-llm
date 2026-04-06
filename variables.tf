@@ -88,3 +88,39 @@ variable "hf_token" {
   type        = string
   sensitive   = true
 }
+
+variable "model_id" {
+  description = "HuggingFace model ID for vLLM to serve"
+  type        = string
+  default     = "google/gemma-4-31B-it"
+}
+
+variable "served_model_name" {
+  description = "Model name exposed by vLLM API (used in Claude Code config)"
+  type        = string
+  default     = "gemma-4-31b"
+}
+
+variable "max_model_len" {
+  description = "Maximum context length in tokens"
+  type        = number
+  default     = 131072
+}
+
+variable "gpu_memory_utilization" {
+  description = "Fraction of GPU memory for model + KV cache (0.0-1.0)"
+  type        = number
+  default     = 0.95
+}
+
+variable "tool_call_parser" {
+  description = "vLLM tool call parser (gemma4, hermes, llama4_pythonic, qwen3_coder, glm47)"
+  type        = string
+  default     = "gemma4"
+}
+
+variable "vllm_port" {
+  description = "Port for vLLM API server"
+  type        = number
+  default     = 8000
+}
