@@ -35,30 +35,40 @@ LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 # Phase 3: Best models for agentic coding + tool calling + thinking on A100 80GB
 # Phase 3 final: best agentic coding models for A100 80GB
 # Models ordered by expected quality (SWE-bench / BFCL scores)
-declare -a MODEL_SLUGS=("qwen3-coder-next-fp8" "gemma4-31b" "glm47-flash" "llama4-scout")
+# Phase 3 final: best agentic coding models for A100 80GB
+# Strategy: use AWQ 4-bit where possible to maximize context window
+# Exception: GLM AWQ degrades tool-calling quality — keep BF16
+declare -a MODEL_SLUGS=("qwen3-coder-next-fp8" "gemma4-31b-awq" "gemma4-31b-bf16" "glm47-flash" "llama4-scout")
 declare -A HF_MODELS=(
     ["qwen3-coder-next-fp8"]="Qwen/Qwen3-Coder-Next-FP8"
-    ["gemma4-31b"]="google/gemma-4-31B-it"
+    ["gemma4-31b-awq"]="cyankiwi/gemma-4-31B-it-AWQ-4bit"
+    ["gemma4-31b-bf16"]="google/gemma-4-31B-it"
     ["glm47-flash"]="zai-org/GLM-4.7-Flash"
     ["llama4-scout"]="meta-llama/Llama-4-Scout-17B-16E-Instruct"
 )
 declare -A VLLM_EXTRA=(
     ["qwen3-coder-next-fp8"]="--trust-remote-code --tool-call-parser qwen3_coder"
-    ["gemma4-31b"]=""
+    ["gemma4-31b-awq"]="--quantization awq"
+    ["gemma4-31b-bf16"]=""
     ["glm47-flash"]="--reasoning-parser glm45"
     ["llama4-scout"]=""
 )
 declare -A TOOL_PARSER=(
     ["qwen3-coder-next-fp8"]="qwen3_coder"
-    ["gemma4-31b"]="gemma4"
+    ["gemma4-31b-awq"]="gemma4"
+    ["gemma4-31b-bf16"]="gemma4"
     ["glm47-flash"]="glm47"
     ["llama4-scout"]="llama4_pythonic"
 )
-# Per-model max context (based on A100 80GB VRAM budget after weights)
-# FP8 models have smaller weights = more room for KV cache = longer context
+# Per-model max context (A100 80GB × 0.90 = 72GB usable)
+# AWQ 4-bit: ~15GB weights → 57GB for KV cache → 128K+ context
+# FP8: ~40GB weights → 32GB KV → 32K context
+# BF16 31B: ~62GB weights → 10GB KV → 8K context
+# BF16 17B: ~34GB weights → 38GB KV → 32K context
 declare -A MAX_MODEL_LEN=(
     ["qwen3-coder-next-fp8"]="32768"
-    ["gemma4-31b"]="8192"
+    ["gemma4-31b-awq"]="131072"
+    ["gemma4-31b-bf16"]="8192"
     ["glm47-flash"]="8192"
     ["llama4-scout"]="32768"
 )
