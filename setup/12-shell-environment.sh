@@ -35,10 +35,8 @@ fc-cache -fv 2>/dev/null || true
 # Tmux Plugin Manager
 git clone --depth=1 https://github.com/tmux-plugins/tpm /etc/skel/.tmux/plugins/tpm 2>/dev/null || true
 
-# Neovim
-curl -Lo /usr/local/bin/nvim "https://github.com/neovim/neovim/releases/latest/download/nvim.appimage" 2>/dev/null && \
-  chmod +x /usr/local/bin/nvim || \
-  apt-get install -y neovim
+# Neovim (apt preferred — AppImage often fails on Ubuntu 24.04)
+apt-get install -y neovim
 
 # Copy to admin user
 cp -r /etc/skel/.oh-my-zsh /home/${ADMIN_USERNAME}/.oh-my-zsh 2>/dev/null || true
