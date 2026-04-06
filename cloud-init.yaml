@@ -67,14 +67,14 @@ write_files:
     \ | sh\nexport PATH=\"/root/.local/bin:$PATH\"\nuv pip install --python /opt/vllm-env/bin/python -U vllm --pre \\\n  --extra-index-url https://wheels.vllm.ai/nightly/cu129 \\\n  --extra-index-url https://download.pytorch.org/whl/cu129\
     \ \\\n  --index-strategy unsafe-best-match\nuv pip install --python /opt/vllm-env/bin/python transformers==5.5.0\n/opt/vllm-env/bin/pip install aiohttp tabulate\n\n# ---- Node.js 20 + Claude Code CLI\
     \ ----\ncurl -fsSL https://deb.nodesource.com/setup_20.x | bash -\napt-get install -y nodejs || (dpkg --configure -a && apt-get install -y -f nodejs)\nnpm install -g @anthropic-ai/claude-code\n\n# ----\
-    \ Claude Code configuration ----\nmkdir -p /home/${admin_username}/.claude\ncat > /home/${admin_username}/.claude/settings.json <<'CLAUDECONF'\n{\n  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"http://localhost:${vllm_port}\"\
-    ,\n    \"ANTHROPIC_API_KEY\": \"local-vllm\",\n    \"ANTHROPIC_AUTH_TOKEN\": \"local-vllm\",\n    \"ANTHROPIC_DEFAULT_OPUS_MODEL\": \"${served_model_name}\",\n    \"ANTHROPIC_DEFAULT_SONNET_MODEL\"\
-    : \"${served_model_name}\",\n    \"ANTHROPIC_DEFAULT_HAIKU_MODEL\": \"${served_model_name}\",\n    \"CLAUDE_CODE_ATTRIBUTION_HEADER\": \"0\"\n  }\n}\nCLAUDECONF\n\n\n# ---- HuggingFace token (injected\
-    \ by Terraform at build time) ----\nmkdir -p /home/${admin_username}/.cache/huggingface\necho \"${hf_token}\" > /home/${admin_username}/.cache/huggingface/token\nchmod 600 /home/${admin_username}/.cache/huggingface/token\n\
-    chown -R azureuser:azureuser /home/${admin_username}/.cache\n\n# ---- Convenience scripts ----\n\n# Option 1: Native gemma4 tool parser (try first)\ncat > /usr/local/bin/start-vllm-gemma4 <<'SCRIPT'\n\
-    #!/bin/bash\necho \"Starting vLLM with Gemma 4 31B (native gemma4 tool parser)...\"\necho \"This may take 5-10 minutes on first run (downloading model)...\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token\
-    \ 2>/dev/null)}\"\nexec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \\\n  --model ${model_id} \\\n  --served-model-name ${served_model_name} \\\n  --tensor-parallel-size 2 \\\n  --max-model-len\
-    \ ${max_model_len} \\\n  --gpu-memory-utilization ${gpu_memory_utilization} \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser ${tool_call_parser} \\\n  --reasoning-parser gemma4 \\\n  --default-chat-template-kwargs\
+    \ Claude Code configuration (from /etc/skel, applies to all users) ----\n# /etc/skel files are written by cloud-init write_files, not this script\n# Copy skel to admin user (skel only applies to users\
+    \ created AFTER this point)\ncp -r /etc/skel/.claude /home/$${admin_username}/.claude 2>/dev/null || true\ncp /etc/skel/.claude.json /home/$${admin_username}/.claude.json 2>/dev/null || true\nchown\
+    \ -R $${admin_username}:$${admin_username} /home/$${admin_username}/.claude /home/$${admin_username}/.claude.json\n\n# ---- HuggingFace token (injected by Terraform at build time) ----\nmkdir -p /home/${admin_username}/.cache/huggingface\n\
+    echo \"${hf_token}\" > /home/${admin_username}/.cache/huggingface/token\nchmod 600 /home/${admin_username}/.cache/huggingface/token\nchown -R azureuser:azureuser /home/${admin_username}/.cache\n\n#\
+    \ ---- Convenience scripts ----\n\n# Option 1: Native gemma4 tool parser (try first)\ncat > /usr/local/bin/start-vllm-gemma4 <<'SCRIPT'\n#!/bin/bash\necho \"Starting vLLM with Gemma 4 31B (native gemma4\
+    \ tool parser)...\"\necho \"This may take 5-10 minutes on first run (downloading model)...\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}\"\n\
+    exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \\\n  --model ${model_id} \\\n  --served-model-name ${served_model_name} \\\n  --tensor-parallel-size 2 \\\n  --max-model-len ${max_model_len}\
+    \ \\\n  --gpu-memory-utilization ${gpu_memory_utilization} \\\n  --enable-auto-tool-choice \\\n  --tool-call-parser ${tool_call_parser} \\\n  --reasoning-parser gemma4 \\\n  --default-chat-template-kwargs\
     \ '{\"enable_thinking\": true}' \\\n  --async-scheduling \\\n  --mm-processor-kwargs '{\"max_soft_tokens\": 560}' \\\n  --limit-mm-per-prompt '{\"image\": 4}' \\\n  --host 0.0.0.0 \\\n  --port ${vllm_port}\n\
     SCRIPT\nchmod +x /usr/local/bin/start-vllm-gemma4\n\n# Option 2: Hermes tool parser (fallback if gemma4 parser is buggy)\ncat > /usr/local/bin/start-vllm-gemma4-hermes <<'SCRIPT'\n#!/bin/bash\necho\
     \ \"Starting vLLM with Gemma 4 31B (hermes tool parser fallback)...\"\necho \"This may take 5-10 minutes on first run (downloading model)...\"\nexport HF_TOKEN=\"$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token\
@@ -100,6 +100,33 @@ write_files:
     }}}}}],\n    \"max_tokens\":100\n  }' 2>/dev/null)\nif echo \"$RESP\" | grep -q \"tool_calls\\|function\"; then\n    echo \"PASS (tool call detected)\"\nelif echo \"$RESP\" | grep -q \"choices\"; then\n\
     \    echo \"WARN (response ok but no tool call - model may prefer text answer)\"\nelse\n    echo \"FAIL\"\n    echo \"$RESP\" | head -5\nfi\n\necho \"\"\necho \"=== All tests passed ===\"\necho \"Claude\
     \ Code is ready. Run: claude\"\necho \"Or use: start-claude-code\"\n"
+- path: /etc/skel/.claude/settings.json
+  permissions: '0644'
+  content: "{\n  \"defaultMode\": \"bypassPermissions\",\n  \"skipDangerousModePermissionPrompt\": true,\n  \"permissions\": {\n    \"allow\": [\n      \"Bash\",\n      \"Edit\",\n      \"Write\",\n   \
+    \   \"mcp__*\"\n    ]\n  },\n  \"model\": \"sonnet\",\n  \"spinnerTipsEnabled\": false,\n  \"terminalProgressBarEnabled\": false,\n  \"prefersReducedMotion\": true,\n  \"companyAnnouncements\": [],\n\
+    \  \"env\": {\n    \"ANTHROPIC_BASE_URL\": \"http://localhost:${vllm_port}\",\n    \"ANTHROPIC_API_KEY\": \"local-vllm\",\n    \"ANTHROPIC_DEFAULT_HAIKU_MODEL\": \"${served_model_name}\",\n    \"ANTHROPIC_DEFAULT_SONNET_MODEL\"\
+    : \"${served_model_name}\",\n    \"ANTHROPIC_DEFAULT_OPUS_MODEL\": \"${served_model_name}\",\n    \"CLAUDE_CODE_ATTRIBUTION_HEADER\": \"0\",\n    \"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS\": \"1\",\n \
+    \   \"DEBIAN_FRONTEND\": \"noninteractive\"\n  },\n  \"autoUpdatesChannel\": \"latest\"\n}"
+- path: /etc/skel/.claude.json
+  permissions: '0644'
+  content: "{\n  \"hasCompletedOnboarding\": true,\n  \"theme\": \"dark-daltonized\",\n  \"opusProMigrationComplete\": true,\n  \"sonnet1m45MigrationComplete\": true,\n  \"customApiKeyResponses\": {\n \
+    \   \"approved\": [],\n    \"rejected\": []\n  },\n  \"officialMarketplaceAutoInstallAttempted\": true,\n  \"officialMarketplaceAutoInstalled\": true,\n  \"autoUpdates\": true,\n  \"projects\": {\n\
+    \    \"/home/${admin_username}\": {\n      \"hasTrustDialogAccepted\": true,\n      \"hasTrustDialogHooksAccepted\": true,\n      \"projectOnboardingSeenCount\": 1,\n      \"hasClaudeMdExternalIncludesApproved\"\
+    : true,\n      \"hasClaudeMdExternalIncludesWarningShown\": true\n    },\n    \"/workspace\": {\n      \"hasTrustDialogAccepted\": true,\n      \"hasTrustDialogHooksAccepted\": true,\n      \"projectOnboardingSeenCount\"\
+    : 1,\n      \"hasClaudeMdExternalIncludesApproved\": true,\n      \"hasClaudeMdExternalIncludesWarningShown\": true\n    }\n  }\n}"
+- path: /etc/skel/.claude/CLAUDE.md
+  permissions: '0644'
+  content: "# GPU VM Context\n\nYou are running on an Azure GPU VM with vLLM serving ${model_id}.\n\n- GPU: check with nvidia-smi\n- vLLM API: http://localhost:${vllm_port}\n- Model: ${served_model_name}\n\
+    - Context window: ${max_model_len} tokens\n\n## Available Tools\n\n- claude \u2014 Claude Code CLI (pre-configured for local vLLM)\n- start-vllm-gemma4 \u2014 Start vLLM with native gemma4 tool parser\n\
+    - start-vllm-gemma4-hermes \u2014 Start vLLM with hermes tool parser (fallback)\n- start-claude-code \u2014 Wait for vLLM then launch Claude Code\n"
+- path: /etc/claude-code/CLAUDE.md
+  permissions: '0644'
+  content: "# Claude Code Tool Awareness (GPU VM)\n\nThis file is the managed policy CLAUDE.md, installed at\n/etc/claude-code/CLAUDE.md during VM build. It is loaded in every\nClaude Code session at the\
+    \ highest priority tier.\n\n## Tool Naming Convention\n\nAll Claude Code tools use PascalCase. NEVER use snake_case.\n\n| Correct | WRONG | Purpose |\n| --- | --- | --- |\n| Read | read_file, cat |\
+    \ Read file contents |\n| Write | write_file, create_file | Create/overwrite files |\n| Edit | edit_file, sed | Edit existing files |\n| Bash | bash, run_command | Run shell commands |\n| Glob | glob,\
+    \ find_files | Find files by pattern |\n| Grep | grep, search_files | Search file contents |\n| Agent | agent, task | Launch subagent tasks |\n\n## Local LLM Backend\n\nThis VM runs vLLM with a local\
+    \ model. The API is at http://localhost:${vllm_port}.\nDo not attempt to contact api.anthropic.com \u2014 all requests go to the local vLLM server.\n\n## Bash Tool Escaping\n\nThe Bash tool escapes\
+    \ ! to \\! on all platforms. Avoid ! in generated Bash commands.\nUse | not instead of != in jq. Use cmd || { handle; } instead of if ! cmd.\n"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - chown -R ${admin_username}:${admin_username} /home/${admin_username}/.claude
