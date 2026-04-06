@@ -32,21 +32,21 @@ LOG_FILE="${RESULTS_DIR}/orchestrator.log"
 # A100 (cc 8.0): can remove --enforce-eager, use AWQ, single GPU
 # A100 80GB: MoE models need FP8/AWQ to fit (ALL weights loaded, not just active)
 # 80B MoE BF16 = ~160GB (OOM), FP8 = ~80GB (tight), AWQ = ~40GB (comfortable)
-declare -a MODEL_SLUGS=("qwen3-coder-next-fp8" "qwen35-122b-gptq4" "qwen3-coder-30b")
+declare -a MODEL_SLUGS=("qwen3-coder-next-fp8" "qwen35-122b-gptq4" "gemma4-31b")
 declare -A HF_MODELS=(
     ["qwen3-coder-next-fp8"]="Qwen/Qwen3-Coder-Next-FP8"
     ["qwen35-122b-gptq4"]="Qwen/Qwen3.5-122B-A10B-GPTQ-Int4"
-    ["qwen3-coder-30b"]="Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    ["gemma4-31b"]="google/gemma-4-31B-it"
 )
 declare -A VLLM_EXTRA=(
     ["qwen3-coder-next-fp8"]="--trust-remote-code --tool-call-parser qwen3_coder"
     ["qwen35-122b-gptq4"]="--quantization gptq"
-    ["qwen3-coder-30b"]="--trust-remote-code"
+    ["gemma4-31b"]=""
 )
 declare -A TOOL_PARSER=(
     ["qwen3-coder-next-fp8"]="qwen3_coder"
     ["qwen35-122b-gptq4"]="hermes"
-    ["qwen3-coder-30b"]="hermes"
+    ["gemma4-31b"]="gemma4"
 )
 
 # ==============================================================================
