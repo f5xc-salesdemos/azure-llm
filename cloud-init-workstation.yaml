@@ -15,7 +15,7 @@ write_files:
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/workstation-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-06-v5-workstation"
+    CLOUD_INIT_VERSION="2026-04-07-v6-workstation"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
@@ -39,12 +39,19 @@ write_files:
     wait_for_apt
     apt-get remove -y unattended-upgrades 2>/dev/null || true
 
-    # ---- System packages ----
+    # ---- Minimal bootstrap packages (needed to run setup script) ----
     wait_for_apt
     apt-get update -y
     apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-    apt-get install -y build-essential python3-pip python3-venv git curl wget jq htop tmux \
-      neovim shellcheck ripgrep fd-find bat
+    apt-get install -y git curl wget unzip python3-pip zsh
+
+    # ---- GitHub CLI (needed for xcsh apt repo below) ----
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      | tee /etc/apt/sources.list.d/github-cli.list
+    apt-get update
+    apt-get install -y gh
 
     # ---- NVIDIA drivers (T4 for Chrome GPU rendering, not inference) ----
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
@@ -52,23 +59,22 @@ write_files:
     apt-get update
     apt-get install -y cuda-drivers
 
-    # ---- Node.js 20 + Claude Code + OpenCode ----
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs || (dpkg --configure -a && apt-get install -y -f nodejs)
-    npm install -g @anthropic-ai/claude-code opencode-ai
-
-    # ---- Python tools (uv) ----
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="/root/.local/bin:$PATH"
-    uv tool install ruff 2>/dev/null || true
-
-    # ---- GitHub CLI ----
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-      | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-      | tee /etc/apt/sources.list.d/github-cli.list
-    apt-get update
-    apt-get install -y gh
+    # ---- Full toolset — download and run setup script from GitHub ----
+    TOOLS_SCRIPT_URL="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts/setup-workstation-tools.sh"
+    TOOLS_SCRIPT="/opt/setup-workstation-tools.sh"
+    curl -fsSL "$${TOOLS_SCRIPT_URL}" -o "$${TOOLS_SCRIPT}"
+    # Verify download: must be non-empty and start with a bash shebang
+    if [ ! -s "$${TOOLS_SCRIPT}" ]; then
+        echo "ERROR: setup-workstation-tools.sh download failed or empty" >&2
+        exit 1
+    fi
+    if ! head -1 "$${TOOLS_SCRIPT}" | grep -q '^#\!.*bash'; then
+        echo "ERROR: Downloaded file is not a bash script (possible 404 HTML page):" >&2
+        head -5 "$${TOOLS_SCRIPT}" >&2
+        exit 1
+    fi
+    chmod +x "$${TOOLS_SCRIPT}"
+    bash "$${TOOLS_SCRIPT}" "${admin_username}"
 
     # ---- xcsh (OpenCode fork with fixes) ----
     curl -fsSL https://f5xc-salesdemos.github.io/apt-repo/gpg.key \
@@ -78,24 +84,422 @@ write_files:
     apt-get update
     cd /tmp && apt-get download xcsh && dpkg --force-depends -i xcsh_*.deb && rm -f xcsh_*.deb
 
+    # ---- Zsh default shell ----
+    sed -i 's|SHELL=/bin/sh|SHELL=/bin/zsh|' /etc/default/useradd
+    chsh -s /usr/bin/zsh ${admin_username}
+
+    # ---- Oh-my-zsh + plugins + p10k (as user) ----
+    su - ${admin_username} -c 'export RUNZSH=no KEEP_ZSHRC=yes && sh -c "$$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+    su - ${admin_username} -c '
+      ZSH_CUSTOM=$$HOME/.oh-my-zsh/custom
+      git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git $$ZSH_CUSTOM/plugins/zsh-autosuggestions
+      git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git $$ZSH_CUSTOM/plugins/zsh-syntax-highlighting
+      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $$ZSH_CUSTOM/themes/powerlevel10k
+      $$ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install
+      git clone --depth=1 https://github.com/tmux-plugins/tpm $$HOME/.tmux/plugins/tpm
+      sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" $$HOME/.zshrc
+      sed -i "s/^plugins=(.*/plugins=(zsh-syntax-highlighting zsh-autosuggestions git colored-man-pages command-not-found history tmux)/" $$HOME/.zshrc
+      sed -i "s/^# HYPHEN_INSENSITIVE=.*/HYPHEN_INSENSITIVE=\"true\"/" $$HOME/.zshrc
+      sed -i "s/^# COMPLETION_WAITING_DOTS=.*/COMPLETION_WAITING_DOTS=\"true\"/" $$HOME/.zshrc
+      sed -i "s/^# HIST_STAMPS=.*/HIST_STAMPS=\"yyyy-mm-dd\"/" $$HOME/.zshrc
+    '
+    su - ${admin_username} -c 'cat >> $$HOME/.zshrc <<'"'"'ZSHEOF'"'"'
+    export HISTSIZE=50000
+    export SAVEHIST=50000
+    [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+    export PATH="$$HOME/.local/bin:/usr/local/bin:$$PATH"
+    export OPENAI_API_KEY="local-vllm"
+    alias vim=nvim
+    export LESS="-R -F -X -i -J --mouse"
+    export BAT_THEME="Coldark-Dark"
+    export LESSOPEN="|~/.lessfilter %s"
+    export LESSHISTFILE="$$HOME/.cache/lesshst"
+    ZSHEOF'
+
+    # ---- p10k config (download from devcontainer repo) ----
+    curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/.p10k.zsh \
+      -o /home/${admin_username}/.p10k.zsh
+    chown ${admin_username}:${admin_username} /home/${admin_username}/.p10k.zsh
+
+    # ---- Neovim plugins (lazy.nvim — as user) ----
+    mkdir -p /home/${admin_username}/.config/nvim
+    curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/init.lua \
+      -o /home/${admin_username}/.config/nvim/init.lua
+    LAZY_DIR="/home/${admin_username}/.local/share/nvim/lazy/lazy.nvim"
+    su - ${admin_username} -c "
+      mkdir -p $$(dirname $$LAZY_DIR) && \
+      git clone --filter=blob:none --branch=stable https://github.com/folke/lazy.nvim.git $$LAZY_DIR && \
+      nvim --headless '+Lazy! sync' +qa
+    " 2>/dev/null || true
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.config /home/${admin_username}/.local
+
+    # ---- rc files (matching devcontainer) ----
+    cat > /home/${admin_username}/.digrc <<'DIGRC'
+    +nostats +nocomments +nocmd +noquestion +recurse +search
+    DIGRC
+    cat > /home/${admin_username}/.inputrc <<'INPUTRC'
+    set completion-ignore-case on
+    set completion-map-case on
+    set show-all-if-ambiguous on
+    set show-all-if-unmodified on
+    set colored-stats on
+    set mark-directories on
+    set mark-symlinked-directories on
+    set colored-completion-prefix on
+    set bell-style none
+    set history-preserve-point on
+    set input-meta on
+    set output-meta on
+    set convert-meta off
+    "\e[A": history-search-backward
+    "\e[B": history-search-forward
+    "\e[1;5C": forward-word
+    "\e[1;5D": backward-word
+    INPUTRC
+    cat > /home/${admin_username}/.tmux.conf <<'TMUX'
+    set -g default-shell /usr/bin/zsh
+    set -g default-terminal "tmux-256color"
+    set -as terminal-features ",xterm-256color:RGB"
+    set -s extended-keys always
+    set -as terminal-features ",xterm-256color:extkeys"
+    bind-key -n S-Enter send-keys Escape "[13;2u"
+    set -g history-limit 50000
+    set -g mouse on
+    set -g focus-events on
+    set -g set-clipboard on
+    set -g allow-passthrough on
+    set -g base-index 1
+    setw -g pane-base-index 1
+    set -g renumber-windows on
+    set -sg escape-time 10
+    bind | split-window -h -c "#{pane_current_path}"
+    bind - split-window -v -c "#{pane_current_path}"
+    bind c new-window -c "#{pane_current_path}"
+    bind h select-pane -L
+    bind j select-pane -D
+    bind k select-pane -U
+    bind l select-pane -R
+    bind -r H resize-pane -L 5
+    bind -r J resize-pane -D 5
+    bind -r K resize-pane -U 5
+    bind -r L resize-pane -R 5
+    bind r source-file ~/.tmux.conf \; display "Config reloaded"
+    setw -g mode-keys vi
+    bind -T copy-mode-vi v send-keys -X begin-selection
+    bind -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+    set -g @plugin 'tmux-plugins/tpm'
+    set -g @plugin 'tmux-plugins/tmux-sensible'
+    set -g status-position bottom
+    set -g status-interval 5
+    set -g status-style 'bg=colour32,fg=colour15'
+    set -g status-left "#[fg=colour15,bold] #S "
+    set -g status-right "#[fg=colour15] %H:%M "
+    set -g window-status-style 'bg=default,fg=default'
+    setw -g window-status-current-style 'bg=colour39,fg=colour15,bold'
+    run '~/.tmux/plugins/tpm/tpm'
+    TMUX
+    cat > /home/${admin_username}/.nanorc <<'NANORC'
+    set linenumbers
+    set tabsize 4
+    set tabstospaces
+    set softwrap
+    set smooth
+    set autoindent
+    set constantshow
+    set mouse
+    set suspend
+    include "/usr/share/nano/*.nanorc"
+    include "/usr/share/nano/extra/*.nanorc"
+    NANORC
+    cat > /home/${admin_username}/.lessfilter <<'LESSF'
+    #!/usr/bin/env bash
+    if command -v bat > /dev/null 2>&1; then
+        bat --color=always --style=plain --paging=never -- "$1"
+        exit 0
+    fi
+    exit 1
+    LESSF
+    chmod +x /home/${admin_username}/.lessfilter
+    cat > /home/${admin_username}/.aider.conf.yml <<'AIDER'
+    model: anthropic/claude-opus-4-6
+    dark-mode: true
+    AIDER
+    chown ${admin_username}:${admin_username} /home/${admin_username}/.digrc \
+      /home/${admin_username}/.inputrc /home/${admin_username}/.tmux.conf \
+      /home/${admin_username}/.nanorc /home/${admin_username}/.lessfilter \
+      /home/${admin_username}/.aider.conf.yml
+
+    # ---- Codex config (vLLM/gemma4) ----
+    mkdir -p /home/${admin_username}/.codex
+    cat > /home/${admin_username}/.codex/config.toml <<'CODEX'
+    model = "gemma-4-31b"
+    model_provider = "vllm-local"
+    sandbox_mode = "danger-full-access"
+    approval_policy = "never"
+    model_reasoning_effort = "high"
+    personality = "pragmatic"
+    hide_agent_reasoning = true
+    [model_providers.vllm-local]
+    name = "vLLM Gemma4"
+    base_url = "http://${gemma_ip}:${gemma_port}/v1"
+    env_key = "OPENAI_API_KEY"
+    wire_api = "responses"
+    query_params = {}
+    [features]
+    multi_agent = true
+    shell_tool = true
+    fast_mode = true
+    [projects."/home/${admin_username}"]
+    trust_level = "trusted"
+    CODEX
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.codex
+
+    # ---- Pi config (vLLM multi-model + subagents) ----
+    mkdir -p /home/${admin_username}/.pi/agent/agents
+    cat > /home/${admin_username}/.pi/agent/settings.json <<'PICONF'
+    {
+      "defaultProvider": "openai",
+      "defaultModel": "${gemma_served_name}",
+      "quietStartup": true,
+      "defaultThinkingLevel": "off",
+      "hideThinkingBlock": true,
+      "packages": ["npm:@mjakl/pi-subagent"]
+    }
+    PICONF
+    cat > /home/${admin_username}/.pi/agent/models.json <<'PIMODELS'
+    {
+      "providers": {
+        "openai": {
+          "baseUrl": "http://${gemma_ip}:${gemma_port}/v1",
+          "apiKey": "local-vllm",
+          "models": [
+            {
+              "id": "${gemma_served_name}",
+              "name": "Gemma 4 31B (vLLM)",
+              "api": "openai-completions",
+              "reasoning": true,
+              "contextWindow": ${gemma_max_model_len},
+              "maxTokens": 8192
+            }
+          ]
+        },
+        "devstral": {
+          "baseUrl": "http://${devstral_ip}:${devstral_port}/v1",
+          "apiKey": "local-vllm",
+          "models": [
+            {
+              "id": "${devstral_served_name}",
+              "name": "Devstral-Small-2-24B (vLLM)",
+              "api": "openai-completions",
+              "reasoning": true,
+              "contextWindow": ${devstral_max_model_len},
+              "maxTokens": 4096
+            }
+          ]
+        },
+        "phi": {
+          "baseUrl": "http://${phi_ip}:${phi_port}/v1",
+          "apiKey": "local-vllm",
+          "models": [
+            {
+              "id": "${phi_served_name}",
+              "name": "Phi-4-mini (vLLM)",
+              "api": "openai-completions",
+              "reasoning": false,
+              "contextWindow": ${phi_max_model_len},
+              "maxTokens": 4096
+            }
+          ]
+        }
+      }
+    }
+    PIMODELS
+    cat > /home/${admin_username}/.pi/agent/agents/f5xc-api.md <<'PIF5XC'
+    ---
+    name: f5xc-api
+    description: "ALWAYS delegate to this agent for any F5 Distributed Cloud, F5 XC, Volterra, load balancer, origin pool, WAF, DNS, or API platform operation. This agent executes curl commands against the F5 XC REST API using environment variables F5XC_API_URL, F5XC_API_TOKEN, and F5XC_NAMESPACE."
+    model: devstral/${devstral_served_name}
+    tools: bash
+    ---
+
+    You are an F5 Distributed Cloud API operations agent. You MUST execute REST API calls using the bash tool with curl commands. NEVER output curl commands as text — always execute them.
+
+    ## Authentication
+    All API calls use: curl -s "$F5XC_API_URL/..." -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .
+    Required env vars: F5XC_API_URL, F5XC_API_TOKEN, F5XC_NAMESPACE
+
+    ## CRUD Pattern
+    - List:    GET    /api/config/namespaces/{ns}/{resources}
+    - Create:  POST   /api/config/namespaces/{ns}/{resources}
+    - Get:     GET    /api/config/namespaces/{ns}/{resources}/{name}
+    - Replace: PUT    /api/config/namespaces/{ns}/{resources}/{name}
+    - Delete:  DELETE /api/config/namespaces/{ns}/{resources}/{name}
+
+    ## Rules
+    1. Always use curl -s with APIToken header
+    2. Always pipe through jq
+    3. Use env vars — never hardcode URLs or tokens
+    PIF5XC
+    cat > /home/${admin_username}/.pi/agent/agents/github-ops.md <<'PIGHOPS'
+    ---
+    name: github-ops
+    description: "ALWAYS delegate to this agent for ANY GitHub operation: pull requests, issues, branches, merges, forks, worktrees, workflow runs, code review, commit messages, release management, repository settings, and any gh CLI or GitHub API task."
+    model: phi/${phi_served_name}
+    tools: bash,read
+    ---
+
+    You are a specialized GitHub operations agent. You MUST execute all GitHub operations using the bash tool with gh CLI or git commands. NEVER output commands as text — always execute them.
+
+    ## Pull Requests
+    - Create: gh pr create --title "..." --body "..." [--draft] [--base main]
+    - List: gh pr list [--state open|closed|merged]
+    - Merge: gh pr merge <number> [--squash|--merge|--rebase] [--delete-branch]
+    - Review: gh pr review <number> --approve|--request-changes --body "..."
+    - Checks: gh pr checks <number>
+
+    ## Issues
+    - Create: gh issue create --title "..." --body "..." [--label bug]
+    - List: gh issue list [--state open|closed] [--label "..."]
+    - Close: gh issue close <number>
+
+    ## Branches & Worktrees
+    - Branch: git checkout -b <branch> && git push -u origin <branch>
+    - Worktree: git worktree add <path> -b <branch>
+    - Fork: gh repo fork [--clone]
+
+    ## Workflows & CI
+    - List runs: gh run list [--workflow <name>]
+    - Watch: gh run watch <run-id>
+    - Trigger: gh workflow run <workflow> [--ref <branch>]
+    - Rerun: gh run rerun <run-id> [--failed]
+
+    ## Releases
+    - Create: gh release create <tag> [--generate-notes]
+    - List: gh release list
+
+    ## Commit Messages
+    Conventional Commits: type(scope): description
+    Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
+
+    ## Rules
+    1. Always use gh CLI when possible
+    2. For advanced ops use gh api with GitHub REST API
+    3. Always check and report operation results
+    PIGHOPS
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.pi
+
+    # ---- Hermes config (vLLM/gemma4) ----
+    mkdir -p /home/${admin_username}/.hermes/{sessions,logs,memories,skills,hooks,cron,image_cache,audio_cache}
+    cat > /home/${admin_username}/.hermes/config.yaml <<'HERMES'
+    model:
+      default: "gemma-4-31b"
+      provider: "openai"
+      base_url: "http://${gemma_ip}:${gemma_port}/v1"
+    terminal:
+      backend: "local"
+      cwd: "."
+      timeout: 180
+    compression:
+      enabled: true
+      threshold: 0.50
+      target_ratio: 0.20
+      protect_last_n: 20
+    memory:
+      memory_enabled: true
+      user_profile_enabled: true
+      memory_char_limit: 2200
+      user_char_limit: 1375
+      nudge_interval: 10
+      flush_min_turns: 6
+    agent:
+      max_turns: 60
+      verbose: false
+      reasoning_effort: "medium"
+    display:
+      compact: false
+      tool_progress: all
+      streaming: true
+      show_reasoning: false
+      skin: default
+    HERMES
+    cat > /home/${admin_username}/.hermes/.env <<'HENV'
+    OPENAI_API_KEY=local-vllm
+    OPENAI_BASE_URL=http://${gemma_ip}:${gemma_port}/v1
+    LLM_MODEL=gemma-4-31b
+    HENV
+    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.hermes
+
+    # ---- Populate /etc/skel from user home ----
+    cp /home/${admin_username}/.zshrc /etc/skel/.zshrc
+    cp /home/${admin_username}/.p10k.zsh /etc/skel/.p10k.zsh
+    cp -r /home/${admin_username}/.oh-my-zsh /etc/skel/.oh-my-zsh
+    cp -r /home/${admin_username}/.tmux /etc/skel/.tmux
+    cp /home/${admin_username}/.digrc /home/${admin_username}/.inputrc \
+       /home/${admin_username}/.tmux.conf /home/${admin_username}/.nanorc \
+       /home/${admin_username}/.lessfilter /home/${admin_username}/.aider.conf.yml /etc/skel/
+    chmod +x /etc/skel/.lessfilter
+    cp -r /home/${admin_username}/.codex /etc/skel/.codex
+    cp -r /home/${admin_username}/.pi /etc/skel/.pi
+    mkdir -p /etc/skel/.hermes
+    cp /home/${admin_username}/.hermes/config.yaml /home/${admin_username}/.hermes/.env /etc/skel/.hermes/
+    mkdir -p /etc/skel/.config/nvim
+    cp /home/${admin_username}/.config/nvim/init.lua /etc/skel/.config/nvim/init.lua
+    cp -r /home/${admin_username}/.local/share/nvim /etc/skel/.local/share/nvim 2>/dev/null || true
+    # Fix skel .zshrc to use $HOME instead of hardcoded path
+    sed -i "s|/home/${admin_username}|\\$$HOME|g" /etc/skel/.zshrc 2>/dev/null || true
+
     # ---- Claude Code configuration ----
-    mkdir -p /etc/skel/.claude /home/${admin_username}/.claude
-    cat > /etc/skel/.claude/settings.json <<'SETTINGS'
+    mkdir -p /home/${admin_username}/.claude
+
+    # ~/.claude/settings.json — permissions, model, vLLM env vars, UI prefs
+    cat > /home/${admin_username}/.claude/settings.json <<'SETTINGS'
     {
       "defaultMode": "bypassPermissions",
       "skipDangerousModePermissionPrompt": true,
       "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*"] },
       "model": "sonnet",
+      "spinnerTipsEnabled": false,
+      "terminalProgressBarEnabled": false,
+      "showTurnDuration": false,
+      "prefersReducedMotion": true,
+      "companyAnnouncements": [],
       "env": {
         "ANTHROPIC_BASE_URL": "http://${gemma_ip}:${gemma_port}",
         "ANTHROPIC_API_KEY": "local-vllm",
+        "ANTHROPIC_SMALL_FAST_MODEL": "${gemma_served_name}",
         "ANTHROPIC_DEFAULT_HAIKU_MODEL": "${gemma_served_name}",
         "ANTHROPIC_DEFAULT_SONNET_MODEL": "${gemma_served_name}",
-        "ANTHROPIC_DEFAULT_OPUS_MODEL": "${gemma_served_name}"
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "${gemma_served_name}",
+        "DEBIAN_FRONTEND": "noninteractive"
       }
     }
     SETTINGS
-    cp -r /etc/skel/.claude /home/${admin_username}/.claude 2>/dev/null || true
+
+    # ~/.claude.json — theme, onboarding, API key approval (must be at home root)
+    cat > /home/${admin_username}/.claude.json <<'CLAUDEJSON'
+    {
+      "hasCompletedOnboarding": true,
+      "theme": "dark-daltonized",
+      "opusProMigrationComplete": true,
+      "sonnet1m45MigrationComplete": true,
+      "customApiKeyResponses": {
+        "approved": ["local-vllm"],
+        "rejected": []
+      },
+      "autoUpdates": true,
+      "projects": {
+        "/home/${admin_username}": {
+          "hasTrustDialogAccepted": true,
+          "hasTrustDialogHooksAccepted": true,
+          "projectOnboardingSeenCount": 1,
+          "hasClaudeMdExternalIncludesApproved": true,
+          "hasClaudeMdExternalIncludesWarningShown": true
+        }
+      }
+    }
+    CLAUDEJSON
+
+    chown ${admin_username}:${admin_username} /home/${admin_username}/.claude.json
     chown -R ${admin_username}:${admin_username} /home/${admin_username}/.claude
 
     # ---- OpenCode configuration (dual provider) ----
@@ -103,7 +507,7 @@ write_files:
 
     cat > /home/${admin_username}/.opencode/opencode.json <<'OCCONF'
     {
-      "$$schema": "https://opencode.ai/config.json",
+      "$schema": "https://opencode.ai/config.json",
       "provider": {
         "vllm": {
           "npm": "@ai-sdk/openai-compatible",
@@ -416,6 +820,43 @@ write_files:
     echo -n "Qwen3    (${qwen3_ip}:${qwen3_port}):    "; curl -sf http://${qwen3_ip}:${qwen3_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers
+
+    # ---- Custom MOTD (F5 logo) ----
+    chmod -x /etc/update-motd.d/* 2>/dev/null || true
+    cat > /etc/update-motd.d/01-xcsh <<'MOTD'
+    #!/bin/bash
+    R='\033[0;31m' W='\033[1;37m' N='\033[0m'
+    echo ""
+    echo -e "${R}╭──────────────────────────────────────────────────╮${N}"
+    echo -e "${R}│${N}                                                  ${R}│${N}"
+    echo -e "${R}│${N}                     ${R}________${N}                     ${R}│${N}"
+    echo -e "${R}│${N}                ${R}(${N}${R}▒▒▒▒${N}${R}████████${N}${R}▒▒▒▒${N}${R})${N}                ${R}│${N}"
+    echo -e "${R}│${N}           ${R}(${N}${R}▒▒▒${N}${R}█████████████████████${N}${R}▒▒▒${N}${R})${N}          ${R}│${N}"
+    echo -e "${R}│${N}        ${R}(${N}${R}▒▒${N}${R}████${N}${W}██████████${N}${R}████${N}${W}█████████████${N}${R})${N}       ${R}│${N}"
+    echo -e "${R}│${N}      ${R}(${N}${R}▒${N}${R}████${N}${W}██████${N}${R}▒▒▒▒▒${N}${W}███${N}${R}██${N}${W}██████████████${N}${R}▒${N}${R})${N}      ${R}│${N}"
+    echo -e "${R}│${N}     ${R}(${N}${R}▒${N}${R}████${N}${W}██████${N}${R}▒${N}${R}█████${N}${R}▒▒▒${N}${R}█${N}${W}██${N}${R}▒▒▒▒▒▒▒▒▒▒▒▒▒${N}${R}█${N}${R}▒${N}${R})${N}     ${R}│${N}"
+    echo -e "${R}│${N}    ${R}(${N}${R}▒${N}${R}█████${N}${W}██████${N}${R}█████████${N}${W}██${N}${R}▒${N}${R}███████████████${N}${R}▒${N}${R})${N}    ${R}│${N}"
+    echo -e "${R}│${N}   ${R}(${N}${R}▒${N}${R}██${N}${W}███████████████${N}${R}████${N}${W}█████████████${N}${R}██████${N}${R}▒${N}${R})${N}   ${R}│${N}"
+    echo -e "${R}│${N}  ${R}(${N}${R}▒${N}${R}███${N}${R}▒▒▒${N}${W}███████${N}${R}▒▒▒▒▒${N}${R}███${N}${W}████████████████${N}${R}█████${N}${R}▒${N}${R})${N}  ${R}│${N}"
+    echo -e "${R}│${N}  ${R}|${N}${R}▒${N}${R}██████${N}${R}▒${N}${W}██████${N}${R}███████${N}${W}████████████████████${N}${R}██${N}${R}▒${N}${R}|${N}  ${R}│${N}"
+    echo -e "${R}│${N}  ${R}|${N}${R}▒${N}${R}███████${N}${W}██████${N}${R}███████${N}${R}▒▒▒▒▒▒▒▒▒▒▒${N}${W}██████████${N}${R}█${N}${R}▒${N}${R}|${N}  ${R}│${N}"
+    echo -e "${R}│${N}  ${R}(${N}${R}▒${N}${R}███████${N}${W}██████${N}${R}██████████████████${N}${R}▒▒${N}${W}████████${N}${R}▒▒${N}${R})${N}  ${R}│${N}"
+    echo -e "${R}│${N}   ${R}(${N}${R}▒${N}${R}██████${N}${W}██████${N}${R}███████${N}${W}███${N}${R}██████████${N}${R}▒▒▒${N}${W}████${N}${R}▒▒${N}${R})${N}   ${R}│${N}"
+    echo -e "${R}│${N}    ${R}(${N}${R}▒${N}${R}█████${N}${W}██████${N}${R}██████${N}${W}█████${N}${R}████████████${N}${W}███${N}${R}▒▒${N}${R})${N}    ${R}│${N}"
+    echo -e "${R}│${N}     ${R}(${N}${R}▒▒${N}${W}██████████${N}${R}█████${N}${R}▒${N}${W}██████${N}${R}████████${N}${W}███${N}${R}▒▒▒${N}${R})${N}     ${R}│${N}"
+    echo -e "${R}│${N}      ${R}(${N}${R}▒▒▒▒▒${N}${W}██████████${N}${R}██${N}${R}▒▒${N}${W}█████████████${N}${R}▒▒${N}${R}█${N}${R}▒${N}${R})${N}      ${R}│${N}"
+    echo -e "${R}│${N}        ${R}(${N}${R}▒${N}${R}██${N}${R}▒▒▒▒▒▒▒▒▒▒${N}${R}████${N}${R}▒▒▒▒▒▒▒▒▒▒▒▒▒${N}${R}█${N}${R}▒${N}${R})${N}        ${R}│${N}"
+    echo -e "${R}│${N}           ${R}(${N}${R}▒▒▒${N}${R}████████████████████${N}${R}▒▒▒${N}${R})${N}           ${R}│${N}"
+    echo -e "${R}│${N}                ${R}(${N}${R}▒▒▒▒${N}${R}████████${N}${R}▒▒▒▒${N}${R})${N}                ${R}│${N}"
+    echo -e "${R}│${N}                                                  ${R}│${N}"
+    echo -e "${R}╰──────────────────────────────────────────────────╯${N}"
+    echo ""
+    MOTD
+    chmod +x /etc/update-motd.d/01-xcsh
+
+    # ---- Disable "Last login" message, keep MOTD ----
+    sed -i 's/#PrintLastLog yes/PrintLastLog no/' /etc/ssh/sshd_config
+    systemctl restart ssh
 
     echo "=== Workstation Setup Completed: $(date) ==="
 runcmd:

@@ -329,7 +329,7 @@ resource "azurerm_public_ip" "workstation" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.workstation_zone != "" ? [var.workstation_zone] : []
-  domain_name_label   = "llm-workstation"
+  domain_name_label   = "xcsh"
 }
 
 resource "azurerm_network_interface" "workstation" {
@@ -352,7 +352,8 @@ resource "azurerm_network_interface_security_group_association" "workstation" {
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
-  name                            = "workstation-vm"
+  name                            = "xcsh"
+  computer_name                   = "xcsh"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
   size                            = var.workstation_vm_size

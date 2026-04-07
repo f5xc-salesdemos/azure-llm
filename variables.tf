@@ -219,15 +219,21 @@ variable "devstral_served_name" {
 }
 
 variable "devstral_max_model_len" {
-  description = "Maximum context length for Devstral"
+  description = "Maximum context length for Devstral (256K with TP=2 on 2x A100)"
   type        = number
-  default     = 32768
+  default     = 262144
 }
 
 variable "devstral_gpu_memory_utilization" {
-  description = "GPU memory fraction for Devstral (dedicated GPU 1)"
+  description = "GPU memory fraction for Devstral (GPU 1+3, TP=2)"
   type        = number
-  default     = 0.90
+  default     = 0.95
+}
+
+variable "devstral_tp_size" {
+  description = "Tensor parallel size for Devstral (number of GPUs)"
+  type        = number
+  default     = 2
 }
 
 variable "devstral_port" {

@@ -1,0 +1,696 @@
+{
+  "metadata": {
+    "benchmark": "f5xc_api_ab",
+    "timestamp": "2026-04-07T16:02:37.357832+00:00",
+    "iterations": 3,
+    "warmup": 1,
+    "timeout": 120,
+    "test_cases": 5,
+    "models": {
+      "devstral-24b": {
+        "label": "Devstral-Small-2-24B",
+        "base_url": "http://10.0.0.11:8002/v1",
+        "model": "devstral-24b"
+      },
+      "gemma4-31b": {
+        "label": "Gemma-4-31B",
+        "base_url": "http://10.0.0.10:8000/v1",
+        "model": "gemma-4-31b"
+      }
+    }
+  },
+  "summary": {
+    "devstral-24b": {
+      "label": "Devstral-Small-2-24B",
+      "total_requests": 15,
+      "failed": 0,
+      "ttft_ms": {
+        "mean": 41.39,
+        "p50": 36.98,
+        "p95": 65.23,
+        "min": 26.95,
+        "max": 129.67
+      },
+      "tokens_per_second": {
+        "mean": 55.62,
+        "p50": 55.63,
+        "p95": 56.64,
+        "min": 51.31,
+        "max": 56.65
+      },
+      "total_latency_ms": {
+        "mean": 1996.38,
+        "p50": 1383.81,
+        "p95": 4272.54,
+        "min": 1174.05,
+        "max": 4272.99
+      },
+      "quality": {
+        "mean": 80.0,
+        "p50": 75.0,
+        "p95": 100.0,
+        "min": 75.0,
+        "max": 100.0
+      }
+    },
+    "gemma4-31b": {
+      "label": "Gemma-4-31B",
+      "total_requests": 15,
+      "failed": 0,
+      "ttft_ms": {
+        "mean": 5031.51,
+        "p50": 3863.05,
+        "p95": 10488.68,
+        "min": 3063.72,
+        "max": 12284.42
+      },
+      "tokens_per_second": {
+        "mean": 12.62,
+        "p50": 11.9,
+        "p95": 14.76,
+        "min": 10.74,
+        "max": 14.77
+      },
+      "total_latency_ms": {
+        "mean": 6433.32,
+        "p50": 4826.24,
+        "p95": 13329.08,
+        "min": 4131.04,
+        "max": 15173.83
+      },
+      "quality": {
+        "mean": 78.0,
+        "p50": 75.0,
+        "p95": 100.0,
+        "min": 60.0,
+        "max": 100.0
+      }
+    }
+  },
+  "results": {
+    "devstral-24b": [
+      {
+        "test_id": "list_http_lb",
+        "model_key": "devstral-24b",
+        "iteration": 0,
+        "ttft_ms": 26.95,
+        "total_latency_ms": 1531.48,
+        "tokens_generated": 86,
+        "tokens_per_second": 56.15,
+        "content": "Here's the curl command to list all HTTP load balancers in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http_load_balancers\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```\n\nThis will return a list of all HTTP load balancer configurations in your specified namespace.",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "devstral-24b",
+        "iteration": 0,
+        "ttft_ms": 129.67,
+        "total_latency_ms": 1266.72,
+        "tokens_generated": 65,
+        "tokens_per_second": 51.31,
+        "content": "Here's the curl command to list all origin pools in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "devstral-24b",
+        "iteration": 0,
+        "ttft_ms": 37.38,
+        "total_latency_ms": 1366.94,
+        "tokens_generated": 76,
+        "tokens_per_second": 55.6,
+        "content": "Here's the curl command to get the details of the HTTP load balancer named 'frontend-lb':\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http-load-balancers/frontend-lb\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "devstral-24b",
+        "iteration": 0,
+        "ttft_ms": 36.98,
+        "total_latency_ms": 4272.35,
+        "tokens_generated": 242,
+        "tokens_per_second": 56.64,
+        "content": "Here's the curl command to create a health check named 'web-hc' with an HTTP probe on path `/healthz` and port `8080`:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -X POST \\\n  -d '{\n    \"metadata\": {\n      \"name\": \"web-hc\",\n      \"namespace\": \"'\"$F5XC_NAMESPACE\"'\"\n    },\n    \"spec\": {\n      \"type\": \"HTTP\",\n      \"http\": {\n        \"path\": \"/healthz\",\n        \"port\": 8080\n      }\n    }\n  }' | jq .\n```\n\nThis command:\n1. Uses the POST method to create a new health check\n2. Sets the health check type to HTTP\n3. Configures the HTTP probe with the specified path and port\n4. Includes the required metadata (name and namespace)\n5. Pipes the output through jq for pretty formatting",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "devstral-24b",
+        "iteration": 0,
+        "ttft_ms": 36.76,
+        "total_latency_ms": 1383.81,
+        "tokens_generated": 77,
+        "tokens_per_second": 55.64,
+        "content": "Here's the curl command to delete the origin pool named 'old-backend':\n\n```bash\ncurl -s -X DELETE \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools/old-backend\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_http_lb",
+        "model_key": "devstral-24b",
+        "iteration": 1,
+        "ttft_ms": 27.79,
+        "total_latency_ms": 2231.67,
+        "tokens_generated": 126,
+        "tokens_per_second": 56.46,
+        "content": "Here's the curl command to list all HTTP load balancers in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http_load_balancers\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```\n\nThis command:\n1. Uses the GET method to list resources\n2. Targets the `http_load_balancers` resource type\n3. Uses your namespace from the environment variable\n4. Includes the required authentication header\n5. Pipes the output through jq for pretty formatting",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "devstral-24b",
+        "iteration": 1,
+        "ttft_ms": 37.48,
+        "total_latency_ms": 1174.38,
+        "tokens_generated": 65,
+        "tokens_per_second": 55.35,
+        "content": "Here's the curl command to list all origin pools in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "devstral-24b",
+        "iteration": 1,
+        "ttft_ms": 37.6,
+        "total_latency_ms": 1366.77,
+        "tokens_generated": 76,
+        "tokens_per_second": 55.61,
+        "content": "Here's the curl command to get the details of the HTTP load balancer named 'frontend-lb':\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http-load-balancers/frontend-lb\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "devstral-24b",
+        "iteration": 1,
+        "ttft_ms": 37.61,
+        "total_latency_ms": 4272.99,
+        "tokens_generated": 242,
+        "tokens_per_second": 56.63,
+        "content": "Here's the curl command to create a health check named 'web-hc' with an HTTP probe on path `/healthz` port `8080`:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -X POST \\\n  -d '{\n    \"metadata\": {\n      \"name\": \"web-hc\",\n      \"namespace\": \"'\"$F5XC_NAMESPACE\"'\"\n    },\n    \"spec\": {\n      \"type\": \"HTTP\",\n      \"http\": {\n        \"path\": \"/healthz\",\n        \"port\": 8080\n      }\n    }\n  }' | jq .\n```\n\nThis command:\n1. Uses the POST method to create a new health check\n2. Sets the health check type to HTTP\n3. Configures the HTTP probe with the specified path and port\n4. Includes the required metadata with the name and namespace\n5. Pipes the output through jq for pretty printing",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "devstral-24b",
+        "iteration": 1,
+        "ttft_ms": 36.76,
+        "total_latency_ms": 1349.04,
+        "tokens_generated": 75,
+        "tokens_per_second": 55.59,
+        "content": "Here's the curl command to delete the origin pool named 'old-backend':\n\n```bash\ncurl -s -X DELETE \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools/old-backend\" \\\n-H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_http_lb",
+        "model_key": "devstral-24b",
+        "iteration": 2,
+        "ttft_ms": 28.87,
+        "total_latency_ms": 1532.96,
+        "tokens_generated": 86,
+        "tokens_per_second": 56.1,
+        "content": "Here's the curl command to list all HTTP load balancers in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http_load_balancers\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```\n\nThis will return a list of all HTTP load balancer configurations in your specified namespace.",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "devstral-24b",
+        "iteration": 2,
+        "ttft_ms": 37.08,
+        "total_latency_ms": 1174.05,
+        "tokens_generated": 65,
+        "tokens_per_second": 55.36,
+        "content": "Here's the curl command to list all origin pools in your namespace:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "devstral-24b",
+        "iteration": 2,
+        "ttft_ms": 36.78,
+        "total_latency_ms": 1366.74,
+        "tokens_generated": 76,
+        "tokens_per_second": 55.61,
+        "content": "Here's the curl command to get the details of the HTTP load balancer named 'frontend-lb':\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http-load-balancers/frontend-lb\" -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "devstral-24b",
+        "iteration": 2,
+        "ttft_ms": 35.99,
+        "total_latency_ms": 4271.54,
+        "tokens_generated": 242,
+        "tokens_per_second": 56.65,
+        "content": "Here's the curl command to create a health check named 'web-hc' with an HTTP probe on path `/healthz` and port `8080`:\n\n```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -X POST \\\n  -d '{\n    \"metadata\": {\n      \"name\": \"web-hc\",\n      \"namespace\": \"'\"$F5XC_NAMESPACE\"'\"\n    },\n    \"spec\": {\n      \"type\": \"HTTP\",\n      \"http\": {\n        \"path\": \"/healthz\",\n        \"port\": 8080\n      }\n    }\n  }' | jq .\n```\n\nThis command:\n1. Uses the POST method to create a new health check\n2. Sets the health check type to HTTP\n3. Configures the HTTP probe with the specified path and port\n4. Includes the required metadata (name and namespace)\n5. Pipes the output through jq for pretty formatting",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "devstral-24b",
+        "iteration": 2,
+        "ttft_ms": 37.08,
+        "total_latency_ms": 1384.24,
+        "tokens_generated": 77,
+        "tokens_per_second": 55.63,
+        "content": "Here's the curl command to delete the origin pool named 'old-backend':\n\n```bash\ncurl -s -X DELETE \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/origin-pools/old-backend\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      }
+    ],
+    "gemma4-31b": [
+      {
+        "test_id": "list_http_lb",
+        "model_key": "gemma4-31b",
+        "iteration": 0,
+        "ttft_ms": 4043.14,
+        "total_latency_ms": 5040.7,
+        "tokens_generated": 57,
+        "tokens_per_second": 11.31,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "gemma4-31b",
+        "iteration": 0,
+        "ttft_ms": 3878.27,
+        "total_latency_ms": 4840.61,
+        "tokens_generated": 55,
+        "tokens_per_second": 11.36,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "gemma4-31b",
+        "iteration": 0,
+        "ttft_ms": 3070.14,
+        "total_latency_ms": 4137.4,
+        "tokens_generated": 61,
+        "tokens_per_second": 14.74,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers/frontend-lb\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "gemma4-31b",
+        "iteration": 0,
+        "ttft_ms": 9719.08,
+        "total_latency_ms": 12538.47,
+        "tokens_generated": 160,
+        "tokens_per_second": 12.76,
+        "content": "```bash\ncurl -s -X POST \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\n    \\\"metadata\\\": {\n      \\\"name\\\": \\\"web-hc\\\",\n      \\\"namespace\\\": \\\"$F5XC_NAMESPACE\\\"\n    },\n    \\\"spec\\\": {\n      \\\"probe\\\": {\n        \\\"http\\\": {\n          \\\"path\\\": \\\"/healthz\\\",\n          \\\"port\\\": 8080\n        }\n      }\n    }\n  }\" | jq .\n```",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "gemma4-31b",
+        "iteration": 0,
+        "ttft_ms": 3595.01,
+        "total_latency_ms": 4732.9,
+        "tokens_generated": 65,
+        "tokens_per_second": 13.73,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools/old-backend\" \\\n  -X DELETE \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 60.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 0.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_http_lb",
+        "model_key": "gemma4-31b",
+        "iteration": 1,
+        "ttft_ms": 3797.57,
+        "total_latency_ms": 4796.47,
+        "tokens_generated": 57,
+        "tokens_per_second": 11.88,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "gemma4-31b",
+        "iteration": 1,
+        "ttft_ms": 3863.92,
+        "total_latency_ms": 4827.89,
+        "tokens_generated": 55,
+        "tokens_per_second": 11.39,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "gemma4-31b",
+        "iteration": 1,
+        "ttft_ms": 3068.12,
+        "total_latency_ms": 4135.77,
+        "tokens_generated": 61,
+        "tokens_per_second": 14.75,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers/frontend-lb\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "gemma4-31b",
+        "iteration": 1,
+        "ttft_ms": 9659.45,
+        "total_latency_ms": 12530.92,
+        "tokens_generated": 163,
+        "tokens_per_second": 13.01,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -X POST \\\n  -d \"{\n    \\\"metadata\\\": {\n      \\\"name\\\": \\\"web-hc\\\",\n      \\\"namespace\\\": \\\"$F5XC_NAMESPACE\\\"\n    },\n    \\\"spec\\\": {\n      \\\"probe\\\": {\n        \\\"http\\\": {\n          \\\"path\\\": \\\"/healthz\\\",\n          \\\"port\\\": 8080\n        }\n      }\n    }\n  }\" | jq .\n```",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "gemma4-31b",
+        "iteration": 1,
+        "ttft_ms": 3590.2,
+        "total_latency_ms": 4728.33,
+        "tokens_generated": 65,
+        "tokens_per_second": 13.75,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools/old-backend\" \\\n  -X DELETE \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 60.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 0.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_http_lb",
+        "model_key": "gemma4-31b",
+        "iteration": 2,
+        "ttft_ms": 3793.63,
+        "total_latency_ms": 4791.09,
+        "tokens_generated": 57,
+        "tokens_per_second": 11.9,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "list_origin_pools",
+        "model_key": "gemma4-31b",
+        "iteration": 2,
+        "ttft_ms": 3863.05,
+        "total_latency_ms": 4826.24,
+        "tokens_generated": 55,
+        "tokens_per_second": 11.4,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "get_lb_by_name",
+        "model_key": "gemma4-31b",
+        "iteration": 2,
+        "ttft_ms": 3063.72,
+        "total_latency_ms": 4131.04,
+        "tokens_generated": 61,
+        "tokens_per_second": 14.77,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/httploadbalancers/frontend-lb\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "create_healthcheck",
+        "model_key": "gemma4-31b",
+        "iteration": 2,
+        "ttft_ms": 12284.42,
+        "total_latency_ms": 15173.83,
+        "tokens_generated": 163,
+        "tokens_per_second": 10.74,
+        "content": "```bash\ncurl -s \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/healthchecks\" \\\n  -H \"Authorization: APIToken $F5XC_API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -X POST \\\n  -d '{\n    \"metadata\": {\n      \"name\": \"web-hc\",\n      \"namespace\": \"'\"$F5XC_NAMESPACE\"'\"\n    },\n    \"spec\": {\n      \"probe\": {\n        \"http\": {\n          \"path\": \"/healthz\",\n          \"port\": 8080\n        }\n      }\n    }\n  }' | jq .\n```",
+        "quality_score": 100.0,
+        "subscores": {
+          "api_path": 25.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      },
+      {
+        "test_id": "delete_origin_pool",
+        "model_key": "gemma4-31b",
+        "iteration": 2,
+        "ttft_ms": 4182.95,
+        "total_latency_ms": 5268.12,
+        "tokens_generated": 62,
+        "tokens_per_second": 11.77,
+        "content": "```bash\ncurl -s -X DELETE \"$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/originpools/old-backend\" \\\n     -H \"Authorization: APIToken $F5XC_API_TOKEN\" | jq .\n```",
+        "quality_score": 75.0,
+        "subscores": {
+          "api_path": 0.0,
+          "auth_header": 20.0,
+          "http_method": 15.0,
+          "env_vars": 15.0,
+          "jq_usage": 10.0,
+          "request_body": 15.0
+        },
+        "error": null
+      }
+    ]
+  }
+}
