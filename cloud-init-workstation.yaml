@@ -70,6 +70,14 @@ write_files:
     apt-get update
     apt-get install -y gh
 
+    # ---- xcsh (OpenCode fork with fixes) ----
+    curl -fsSL https://f5xc-salesdemos.github.io/apt-repo/gpg.key \
+      | gpg --dearmor -o /usr/share/keyrings/xcsh-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/xcsh-archive-keyring.gpg] https://f5xc-salesdemos.github.io/apt-repo stable main" \
+      | tee /etc/apt/sources.list.d/xcsh.list > /dev/null
+    apt-get update
+    cd /tmp && apt-get download xcsh && dpkg --force-depends -i xcsh_*.deb && rm -f xcsh_*.deb
+
     # ---- Claude Code configuration ----
     mkdir -p /etc/skel/.claude /home/${admin_username}/.claude
     cat > /etc/skel/.claude/settings.json <<'SETTINGS'
@@ -130,14 +138,14 @@ write_files:
             }
           }
         },
-        "vllm-xlam": {
+        "vllm-devstral": {
           "npm": "@ai-sdk/openai-compatible",
-          "name": "xLAM-32B (${xlam_ip})",
-          "options": { "baseURL": "http://${xlam_ip}:${xlam_port}/v1", "apiKey": "local-vllm" },
+          "name": "Devstral-24B (${devstral_ip})",
+          "options": { "baseURL": "http://${devstral_ip}:${devstral_port}/v1", "apiKey": "local-vllm" },
           "models": {
-            "${xlam_served_name}": {
-              "name": "${xlam_served_name} (Function Calling)",
-              "limit": { "context": ${xlam_max_model_len}, "output": 4096 }
+            "${devstral_served_name}": {
+              "name": "${devstral_served_name} (Coding Agent / Tool Calling)",
+              "limit": { "context": ${devstral_max_model_len}, "output": 4096 }
             }
           }
         },
@@ -223,6 +231,172 @@ write_files:
     - gh release create v1.0.0 --generate-notes
     SKILL
 
+    # ---- F5 XC API agent + skill (Devstral tool calling) ----
+    mkdir -p /home/${admin_username}/.opencode/skills/f5xc-api/references
+
+    cat > /home/${admin_username}/.opencode/agents/f5xc-api.md <<'F5AGENT'
+    ---
+    description: F5 Distributed Cloud API operations — authenticate, list, create, read, update, delete any F5 XC platform resource using REST API with curl and jq
+    mode: subagent
+    model: vllm-devstral/${devstral_served_name}
+    temperature: 0.1
+    permission:
+      bash:
+        "curl *": allow
+        "jq *": allow
+        "cat *": allow
+        "echo *": allow
+        "*": deny
+      edit: deny
+      webfetch: deny
+    ---
+
+    You are an F5 Distributed Cloud API operations agent running on Devstral-24B. You MUST use the bash tool to execute curl commands. NEVER output curl commands as text.
+
+    ## Authentication
+    All API calls use: `curl -s "$F5XC_API_URL/..." -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .`
+
+    Required env vars: F5XC_API_URL, F5XC_API_TOKEN, F5XC_NAMESPACE
+    Optional: F5XC_EMAIL, F5XC_LB_NAME, F5XC_DOMAINNAME, F5XC_ROOT_DOMAIN
+
+    ## CRUD Pattern
+    - List:    GET    /api/config/namespaces/{ns}/{resources}
+    - Create:  POST   /api/config/namespaces/{ns}/{resources}
+    - Get:     GET    /api/config/namespaces/{ns}/{resources}/{name}
+    - Replace: PUT    /api/config/namespaces/{ns}/{resources}/{name}
+    - Delete:  DELETE /api/config/namespaces/{ns}/{resources}/{name}
+
+    Request body: {"metadata": {"name": "...", "namespace": "..."}, "spec": {...}}
+
+    ## Rules
+    1. Always use curl -s with APIToken header
+    2. Always pipe through jq
+    3. Use env vars, never hardcode URLs or tokens
+    4. Check RESOURCE_INDEX.md for correct API paths
+    5. Show payload before create/replace and confirm with user
+    F5AGENT
+
+    cat > /home/${admin_username}/.opencode/skills/f5xc-api/SKILL.md <<'F5SKILL'
+    ---
+    name: f5xc-api
+    description: "F5 Distributed Cloud REST API operations — authenticate, list, create, read, update, delete F5 XC resources (load balancers, origin pools, WAF, DNS, sites, namespaces). Activate when user mentions F5 XC, Distributed Cloud, volterra, API operations, or platform configuration."
+    compatibility: opencode
+    metadata:
+      model: ${devstral_served_name}
+      endpoint: "http://${devstral_ip}:${devstral_port}/v1"
+      specialization: function-calling
+    ---
+
+    # F5 Distributed Cloud API Operations
+
+    ## When to use
+    - Listing, creating, reading, updating, or deleting F5 XC resources
+    - Managing HTTP/TCP/UDP load balancers and origin pools
+    - Configuring WAF policies, bot defense, or API security
+    - Managing DNS zones and DNS load balancers
+    - Working with cloud sites (AWS, Azure, GCP)
+    - Any REST API interaction with F5 Distributed Cloud / Volterra
+
+    ## Environment Variables
+    - F5XC_API_URL: Console API base URL
+    - F5XC_API_TOKEN: API authentication token
+    - F5XC_NAMESPACE: Default namespace
+    - F5XC_EMAIL: User email
+    - F5XC_LB_NAME: Default load balancer name
+    - F5XC_DOMAINNAME: Application domain
+    - F5XC_ROOT_DOMAIN: Root domain
+
+    ## Authentication
+    curl -s "$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http_loadbalancers" \
+      -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .
+
+    ## Common Resources
+    | Resource | API Path (plural) |
+    |----------|-------------------|
+    | HTTP Load Balancer | http_loadbalancers |
+    | TCP Load Balancer | tcp_loadbalancers |
+    | Origin Pool | origin_pools |
+    | Health Check | healthchecks |
+    | App Firewall (WAF) | app_firewalls |
+    | Service Policy | service_policys |
+    | Rate Limiter | rate_limiter_policys |
+    | API Definition | api_definitions |
+    | DNS Zone | dns_zones (prefix: /api/config/dns/) |
+    | DNS Load Balancer | dns_load_balancers (prefix: /api/config/dns/) |
+    | Certificate | certificates |
+    | AWS VPC Site | aws_vpc_sites |
+    | Azure VNet Site | azure_vnet_sites |
+    | Network Policy | network_policys |
+    | Virtual K8s | virtual_k8ss |
+
+    See references/RESOURCE_INDEX.md for full 149-resource index.
+
+    ## Error Codes
+    401=bad token, 403=no permission, 404=not found, 409=conflict, 429=rate limited
+    F5SKILL
+
+    # Generate the full resource index reference
+    cat > /home/${admin_username}/.opencode/skills/f5xc-api/references/RESOURCE_INDEX.md <<'F5INDEX'
+    # F5 XC API Resource Index (149 resources)
+
+    All paths under $F5XC_API_URL. Pattern: /api/config/namespaces/{ns}/{plural} for list/create, /{ns}/{plural}/{name} for get/replace/delete.
+    DNS resources use /api/config/dns/ prefix.
+
+    ## Load Balancing
+    http_loadbalancers, tcp_loadbalancers, udp_loadbalancers, cdn_loadbalancers, origin_pools, healthchecks
+
+    ## Security & WAF
+    app_firewalls, service_policys, service_policy_rules, service_policy_sets, rate_limiters, rate_limiter_policys, fast_acls, fast_acl_rules, malicious_user_mitigations, user_identifications, sensitive_data_policys, protocol_inspections, shape_bot_defense_instances, waf_exclusion_policys, enhanced_firewall_policys, filter_sets
+
+    ## API Security
+    api_crawlers, api_discoverys, api_testings, api_definitions, app_api_groups, code_base_integrations
+
+    ## DNS (prefix: /api/config/dns/)
+    dns_zones, dns_load_balancers, dns_lb_pools, dns_lb_health_checks, geo_location_sets
+    ## DNS (standard prefix)
+    dns_domains, dns_proxys, dns_compliance_checkss
+
+    ## Networking
+    network_policys, network_policy_rules, network_policy_sets, network_policy_views, network_firewalls, network_connectors, network_interfaces, virtual_networks, routes, segments, segment_connections, bgps, bgp_asn_sets, bgp_routing_policys, nat_policys, ip_prefix_sets, forwarding_classs, tunnels, policers, protocol_policers, srv6_network_slices, subnets, ike1s, ike2s, ike_phase1_profiles, ike_phase2_profiles, policy_based_routings, forward_proxy_policys
+
+    ## Cloud Sites & Infrastructure
+    aws_vpc_sites, aws_tgw_sites, azure_vnet_sites, gcp_vpc_sites, securemesh_sites, securemesh_site_v2s, voltstack_sites, cloud_connects, cloud_credentialss, cloud_elastic_ips, cloud_links, cloud_regions, fleets, nfv_services, sites, site_mesh_groups, certified_hardwares, virtual_sites
+
+    ## Kubernetes & Workloads
+    k8s_clusters, k8s_cluster_roles, k8s_cluster_role_bindings, k8s_pod_security_admissions, k8s_pod_security_policys, virtual_k8ss, workloads, workload_flavors, container_registrys, discoverys, endpoints
+
+    ## Access Control & Certificates
+    authentications, authorization_servers, certificates, certificate_chains, crls, trusted_ca_lists, secret_management_accesss, tenant_configurations
+
+    ## Monitoring & Observability
+    alert_policys, alert_receivers, global_log_receivers, log_receivers, flow_anomalys
+
+    ## BIG-IP
+    application_profiless, data_groups, irules, bigip_http_proxys, bigip_virtual_servers
+
+    ## NGINX One
+    nginx_csgs, nginx_instances, nginx_servers
+
+    ## CDN
+    cdn_cache_rules, cdn_purge_commands
+
+    ## Other
+    address_allocators, advertise_policys, app_settings, app_types, app_securitys, cminstances, clusters, dc_cluster_groups, data_types, known_labels, known_label_keys, public_ips, proxys, third_party_applications, external_connectors, usb_policys, virtual_hosts, bot_defense_app_infrastructures
+    F5INDEX
+
+    # ---- F5 XC environment variable placeholders ----
+    cat >> /home/${admin_username}/.bashrc <<'F5ENV'
+
+    # F5 Distributed Cloud API — set these before using the f5xc-api skill
+    # export F5XC_API_URL=https://<tenant>.console.ves.volterra.io
+    # export F5XC_API_TOKEN=<your-api-token>
+    # export F5XC_NAMESPACE=<your-namespace>
+    # export F5XC_EMAIL=<your-email>
+    # export F5XC_LB_NAME=<load-balancer-name>
+    # export F5XC_DOMAINNAME=<app-domain>
+    # export F5XC_ROOT_DOMAIN=<root-domain>
+    F5ENV
+
     chown -R ${admin_username}:${admin_username} /home/${admin_username}/.opencode
 
     # ---- HuggingFace token ----
@@ -238,7 +412,7 @@ write_files:
     echo -n "Gemma    (${gemma_ip}:${gemma_port}):    "; curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
     echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
     echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
-    echo -n "xLAM     (${xlam_ip}:${xlam_port}):    "; curl -sf http://${xlam_ip}:${xlam_port}/health && echo "UP" || echo "DOWN"
+    echo -n "Devstral (${devstral_ip}:${devstral_port}):    "; curl -sf http://${devstral_ip}:${devstral_port}/health && echo "UP" || echo "DOWN"
     echo -n "Qwen3    (${qwen3_ip}:${qwen3_port}):    "; curl -sf http://${qwen3_ip}:${qwen3_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers

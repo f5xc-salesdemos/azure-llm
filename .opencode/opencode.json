@@ -3,16 +3,16 @@
   "provider": {
     "vllm": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "vLLM Main (Gemma 4 31B)",
+      "name": "Gemma 4 31B",
       "options": {
-        "baseURL": "http://localhost:8000/v1",
+        "baseURL": "http://10.0.0.10:8000/v1",
         "apiKey": "local-vllm"
       },
       "models": {
         "gemma-4-31b": {
           "name": "Gemma 4 31B",
           "limit": {
-            "context": 131072,
+            "context": 262144,
             "output": 8192
           }
         }
@@ -20,9 +20,9 @@
     },
     "vllm-subagent": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "vLLM Sub-Agent (Phi-4-mini)",
+      "name": "Phi-4-mini",
       "options": {
-        "baseURL": "http://localhost:8001/v1",
+        "baseURL": "http://10.0.0.11:8000/v1",
         "apiKey": "local-vllm"
       },
       "models": {
@@ -34,7 +34,25 @@
           }
         }
       }
+    },
+    "vllm-devstral": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Devstral-24B (Coding Agent / Tool Calling)",
+      "options": {
+        "baseURL": "http://10.0.0.11:8002/v1",
+        "apiKey": "local-vllm"
+      },
+      "models": {
+        "devstral-24b": {
+          "name": "Devstral-24B (Coding Agent / Tool Calling)",
+          "limit": {
+            "context": 32768,
+            "output": 4096
+          }
+        }
+      }
     }
   },
-  "model": "vllm/gemma-4-31b"
+  "model": "vllm/gemma-4-31b",
+  "permission": "allow"
 }

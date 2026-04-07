@@ -84,9 +84,9 @@ output "vllm_qwen_vl_endpoint" {
   value       = "http://10.0.0.11:${var.qwen_vl_port}/v1"
 }
 
-output "vllm_xlam_endpoint" {
-  description = "xLAM-32B vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.11:${var.xlam_port}/v1"
+output "vllm_devstral_endpoint" {
+  description = "Devstral-24B vLLM API endpoint (from workstation)"
+  value       = "http://10.0.0.11:${var.devstral_port}/v1"
 }
 
 output "vllm_qwen3_endpoint" {

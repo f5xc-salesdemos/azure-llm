@@ -205,33 +205,33 @@ variable "qwen_vl_port" {
   default     = 8001
 }
 
-# Model 3: xLAM-2-32B (port 8002) — function calling / API orchestration
-variable "xlam_model_id" {
-  description = "HuggingFace model ID for xLAM"
+# Model 3: Devstral-Small-2-24B (port 8002) — coding agent / tool calling / API orchestration
+variable "devstral_model_id" {
+  description = "HuggingFace model ID for Devstral"
   type        = string
-  default     = "Salesforce/xLAM-2-32b-fc-r"
+  default     = "mistralai/Devstral-Small-2-24B-Instruct-2512"
 }
 
-variable "xlam_served_name" {
-  description = "Model name exposed by xLAM vLLM API"
+variable "devstral_served_name" {
+  description = "Model name exposed by Devstral vLLM API"
   type        = string
-  default     = "xlam-32b"
+  default     = "devstral-24b"
 }
 
-variable "xlam_max_model_len" {
-  description = "Maximum context length for xLAM"
+variable "devstral_max_model_len" {
+  description = "Maximum context length for Devstral"
   type        = number
   default     = 32768
 }
 
-variable "xlam_gpu_memory_utilization" {
-  description = "GPU memory fraction for xLAM (dedicated GPU 1)"
+variable "devstral_gpu_memory_utilization" {
+  description = "GPU memory fraction for Devstral (dedicated GPU 1)"
   type        = number
   default     = 0.90
 }
 
-variable "xlam_port" {
-  description = "Port for xLAM vLLM API"
+variable "devstral_port" {
+  description = "Port for Devstral vLLM API"
   type        = number
   default     = 8002
 }

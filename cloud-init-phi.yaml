@@ -1,7 +1,7 @@
 #cloud-config
 # Sub-agent server: 4 models on 4x A100 80GB
 #   GPU 0 (shared):    Phi-4-mini (port ${phi_port}) + Qwen2.5-VL-7B (port ${qwen_vl_port})
-#   GPU 1 (dedicated): xLAM-2-32B (port ${xlam_port})
+#   GPU 1 (dedicated): Devstral-Small-2-24B (port ${devstral_port})
 #   GPU 2 (dedicated): Qwen3-32B  (port ${qwen3_port}) — docs/markdown/OpenAPI
 #   GPU 3: unused
 package_upgrade: true
@@ -256,34 +256,35 @@ write_files:
     SYSTEMD
 
     # ======================================================================
-    # Model 3: xLAM-2-32B (port ${xlam_port}) — function calling / API orchestration
+    # Model 3: Devstral-Small-2-24B (port ${devstral_port}) — coding agent / tool calling / API orchestration
     # Dedicated GPU 1 (CUDA_VISIBLE_DEVICES=1)
     # ======================================================================
-    cat > /usr/local/bin/start-vllm-xlam <<'SCRIPT'
+    cat > /usr/local/bin/start-vllm-devstral <<'SCRIPT'
     #!/bin/bash
-    echo "Starting vLLM: ${xlam_model_id} (TP=1, ${xlam_max_model_len} ctx, port ${xlam_port}, GPU 1)..."
+    echo "Starting vLLM: ${devstral_model_id} (TP=1, ${devstral_max_model_len} ctx, port ${devstral_port}, GPU 1)..."
     export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
-      --model ${xlam_model_id} \
-      --served-model-name ${xlam_served_name} \
+      --model ${devstral_model_id} \
+      --served-model-name ${devstral_served_name} \
       --tensor-parallel-size 1 \
-      --max-model-len ${xlam_max_model_len} \
-      --gpu-memory-utilization ${xlam_gpu_memory_utilization} \
+      --max-model-len ${devstral_max_model_len} \
+      --gpu-memory-utilization ${devstral_gpu_memory_utilization} \
       --enable-auto-tool-choice \
-      --tool-call-parser xlam \
+      --tool-call-parser mistral \
+      --chat-template-content-format string \
       --async-scheduling \
       --enable-prefix-caching \
       --enable-chunked-prefill \
       --no-enable-log-requests \
       --disable-log-stats \
       --host 0.0.0.0 \
-      --port ${xlam_port}
+      --port ${devstral_port}
     SCRIPT
-    chmod +x /usr/local/bin/start-vllm-xlam
+    chmod +x /usr/local/bin/start-vllm-devstral
 
-    cat > /etc/systemd/system/vllm-xlam.service <<'SYSTEMD'
+    cat > /etc/systemd/system/vllm-devstral.service <<'SYSTEMD'
     [Unit]
-    Description=vLLM ${xlam_served_name} Function Calling / API Orchestration (port ${xlam_port}, GPU 1)
+    Description=vLLM ${devstral_served_name} Coding Agent / Tool Calling (port ${devstral_port}, GPU 1)
     After=network.target nvidia-persistenced.service vllm-phi.service
     Wants=nvidia-persistenced.service
 
@@ -297,7 +298,7 @@ write_files:
     Environment=OMP_NUM_THREADS=1
     Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
     ExecStartPre=/bin/sleep 30
-    ExecStart=/usr/local/bin/start-vllm-xlam
+    ExecStart=/usr/local/bin/start-vllm-devstral
     Restart=on-failure
     RestartSec=30
     LimitNOFILE=2097152
@@ -337,7 +338,7 @@ write_files:
     cat > /etc/systemd/system/vllm-qwen3.service <<'SYSTEMD'
     [Unit]
     Description=vLLM ${qwen3_served_name} Documentation / Markdown / OpenAPI (port ${qwen3_port}, GPU 2)
-    After=network.target nvidia-persistenced.service vllm-xlam.service
+    After=network.target nvidia-persistenced.service vllm-devstral.service
     Wants=nvidia-persistenced.service
 
     [Service]
@@ -367,7 +368,7 @@ write_files:
     echo "=== Sub-Agent Server Health Check ==="
     echo -n "Phi     (GPU 0, :${phi_port}):    "; curl -sf http://localhost:${phi_port}/health && echo "OK" || echo "DOWN"
     echo -n "Qwen VL (GPU 0, :${qwen_vl_port}):    "; curl -sf http://localhost:${qwen_vl_port}/health && echo "OK" || echo "DOWN"
-    echo -n "xLAM    (GPU 1, :${xlam_port}):    "; curl -sf http://localhost:${xlam_port}/health && echo "OK" || echo "DOWN"
+    echo -n "Devstral (GPU 1, :${devstral_port}):   "; curl -sf http://localhost:${devstral_port}/health && echo "OK" || echo "DOWN"
     echo -n "Qwen3   (GPU 2, :${qwen3_port}):    "; curl -sf http://localhost:${qwen3_port}/health && echo "OK" || echo "DOWN"
     echo "=== GPU ==="
     nvidia-smi --query-gpu=index,name,memory.used,memory.total,temperature.gpu --format=csv,noheader
@@ -375,7 +376,7 @@ write_files:
     chmod +x /usr/local/bin/check-vllm
 
     systemctl daemon-reload
-    systemctl enable vllm-phi.service vllm-qwenvl.service vllm-xlam.service vllm-qwen3.service
+    systemctl enable vllm-phi.service vllm-qwenvl.service vllm-devstral.service vllm-qwen3.service
 
     # ---- Journald retention ----
     mkdir -p /etc/systemd/journald.conf.d
@@ -387,8 +388,8 @@ write_files:
     systemctl restart systemd-journald
 
     echo "=== Sub-Agent GPU Server Setup Completed: $(date) ==="
-    echo "Services: vllm-phi (:${phi_port}), vllm-qwenvl (:${qwen_vl_port}), vllm-xlam (:${xlam_port}), vllm-qwen3 (:${qwen3_port})"
-    echo "Commands: start-vllm-phi, start-vllm-qwenvl, start-vllm-xlam, start-vllm-qwen3, check-vllm"
+    echo "Services: vllm-phi (:${phi_port}), vllm-qwenvl (:${qwen_vl_port}), vllm-devstral (:${devstral_port}), vllm-qwen3 (:${qwen3_port})"
+    echo "Commands: start-vllm-phi, start-vllm-qwenvl, start-vllm-devstral, start-vllm-qwen3, check-vllm"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - bash /opt/setup-gpu.sh

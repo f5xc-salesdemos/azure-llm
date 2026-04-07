@@ -197,7 +197,7 @@ resource "azurerm_network_security_group" "phi" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = tostring(var.xlam_port)
+    destination_port_range     = tostring(var.devstral_port)
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
@@ -287,11 +287,11 @@ resource "azurerm_linux_virtual_machine" "phi" {
     qwen_vl_max_model_len          = var.qwen_vl_max_model_len
     qwen_vl_gpu_memory_utilization = var.qwen_vl_gpu_memory_utilization
     qwen_vl_port                   = var.qwen_vl_port
-    xlam_model_id               = var.xlam_model_id
-    xlam_served_name            = var.xlam_served_name
-    xlam_max_model_len          = var.xlam_max_model_len
-    xlam_gpu_memory_utilization = var.xlam_gpu_memory_utilization
-    xlam_port                   = var.xlam_port
+    devstral_model_id               = var.devstral_model_id
+    devstral_served_name            = var.devstral_served_name
+    devstral_max_model_len          = var.devstral_max_model_len
+    devstral_gpu_memory_utilization = var.devstral_gpu_memory_utilization
+    devstral_port                   = var.devstral_port
     qwen3_model_id               = var.qwen3_model_id
     qwen3_served_name            = var.qwen3_served_name
     qwen3_max_model_len          = var.qwen3_max_model_len
@@ -395,10 +395,10 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     qwen_vl_port        = var.qwen_vl_port
     qwen_vl_served_name = var.qwen_vl_served_name
     qwen_vl_max_model_len = var.qwen_vl_max_model_len
-    xlam_ip             = "10.0.0.11"
-    xlam_port           = var.xlam_port
-    xlam_served_name    = var.xlam_served_name
-    xlam_max_model_len  = var.xlam_max_model_len
+    devstral_ip             = "10.0.0.11"
+    devstral_port           = var.devstral_port
+    devstral_served_name    = var.devstral_served_name
+    devstral_max_model_len  = var.devstral_max_model_len
     qwen3_ip            = "10.0.0.11"
     qwen3_port          = var.qwen3_port
     qwen3_served_name   = var.qwen3_served_name
