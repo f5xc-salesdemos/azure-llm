@@ -92,6 +92,8 @@ write_files:
     su - ${admin_username} -c 'export RUNZSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
     su - ${admin_username} -c '
       ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
+      # Pre-install tfenv so zsh-tfenv plugin doesn't noisily clone on first login
+      git clone --depth=1 https://github.com/tfutils/tfenv.git $HOME/.tfenv 2>/dev/null || true
       # External plugins (community)
       git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions 2>/dev/null || true
       git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting 2>/dev/null || true
@@ -138,9 +140,6 @@ write_files:
     ZSHEOF
     chown ${admin_username}:${admin_username} /home/${admin_username}/.zshrc
 
-    # ---- .hushlogin (suppress login banner) ----
-    touch /home/${admin_username}/.hushlogin
-    chown ${admin_username}:${admin_username} /home/${admin_username}/.hushlogin
 
     # ---- /etc/zsh/zshenv (OAuth token forwarding for Claude Code) ----
     mkdir -p /etc/zsh
