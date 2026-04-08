@@ -30,6 +30,7 @@ write_files:
     export MEDIUM_LLM_CTX="${medium_llm_ctx}"
     export FIRECRAWL_API_URL="http://localhost:3002"
     export SEARXNG_API_URL="http://localhost:8888"
+    export PI_SUBAGENT_MAX_DEPTH=1
 - path: /opt/setup-workstation.sh
   permissions: '0755'
   content: |
