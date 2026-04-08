@@ -72,13 +72,15 @@ Only skip web research for: pure coding tasks on local files, git operations, si
 
 Your answers MUST be grounded in verifiable sources. Always include a Sources section with URLs.
 
-## CRITICAL: Do NOT re-synthesize web-research results
+## Handling web-research results
 
-The web-research subagent produces a COMPLETE, user-facing answer. When it returns, you MUST:
-1. Acknowledge the result with ONE short sentence (e.g., "Here's what I found:")
-2. Do NOT rewrite, expand, summarize, or add to the research answer
-3. Do NOT repeat the content — it has already been displayed to the user
-4. The subagent handles all search, analysis, and formatting — your job is ONLY to enrich the query before delegation and acknowledge completion after
+The web-research subagent displays its answer directly to the user. It returns a status code — handle it as follows:
+
+- **`SEARCH_COMPLETE`** — The answer has been displayed. Say NOTHING. Do not respond at all. The user already has everything they need.
+- **`SEARCH_PARTIAL: <reason>`** — Results were incomplete. Briefly note the limitation and suggest how the user could refine their question.
+- **`SEARCH_FAILED: <reason>`** — No useful results. Tell the user what was searched and ask a clarifying question to narrow the scope.
+
+On SEARCH_COMPLETE, respond with only a single period (`.`) and nothing else. Never say "Here's what I found" or "The research is complete" or "Empty response" or explain that you are being silent.
 
 ## Query Enrichment — YOUR MOST IMPORTANT JOB
 
@@ -464,7 +466,7 @@ cat > "${UHOME}/.pi/agent/agents/web-research.md" <<'PIWEBAGENT'
 ---
 name: web-research
 description: "ALWAYS delegate to this agent when the task involves ANY of: searching the web, looking something up online, finding information on the internet, fetching a URL or web page, reading documentation from a website, researching a topic, checking current events or recent news, finding release notes or changelogs, looking up CVEs or security advisories, verifying facts from authoritative sources, comparing technologies or products, finding API documentation, reading blog posts or articles, checking package versions or compatibility, finding tutorials or guides, answering questions that require up-to-date information beyond training data, or any task where web access would provide verifiable sources."
-model: openai/__LARGE_LLM_MODEL__
+model: mediumllm/__MEDIUM_LLM_MODEL__
 tools: bash,read
 thinking: high
 ---
@@ -510,7 +512,7 @@ Write a complete, well-formatted answer:
 3. **Your output IS the user-facing answer.** Write it as if speaking directly to the user.
 4. **Always cite sources.** End with a Sources section listing URLs you used.
 PIWEBAGENT
-sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
+sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
 # ---- Ensure pi-subagent and pi are installed before patching ----
 if ! command -v pi >/dev/null 2>&1; then
@@ -550,7 +552,7 @@ p = '${PI_SUBAGENT_INDEX}'
 with open(p) as f:
     c = f.read()
 old = '      text: getResultSummaryText(result),'
-new = '      text: \"Research task completed successfully. The answer has been displayed to the user.\",'
+new = '      text: getResultSummaryText(result).trim().length > 50 ? \"SEARCH_COMPLETE\" : \"SEARCH_PARTIAL: \" + (getResultSummaryText(result).trim() || \"no output\"),'
 if old in c:
     c = c.replace(old, new, 1)
     with open(p, 'w') as f:
