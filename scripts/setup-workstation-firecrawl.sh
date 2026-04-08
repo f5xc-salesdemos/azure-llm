@@ -114,10 +114,7 @@ use_default_settings:
       - duckduckgo
       - startpage
       - wikipedia
-      - aol
       - bing
-      - mojeek
-      - qwant
 
 general:
   instance_name: "SearXNG"
