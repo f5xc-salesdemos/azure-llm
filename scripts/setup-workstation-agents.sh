@@ -256,6 +256,25 @@ curl -s http://localhost:3002/v1/map \
 PIWEBAGENT
 sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
+# Suppress noisy "Found N subagent(s)" startup notification from pi-subagent
+PI_SUBAGENT_INDEX=$(find /usr/lib/node_modules/@mjakl/pi-subagent -name "index.ts" -print -quit 2>/dev/null)
+if [ -n "${PI_SUBAGENT_INDEX}" ]; then
+    python3 -c "
+p = '${PI_SUBAGENT_INDEX}'
+with open(p) as f: c = f.read()
+old = '''      ctx.ui.notify(
+        \x60Found \x24{discoveredAgents.length} subagent(s):\\\\n\x24{list}\x60,
+        \"info\",
+      );'''
+if old in c:
+    c = c.replace(old, '      // subagent discovery notification suppressed')
+    with open(p, 'w') as f: f.write(c)
+    print('Patched pi-subagent startup notification')
+else:
+    print('pi-subagent already patched or pattern changed')
+" 2>/dev/null || true
+fi
+
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.pi"
 
 # ============================================================
