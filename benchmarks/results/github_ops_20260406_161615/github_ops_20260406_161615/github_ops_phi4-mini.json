@@ -1,0 +1,920 @@
+{
+  "metadata": {
+    "model": "microsoft/Phi-4-mini-instruct",
+    "base_url": "http://localhost:8000/v1",
+    "timestamp": "2026-04-06T16:51:10Z",
+    "total_test_cases": 56,
+    "total_duration_s": 10.13,
+    "categories": [
+      "pr_description",
+      "code_review",
+      "issue_triage",
+      "commit_message",
+      "gh_cli"
+    ]
+  },
+  "summary": {
+    "overall_score": 78.7,
+    "by_category": {
+      "code_review": {
+        "category": "code_review",
+        "mean_score": 76.6,
+        "median_score": 75.0,
+        "min_score": 55.0,
+        "max_score": 100.0,
+        "total_cases": 12,
+        "failed_cases": 0
+      },
+      "commit_message": {
+        "category": "commit_message",
+        "mean_score": 80.5,
+        "median_score": 81.5,
+        "min_score": 60.0,
+        "max_score": 93.0,
+        "total_cases": 12,
+        "failed_cases": 0
+      },
+      "gh_cli": {
+        "category": "gh_cli",
+        "mean_score": 84.0,
+        "median_score": 90.0,
+        "min_score": 50.0,
+        "max_score": 100.0,
+        "total_cases": 10,
+        "failed_cases": 0
+      },
+      "issue_triage": {
+        "category": "issue_triage",
+        "mean_score": 69.3,
+        "median_score": 71.7,
+        "min_score": 15.0,
+        "max_score": 90.0,
+        "total_cases": 10,
+        "failed_cases": 0
+      },
+      "pr_description": {
+        "category": "pr_description",
+        "mean_score": 83.1,
+        "median_score": 84.4,
+        "min_score": 63.8,
+        "max_score": 100.0,
+        "total_cases": 12,
+        "failed_cases": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "test_case_id": "pr_desc_001",
+      "category": "pr_description",
+      "score": 86.2,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 11.2,
+        "markdown_format": 10.0,
+        "mentions_changes": 5.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Update Rust installation to stable, system-wide version\n\nThe Rust installation script has been updated to install the stable version of Rust system-wide using rustup, with the appropriate environment variables set for RUSTUP_HOME and CARGO_HOME. The PATH is also updated to include the cargo bin directory. This change ensures that Rust is available globally on the system and avoids conflicts with other Rust versions. The script now creates a dedicated profile script for Rust to manage the environment variables and permissions.",
+      "latency_ms": 781.56,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_002",
+      "category": "pr_description",
+      "score": 85.0,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 0.0,
+        "markdown_format": 10.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "Title:\nUpdate Neovim installation method for Ubuntu 24.04 compatibility\n\n---\n\nThis PR updates the Neovim installation process in the setup scripts for Azure GPU VMs running Ubuntu 24.04. The previous method using AppImage is removed due to compatibility issues and replaced with a direct apt-get install, ensuring a smoother setup process on this specific Ubuntu version. This change aims to improve the reliability of the environment setup and reduce potential installation errors.",
+      "latency_ms": 742.91,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_003",
+      "category": "pr_description",
+      "score": 87.5,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 7.5,
+        "markdown_format": 10.0,
+        "mentions_changes": 10.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Update security tools installation script to use uv tool for faster, pure Python installations\n\nThe PR updates the security tools installation script to use the uv tool, which provides faster, pure Python installations without the need for C compilation. This change improves the speed and reliability of setting up the penetration testing environment. The script now separates the installation of lightweight uv tools from heavier, system-level tools that require C compilation, ensuring a more efficient setup process. Additionally, the PATH is updated to include the uv tool's binary directory, and pip is used for system-level integrations.",
+      "latency_ms": 899.62,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_004",
+      "category": "pr_description",
+      "score": 81.2,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 11.2,
+        "markdown_format": 10.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 10.0
+      },
+      "model_output": "# Update os_disk_size_gb default value and add hf_token variable\n\nThis PR updates the default OS disk size to 512GB, which is recommended for model weights, and introduces a new variable for the HuggingFace API token. The changes are intended to enhance the VM's capabilities for machine learning tasks by providing more storage space and secure access to pre-trained models.",
+      "latency_ms": 625.55,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_005",
+      "category": "pr_description",
+      "score": 90.0,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 5.0,
+        "markdown_format": 10.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "Add exclusion for Terraform secrets and auto-generated secret files\n\nThe PR updates the `.gitignore` file to exclude Terraform secrets and auto-generated secret files to prevent them from being committed to the repository. This change enhances security by ensuring sensitive information is not accidentally pushed to version control. It also includes a broader exclusion for any files with the `.secret.tfvars` extension, which may contain additional sensitive data.",
+      "latency_ms": 603.07,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_006",
+      "category": "pr_description",
+      "score": 63.8,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 3.8,
+        "markdown_format": 10.0,
+        "mentions_changes": 5.0,
+        "explains_what": 25.0,
+        "explains_why": 10.0
+      },
+      "model_output": "# Update cloud-init template with HF token variable\n\nThe cloud-init provisioning now supports injecting the HashiCorp token variable, allowing for more dynamic and secure configuration of Azure VMs during provisioning. This change enables users to pass the HF token as a variable, enhancing the flexibility and security of their infrastructure setup.",
+      "latency_ms": 463.49,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_007",
+      "category": "pr_description",
+      "score": 100.0,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 15.0,
+        "markdown_format": 10.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Refactor benchmark_client.py to use asyncio and aiohttp for asynchronous benchmarking\n\nThe benchmark client has been refactored to use `asyncio` and `aiohttp` for improved performance during benchmarking of the LLM inference engine. This change allows for non-blocking HTTP requests and better utilization of I/O waiting times, leading to more accurate latency measurements. The `RequestResult` dataclass has also been updated to include additional metrics such as tokens generated and tokens per second.",
+      "latency_ms": 713.35,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_008",
+      "category": "pr_description",
+      "score": 82.5,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 7.5,
+        "markdown_format": 0.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Update AI/ML stack setup to include vLLM nightly build and transformers 5.5.0\n\nThe AI/ML stack setup script has been updated to install the vLLM nightly build for Gemma 4 support, which requires transformers version 5.5.0. This change ensures that the GPU VM is equipped with the latest features and improvements for AI/ML inference, leveraging the vLLM inference server for enhanced performance. The installation now includes the necessary nightly build and the transformers library at the specified version to meet the requirements of Gemma 4.",
+      "latency_ms": 862.23,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_009",
+      "category": "pr_description",
+      "score": 82.5,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 7.5,
+        "markdown_format": 0.0,
+        "mentions_changes": 15.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Update VM size for enhanced GPU performance\n\nThe Terraform configuration for the Azure GPU VM has been updated to use the \"Standard_NC48ads_A100_v4\" size, which provides more GPUs for improved performance in LLM inference workloads. Additionally, an OS disk size of 512 GB has been added to ensure sufficient storage for the VM's operations.",
+      "latency_ms": 541.79,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_010",
+      "category": "pr_description",
+      "score": 87.5,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 7.5,
+        "markdown_format": 10.0,
+        "mentions_changes": 10.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Update cloud-init configuration for Claude Code CLI provisioning on GPU VMs\n\nThe cloud-init configuration has been updated to include settings for Claude Code CLI, including a custom settings file with bypassed permissions for specific commands and environment variables for the Anthropic API. This ensures that the GPU VMs are correctly provisioned with the necessary configurations for Claude Code CLI to function properly.",
+      "latency_ms": 560.38,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_011",
+      "category": "pr_description",
+      "score": 67.5,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 7.5,
+        "markdown_format": 10.0,
+        "mentions_changes": 5.0,
+        "explains_what": 25.0,
+        "explains_why": 10.0
+      },
+      "model_output": "# Update benchmark models to include 4-bit quantized and new LLMs\n\nThe benchmark orchestrator script has been updated to include additional 4-bit quantized models and a new LLM, Llama-4-Scout, for a more comprehensive comparison of model performance on A100 GPUs. This change aims to explore the efficiency and effectiveness of recent advancements in model quantization and the capabilities of emerging LLMs.",
+      "latency_ms": 641.69,
+      "error": null
+    },
+    {
+      "test_case_id": "pr_desc_012",
+      "category": "pr_description",
+      "score": 83.8,
+      "subscores": {
+        "title_present": 10.0,
+        "title_keywords": 3.8,
+        "markdown_format": 10.0,
+        "mentions_changes": 10.0,
+        "explains_what": 25.0,
+        "explains_why": 25.0
+      },
+      "model_output": "# Upgrade CUDA toolkit to version 12.8\n\nThis PR updates the CUDA toolkit from version 12.4 to 12.8 to ensure compatibility with the latest GPU drivers and features. It also adds a check for GPU availability using `nvidia-smi` to alert users if the GPU is not accessible after setup.",
+      "latency_ms": 499.51,
+      "error": null
+    },
+    {
+      "test_case_id": "review_001",
+      "category": "code_review",
+      "score": 97.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 15.0,
+        "fix_suggested": 25.0,
+        "no_false_positives": 7.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: Command Injection\n\n2) Severity: Critical\n\n3) Suggested Fix: Use a secure method for establishing SSH connections that does not involve shell=True. The subprocess.call() function with shell=True can be vulnerable to command injection if the input parameters are not properly sanitized. Instead, use the paramiko library, which is a Python implementation of the SSHv2 protocol, to establish an SSH connection. Here's an example of how to use paramiko:\n\n```python\nimport paramiko\n\ndef connect(host, port, user):\n    client = paramiko.SSHClient()\n    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())\n    client.connect(host, port=port, username=user)\n    return True\n```\n\nThis code establishes an SSH connection using paramiko and does not have the same security risks as using subprocess.call() with shell=True. Always ensure that user input is properly sanitized and validated before using it in a command or any other context where it could be exploited.",
+      "latency_ms": 1427.44,
+      "error": null
+    },
+    {
+      "test_case_id": "review_002",
+      "category": "code_review",
+      "score": 100.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 15.0,
+        "fix_suggested": 25.0,
+        "no_false_positives": 10.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: SQL Injection\n   Severity: Critical\n   Suggested Fix: Use parameterized queries to prevent SQL injection. Instead of directly inserting the user_id into the query string, use placeholders and pass the user_id as a parameter to the execute() method. For example, if you're using a library like psycopg2 for PostgreSQL, you can do it like this:\n   ```python\n   cursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))\n   ```\n   This will ensure that the user_id is properly escaped and not executed as part of the SQL command, preventing potential SQL injection attacks.",
+      "latency_ms": 924.08,
+      "error": null
+    },
+    {
+      "test_case_id": "review_003",
+      "category": "code_review",
+      "score": 82.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 20.0,
+        "no_false_positives": 7.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: XSS (Cross-Site Scripting) vulnerability\nSeverity: High\nSuggested Fix: Sanitize the `comment.body` content before inserting it into the DOM. You can use the `textContent` property to safely insert text without interpreting any HTML tags, or use a library like DOMPurify to sanitize the content.\n\n2) Bug Type: Potential performance issue\nSeverity: Medium\nSuggested Fix: Instead of using `insertAdjacentHTML`, consider using `innerHTML` or `createElement` and `appendChild` to build the comment element. This can improve performance when inserting multiple elements, as `insertAdjacentHTML` can be slower due to parsing the HTML string.\n\n3) Bug Type: Hardcoded element ID\nSeverity: Low\nSuggested Fix: Make the element ID dynamic or configurable, or use a more descriptive and unique ID to avoid potential conflicts with other elements on the page. This can be done by passing the ID as a parameter to the function or using a more specific ID that is less likely to change.",
+      "latency_ms": 1504.19,
+      "error": null
+    },
+    {
+      "test_case_id": "review_004",
+      "category": "code_review",
+      "score": 80.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 15.0,
+        "fix_suggested": 15.0,
+        "no_false_positives": 0.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: File I/O Error\n   Severity: Medium\n   Suggested Fix: Add error handling to catch and handle exceptions that may occur while opening or reading the file. For example, you can use a try-except block to catch `FileNotFoundError` and `PermissionError` exceptions.\n\n   ```python\n   import os\n\n   def read_config(path):\n       user_path = os.path.join('/etc/app/config', path)\n       try:\n           with open(user_path) as f:\n               return f.read()\n       except FileNotFoundError:\n           print(f\"Error: The file {user_path} was not found.\")\n       except PermissionError:\n           print(f\"Error: Permission denied when trying to read the file {user_path}.\")\n   ```\n\n2) Bug Type: Security Vulnerability (Path Traversal)\n   Severity: High\n   Suggested Fix: Validate the `path` parameter to ensure it does not contain any path traversal characters (e.g., `..`) that could potentially lead to unauthorized file access. You can use the `os.path.normpath` function to normalize the path and then check if it contains any parent directory references.\n\n   ```python\n   import os\n\n   def read_config(path):\n       user_path = os.path.normpath(os.path.join('/etc/app/config', path))\n       if '..' in user_path:\n           print(\"Error: Invalid path.\")\n           return None\n       try:\n           with open(user_path) as f:\n               return f.read()\n       except FileNotFoundError:\n           print(f\"Error: The file {user_path} was not found.\")\n       except PermissionError:\n           print(f\"Error: Permission denied when trying to read the file {user_path}.\")\n   ```\n\n3) Bug Type: Hardcoded Path\n   Severity: Low\n   Suggested Fix: Consider making the base path configurable or passing it as a parameter to the function to make the code more flexible and reusable. This would allow the function to be used in different environments or with different base paths.\n\n   ```python\n   import os\n\n   def read_config(path, base_path='/etc/app/config'):\n       user_path = os.path.normpath(os.path.join(base_path, path))\n       if '..' in user_path:\n           print(\"Error: Invalid path.\")\n           return None\n       try:\n           with open(user_path) as f:\n               return f.read()\n       except FileNotFoundError:\n           print(f\"Error: The file {user_path} was not found.\")\n       except PermissionError:\n           print(f\"Error: Permission denied when trying to read the file {user_path}.\")\n   ```\n\n4) Bug Type: Lack of Input Validation\n   Severity: Medium\n   Suggested Fix: Validate the `path` parameter to ensure it is a valid file path and does not contain any malicious content. You can use regular expressions or other validation techniques to check for invalid characters or patterns.\n\n   ```python\n   import os\n   import re\n\n   def read_config(path):\n       if not re.match(r'^[\\w\\s/]+$', path):\n           print(\"Error: Invalid path.\")\n           return None\n       user_path = os.path.normpath(os.path.join('/etc/app/config', path))\n       if '..' in user_path:\n           print(\"Error: Invalid path.\")\n           return None\n       try:\n           with open(user_path) as f:\n               return f.read()\n       except FileNotFoundError:\n           print(f\"Error: The file {user_path} was not found.\")\n       except PermissionError:\n           print(f\"Error: Permission denied when trying to read the file {user_path}.\")\n   ```",
+      "latency_ms": 5373.59,
+      "error": null
+    },
+    {
+      "test_case_id": "review_005",
+      "category": "code_review",
+      "score": 75.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 20.0,
+        "no_false_positives": 0.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1. Bug Type: Security vulnerability (YAML loading issue)\n   Severity: Medium\n   Suggested Fix: Use `yaml.safe_load` instead of `yaml.load` to prevent arbitrary code execution if the YAML data is untrusted. This function will only load a mapping or sequence type, not arbitrary Python objects.\n\n2. Bug Type: Key error (Key 'settings' not found)\n   Severity: Low\n   Suggested Fix: Add a check to ensure the 'settings' key exists in the loaded YAML data before trying to access it. If it doesn't exist, handle the case appropriately, e.g., by returning an empty dictionary or raising a custom exception.\n\n3. Bug Type: Missing import (yaml)\n   Severity: Medium\n   Suggested Fix: Ensure that the `yaml` module is imported at the beginning of the file. If it's not installed, you may need to install it using `pip install PyYAML` or add an import error handling block to manage the ImportError.\n\n4. Bug Type: Incomplete code (missing return statement)\n   Severity: Low\n   Suggested Fix: Make sure to return the loaded settings dictionary at the end of the function. The current code snippet is missing the return statement for the loaded settings.\n\n5. Bug Type: Potential data type issue (config.get returns None)\n   Severity: Low\n   Suggested Fix: Check if the 'settings' key exists and is not None before accessing its value. If it's not present or is None, handle the case appropriately, e.g., by returning an empty dictionary or raising a custom exception.",
+      "latency_ms": 2274.16,
+      "error": null
+    },
+    {
+      "test_case_id": "review_006",
+      "category": "code_review",
+      "score": 76.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 15.0,
+        "fix_suggested": 10.0,
+        "no_false_positives": 1.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: Incorrect handling of URL and connection setup\n   Severity: Medium\n   Suggested Fix: Use the `urlparse` module to correctly parse the URL and extract the hostname and path. Also, use the `http.client` module to establish a connection with the correct parameters.\n\n2) Bug Type: Not closing the connection\n   Severity: Medium\n   Suggested Fix: Use a context manager (with statement) to ensure the connection is properly closed after use.\n\n3) Bug Type: No error handling\n   Severity: Low\n   Suggested Fix: Add error handling for potential exceptions that may occur during the connection, request, or response reading process.\n\nHere's a revised version of the code:\n\n```python\nimport http.client\nfrom urllib.parse import urlparse\n\ndef download_file(url):\n    parsed_url = urlparse(url)\n    conn = http.client.HTTPSConnection(parsed_url.netloc)\n    conn.request('GET', parsed_url.path)\n    response = conn.getresponse()\n    \n    try:\n        data = response.read()\n        return data\n    except Exception as e:\n        print(f\"An error occurred: {e}\")\n    finally:\n        conn.close()\n```",
+      "latency_ms": 1698.98,
+      "error": null
+    },
+    {
+      "test_case_id": "review_007",
+      "category": "code_review",
+      "score": 75.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 20.0,
+        "no_false_positives": 0.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1. Off-by-one error (bug)\n   Severity: Low\n   Suggested fix: Change the range in the for loop to `range(1, len(items))` to `range(1, len(items) - 1)` to avoid an `IndexError` when accessing `items[i-1]` and `items[i]` at the boundaries of the list.\n\n2. Potential security vulnerability (if items are user-supplied)\n   Severity: Medium\n   Suggested fix: If `items` is user-supplied, ensure that the input is properly sanitized and validated to prevent potential security issues such as code injection or unintended behavior. If `items` is expected to be a list of numbers, consider adding a check to ensure that all elements are indeed numbers before processing.\n\n3. Inefficient processing (performance issue)\n   Severity: Low\n   Suggested fix: If the list of items is large and performance is a concern, consider using a more efficient algorithm or data structure to compare adjacent elements. For example, using a generator expression with `itertools.tee` can avoid creating a new list in memory.\n\n4. Lack of input validation (robustness issue)\n   Severity: Medium\n   Suggested fix: Add input validation to ensure that `items` is a list and that it is not empty. If an empty list is not a valid input for your use case, raise an appropriate exception or handle it accordingly.\n\n5. No error handling (robustness issue)\n   Severity: Low\n   Suggested fix: Add error handling to manage potential exceptions that may occur during processing, such as `TypeError` if non-numeric values are present in the list. This can be done using a try-except block around the comparison and subtraction operations.",
+      "latency_ms": 2581.73,
+      "error": null
+    },
+    {
+      "test_case_id": "review_008",
+      "category": "code_review",
+      "score": 71.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 15.0,
+        "no_false_positives": 1.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "Issue: SQL Injection vulnerability in DATABASE_URL\n\n1) Bug Type: Injection vulnerability\n2) Severity: High\n3) Suggested Fix: Replace the '@' character in the password with a safe alternative or use a different authentication method that doesn't allow plain-text passwords in the URL. For example, use an environment variable or a secrets manager to store the password securely, and modify the DATABASE_URL to use these secure methods. For example:\n\n```python\nimport os\nfrom dotenv import load_dotenv\n\nload_dotenv()\n\nDATABASE_URL = f\"postgresql://admin:{os.getenv('DATABASE_PASSWORD')}@prod-db.internal:5432/myapp\"\n```\n\nMake sure to set the 'DATABASE_PASSWORD' environment variable in a secure manner, such as using a `.env` file or a secrets manager. This will prevent the password from being exposed in the code and stored in version control.",
+      "latency_ms": 1302.12,
+      "error": null
+    },
+    {
+      "test_case_id": "review_009",
+      "category": "code_review",
+      "score": 72.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 10.0,
+        "no_false_positives": 7.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: Race Condition\n\nSeverity: High\n\nSuggested Fix: Use a Lock to synchronize access to the shared resource (counter variable). Python's threading module provides a Lock class that can be used to ensure that only one thread can access the critical section of code at a time. Here's the updated code with a Lock:\n\n```python\nimport threading\n\ncounter = 0\nlock = threading.Lock()\n\ndef increment():\n    global counter\n    for _ in range(1000000):\n        with lock:\n            counter += 1\n\nthreads = [threading.Thread(target=increment) for _ in range(4)]\nfor t in threads: t.start()\nfor t in threads: t.join()\nprint(counter)\n```\n\nThis will ensure that only one thread can increment the counter at a time, preventing a race condition.",
+      "latency_ms": 1224.53,
+      "error": null
+    },
+    {
+      "test_case_id": "review_010",
+      "category": "code_review",
+      "score": 69.0,
+      "subscores": {
+        "bug_detected": 40.0,
+        "severity": 5.0,
+        "fix_suggested": 10.0,
+        "no_false_positives": 4.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) Bug Type: Runtime error due to improper error handling\nSeverity: Medium\nSuggested Fix: Check for errors when reading the request body and unmarshaling JSON. Handle the error appropriately, for example by sending an error response to the client.\n\n2) Bug Type: Potential nil pointer dereference\nSeverity: Medium\nSuggested Fix: Check if the \"name\" key exists in the map and if the value is of type string before using it. This can be done using the following code:\n\n```go\nif name, ok := data[\"name\"].(string); ok {\n    fmt.Fprintf(w, \"Hello, %s\", name)\n} else {\n    http.Error(w, \"Name not found in the request\", http.StatusBadRequest)\n}\n```\n\n3) Bug Type: Potential security vulnerability (no input validation)\nSeverity: Medium\nSuggested Fix: Validate the input data to ensure it meets the expected format and content. For example, you can check if the \"name\" value contains only valid characters to prevent injection attacks. You can also limit the length of the \"name\" value to prevent buffer overflow attacks.",
+      "latency_ms": 1687.28,
+      "error": null
+    },
+    {
+      "test_case_id": "review_011",
+      "category": "code_review",
+      "score": 55.0,
+      "subscores": {
+        "bug_detected": 20.0,
+        "severity": 5.0,
+        "fix_suggested": 20.0,
+        "no_false_positives": 0.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1. Potential Value Error (Medium)\n   If the 'age' key is not present in the data dictionary, the `data.get('age', '')` will return an empty string, which will then be converted to an integer, causing a ValueError when trying to convert it. This could happen if the 'age' key is missing or if the value is not a string that can be converted to an integer.\n\n   Suggested Fix: Check if the age_str is not an empty string before converting it to an integer. You can modify the parse_age function as follows:\n   ```python\n   def parse_age(age_str):\n       if age_str:\n           age = int(age_str)\n           if age > 0 and age < 150:\n               return age\n       return None\n   ```\n\n2. Potential Security Vulnerability (Medium)\n   The code does not sanitize the input before using it, which could lead to potential security issues such as SQL injection, command injection, or other forms of attacks if the input is used in a context where it can be executed or interpreted as code.\n\n   Suggested Fix: Always sanitize and validate user inputs before using them, especially if they are used in a context where they can be executed or interpreted as code. In this case, since we are only converting the input to an integer, the risk is low, but it's still good practice to validate the input format before conversion.\n\n3. Potential Logic Error (Low)\n   The code does not handle the case when the age is exactly 0 or 150, which might be considered invalid depending on the context.\n\n   Suggested Fix: Update the condition in the parse_age function to include or exclude these values based on the requirements. For example, to exclude 0 and 150:\n   ```python\n   if age > 0 and age < 150:\n   ```\n   Or, to include them:\n   ```python\n   if age >= 0 and age <= 150:\n   ```\n\n4. Potential Resource Leak (Low)\n   If the process_form function is used in a context where it holds a reference to the message string, it could potentially cause a memory leak if the string is not properly managed. However, this is highly dependent on the larger context of the code and is not an issue with the provided snippet.\n\n   Suggested Fix: Ensure proper management of resources in the larger context where this function is used. If the message is not needed after the function returns, consider setting it to None or using a context manager to handle the string.",
+      "latency_ms": 3772.29,
+      "error": null
+    },
+    {
+      "test_case_id": "review_012",
+      "category": "code_review",
+      "score": 67.0,
+      "subscores": {
+        "bug_detected": 20.0,
+        "severity": 15.0,
+        "fix_suggested": 15.0,
+        "no_false_positives": 7.0,
+        "clear_explanation": 10.0
+      },
+      "model_output": "1) SQL Injection vulnerability in the DELETE route\n2) Critical severity\nSuggested fix: Use parameterized queries or prepared statements to prevent SQL injection. For example, if using a MySQL database, you can use the following code:\n```javascript\napp.post('/api/admin/delete-user', (req, res) => {\n  const userId = req.body.id;\n  db.query('DELETE FROM users WHERE id = ?', [userId]);\n  res.json({ success: true });\n});\n```\nIf using a different database, refer to the appropriate documentation for parameterized queries.",
+      "latency_ms": 869.02,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_001",
+      "category": "issue_triage",
+      "score": 71.7,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 6.7,
+        "no_incorrect": 20.0,
+        "priority_match": 15.0,
+        "category_match": 0.0
+      },
+      "model_output": "{\n  \"labels\": [\"bug\"],\n  \"priority\": \"high\",\n  \"category\": \"performance\"\n}",
+      "latency_ms": 195.48,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_002",
+      "category": "issue_triage",
+      "score": 90.0,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 10.0,
+        "no_incorrect": 20.0,
+        "priority_match": 15.0,
+        "category_match": 15.0
+      },
+      "model_output": "{\n  \"labels\": [\"enhancement\"],\n  \"priority\": \"medium\",\n  \"category\": \"feature\"\n}",
+      "latency_ms": 200.05,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_003",
+      "category": "issue_triage",
+      "score": 71.7,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 6.7,
+        "no_incorrect": 20.0,
+        "priority_match": 15.0,
+        "category_match": 0.0
+      },
+      "model_output": "{\n  \"labels\": [\"bug\"],\n  \"priority\": \"high\",\n  \"category\": \"bug\"\n}",
+      "latency_ms": 192.56,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_004",
+      "category": "issue_triage",
+      "score": 70.0,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 20.0,
+        "no_incorrect": 20.0,
+        "priority_match": 0.0,
+        "category_match": 0.0
+      },
+      "model_output": "```json\n{\n  \"labels\": [\"documentation\"],\n  \"priority\": \"medium\",\n  \"category\": \"documentation\"\n}\n```",
+      "latency_ms": 213.13,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_005",
+      "category": "issue_triage",
+      "score": 71.7,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 6.7,
+        "no_incorrect": 20.0,
+        "priority_match": 0.0,
+        "category_match": 15.0
+      },
+      "model_output": "{\n  \"labels\": [\"performance\"],\n  \"priority\": \"high\",\n  \"category\": \"performance\"\n}",
+      "latency_ms": 185.37,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_006",
+      "category": "issue_triage",
+      "score": 90.0,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 10.0,
+        "no_incorrect": 20.0,
+        "priority_match": 15.0,
+        "category_match": 15.0
+      },
+      "model_output": "{\n  \"labels\": [\"security\"],\n  \"priority\": \"high\",\n  \"category\": \"security\"\n}",
+      "latency_ms": 187.54,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_007",
+      "category": "issue_triage",
+      "score": 55.0,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 10.0,
+        "no_incorrect": 15.0,
+        "priority_match": 0.0,
+        "category_match": 0.0
+      },
+      "model_output": "```json\n{\n  \"labels\": [\"question\", \"performance\"],\n  \"priority\": \"medium\",\n  \"category\": \"performance\"\n}\n```",
+      "latency_ms": 240.1,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_008",
+      "category": "issue_triage",
+      "score": 71.7,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 6.7,
+        "no_incorrect": 20.0,
+        "priority_match": 0.0,
+        "category_match": 15.0
+      },
+      "model_output": "{\n  \"labels\": [\"enhancement\"],\n  \"priority\": \"high\",\n  \"category\": \"feature\"\n}",
+      "latency_ms": 194.81,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_009",
+      "category": "issue_triage",
+      "score": 15.0,
+      "subscores": {
+        "correct_label": 0.0,
+        "all_labels": 0.0,
+        "no_incorrect": 15.0,
+        "priority_match": 0.0,
+        "category_match": 0.0
+      },
+      "model_output": "```json\n{\n  \"labels\": [\"enhancement\"],\n  \"priority\": \"high\",\n  \"category\": \"feature\"\n}\n```",
+      "latency_ms": 230.96,
+      "error": null
+    },
+    {
+      "test_case_id": "triage_010",
+      "category": "issue_triage",
+      "score": 86.7,
+      "subscores": {
+        "correct_label": 30.0,
+        "all_labels": 6.7,
+        "no_incorrect": 20.0,
+        "priority_match": 15.0,
+        "category_match": 15.0
+      },
+      "model_output": "{\n  \"labels\": [\"enhancement\"],\n  \"priority\": \"medium\",\n  \"category\": \"feature\"\n}",
+      "latency_ms": 206.01,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_001",
+      "category": "commit_message",
+      "score": 78.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 10.0,
+        "relevant_scope": 15.0,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(system-wide): add rustup and cargo to system path for stable rust installation\n\nAdded rustup and cargo to the system path to enable stable rust installation system-wide. Created /etc/profile.d/rust.sh to source rustup and cargo environment variables on login.",
+      "latency_ms": 422.82,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_002",
+      "category": "commit_message",
+      "score": 60.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 10.0,
+        "relevant_scope": 15.0,
+        "concise": 0.0,
+        "body_rationale": 10.0
+      },
+      "model_output": "feat(setup): use apt to install neovim instead of downloading AppImage (AppImage often fails on Ubuntu 24.04)",
+      "latency_ms": 230.07,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_003",
+      "category": "commit_message",
+      "score": 81.2,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 10.0,
+        "relevant_scope": 11.2,
+        "concise": 15.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat: add uv tool for improved isolation and speed of security tools\n\nAdded uvu (uv tool) to install and manage security tools like sherlock-project, maigret, dnsrecon, etc. faster and with better isolation.",
+      "latency_ms": 362.09,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_004",
+      "category": "commit_message",
+      "score": 89.2,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 11.2,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(variables): increase os_disk_size_gb default and add hf_token variable\n\nAdded a new variable `hf_token` for HuggingFace API token with a description and marked it as sensitive.",
+      "latency_ms": 317.1,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_005",
+      "category": "commit_message",
+      "score": 78.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 10.0,
+        "relevant_scope": 15.0,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(gitignore): add auto-generated and secret .tfvars files to .gitignore\n\nThis commit adds rules to .gitignore to exclude auto-generated and secret Terraform variable files, preventing them from being committed to the repository. This helps to keep sensitive data secure and avoids accidental commits of potentially sensitive information.",
+      "latency_ms": 467.54,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_006",
+      "category": "commit_message",
+      "score": 82.5,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 7.5,
+        "concise": 15.0,
+        "body_rationale": 10.0
+      },
+      "model_output": "feat(core): allow hf_token variable in cloud-init template",
+      "latency_ms": 100.91,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_007",
+      "category": "commit_message",
+      "score": 81.8,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 3.8,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(terraform): update vm_size and add os_disk_size_gb in terraform.tfvars\n\nThis commit updates the vm_size to a larger variant and adds a new variable for os_disk_size_gb in the terraform.tfvars file.",
+      "latency_ms": 365.76,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_008",
+      "category": "commit_message",
+      "score": 78.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 10.0,
+        "relevant_scope": 15.0,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(gpu-drivers): update to CUDA Toolkit 12-8, add nvidia-smi verification\n\nThis update upgrades the CUDA Toolkit from version 12-4 to 12-8 and includes a verification step for GPU access using nvidia-smi.",
+      "latency_ms": 409.07,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_009",
+      "category": "commit_message",
+      "score": 93.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 15.0,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(benchmarks): add new model slugs and HF models to run_orchestrator.sh\n\nAdded \"gemma4-31b-awq\", \"gemma4-31b-bf16\", and \"llama4-scout\" to MODEL_SLUGS array and HF_MODELS associative array for benchmarking additional models.",
+      "latency_ms": 521.09,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_010",
+      "category": "commit_message",
+      "score": 73.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 5.0,
+        "concise": 8.0,
+        "body_rationale": 10.0
+      },
+      "model_output": "feat(cloud-init): add claude settings.json with default mode and environment variable",
+      "latency_ms": 142.65,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_011",
+      "category": "commit_message",
+      "score": 83.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 15.0,
+        "concise": 8.0,
+        "body_rationale": 10.0
+      },
+      "model_output": "feat(ml-stack): add vLLM nightly for Gemma 4 support (requires transformers 5.5.0)",
+      "latency_ms": 218.44,
+      "error": null
+    },
+    {
+      "test_case_id": "commit_012",
+      "category": "commit_message",
+      "score": 88.0,
+      "subscores": {
+        "conventional_format": 25.0,
+        "correct_type": 25.0,
+        "relevant_scope": 10.0,
+        "concise": 8.0,
+        "body_rationale": 20.0
+      },
+      "model_output": "feat(linter-formatters): install code quality tools for multiple languages\n\nAdds installation scripts for Python, JavaScript/TypeScript, and Shell linters and formatters, including Ruff, Pyright, ESLint, Prettier, TypeScript Language Server, Shellcheck, and shfmt.",
+      "latency_ms": 452.66,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_001",
+      "category": "gh_cli",
+      "score": 85.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 15.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh pr create --base main --title \"Fix vLLM startup race condition\" --body \"This PR addresses the startup race condition in vLLM.\"",
+      "latency_ms": 253.09,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_002",
+      "category": "gh_cli",
+      "score": 85.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 15.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh issue list -l bug",
+      "latency_ms": 65.0,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_003",
+      "category": "gh_cli",
+      "score": 100.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh pr merge 42 --squash",
+      "latency_ms": 85.47,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_004",
+      "category": "gh_cli",
+      "score": 100.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh issue create --title \"GPU OOM on model load\" --label \"bug, gpu\"",
+      "latency_ms": 166.02,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_005",
+      "category": "gh_cli",
+      "score": 70.0,
+      "subscores": {
+        "correct_command": 0.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh workflow run view --json .[].{id,head_sha,status} | jq '.[] | select(.status == \"completed\") | .id'",
+      "latency_ms": 253.0,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_006",
+      "category": "gh_cli",
+      "score": 95.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 10.0
+      },
+      "model_output": "gh release create v2.0.0 --generate-notes --notes \"Auto-generated release notes from the main branch\" --body \"Release notes for v2.0.0\" --title \"Release v2.0.0\" --target \"main\" --draft false",
+      "latency_ms": 424.97,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_007",
+      "category": "gh_cli",
+      "score": 50.0,
+      "subscores": {
+        "correct_command": 0.0,
+        "required_flags": 15.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 10.0
+      },
+      "model_output": "gh pr review 15 --reviewer octocat",
+      "latency_ms": 94.81,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_008",
+      "category": "gh_cli",
+      "score": 100.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh repo fork opencode-ai/opencode --clone",
+      "latency_ms": 93.12,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_009",
+      "category": "gh_cli",
+      "score": 55.0,
+      "subscores": {
+        "correct_command": 0.0,
+        "required_flags": 15.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh issue comment -b \"This issue was fixed in PR #12\" -R 7",
+      "latency_ms": 153.65,
+      "error": null
+    },
+    {
+      "test_case_id": "ghcli_010",
+      "category": "gh_cli",
+      "score": 100.0,
+      "subscores": {
+        "correct_command": 30.0,
+        "required_flags": 30.0,
+        "no_forbidden": 15.0,
+        "valid_syntax": 10.0,
+        "valid_flags": 15.0
+      },
+      "model_output": "gh pr diff 25",
+      "latency_ms": 54.37,
+      "error": null
+    }
+  ]
+}

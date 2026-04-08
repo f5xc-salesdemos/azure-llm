@@ -2,6 +2,7 @@
 # Workstation VM — developer tools, Claude Code, OpenCode, benchmarks
 # T4 GPU for Chrome/Playwright rendering only (no vLLM serving)
 # Connects to Gemma (${gemma_ip}:${gemma_port}) and Phi (${phi_ip}:${phi_port}) over VNet
+package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
   content: '$nrconf{restart} = ''a'';
@@ -9,13 +10,17 @@ write_files:
     $nrconf{kernelhints} = 0;
 
     '
+- path: /opt/setup-workstation-tools.sh
+  permissions: '0755'
+  encoding: b64
+  content: ${tools_script_b64}
 - path: /opt/setup-workstation.sh
   permissions: '0755'
   content: |
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/workstation-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-07-v6-workstation"
+    CLOUD_INIT_VERSION="2026-04-08-v7-resilient"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
@@ -42,7 +47,6 @@ write_files:
     # ---- Minimal bootstrap packages (needed to run setup script) ----
     wait_for_apt
     apt-get update -y
-    apt-get upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
     apt-get install -y git curl wget unzip python3-pip zsh
 
     # ---- GitHub CLI (needed for xcsh apt repo below) ----
@@ -59,67 +63,100 @@ write_files:
     apt-get update
     apt-get install -y cuda-drivers
 
-    # ---- Full toolset — download and run setup script from GitHub ----
-    TOOLS_SCRIPT_URL="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts/setup-workstation-tools.sh"
+    # ---- Full toolset — run embedded setup script (non-fatal) ----
+    # Script is written by cloud-init write_files (base64-encoded, no GitHub dependency)
     TOOLS_SCRIPT="/opt/setup-workstation-tools.sh"
-    curl -fsSL "$${TOOLS_SCRIPT_URL}" -o "$${TOOLS_SCRIPT}"
-    # Verify download: must be non-empty and start with a bash shebang
-    if [ ! -s "$${TOOLS_SCRIPT}" ]; then
-        echo "ERROR: setup-workstation-tools.sh download failed or empty" >&2
-        exit 1
+    TOOLS_EXIT=0
+    TOOLS_DOWNLOAD_OK=true
+    if [ -s "$${TOOLS_SCRIPT}" ] && head -1 "$${TOOLS_SCRIPT}" | grep -q '^#\!.*bash'; then
+        chmod +x "$${TOOLS_SCRIPT}"
+        echo "Running setup-workstation-tools.sh..."
+        bash "$${TOOLS_SCRIPT}" "${admin_username}" || TOOLS_EXIT=$?
+        if [ "$${TOOLS_EXIT}" -ne 0 ]; then
+            echo "WARNING: setup-workstation-tools.sh exited with code $${TOOLS_EXIT}" >&2
+            echo "WARNING: Continuing with shell/editor/AI agent configuration..." >&2
+        fi
+    else
+        TOOLS_DOWNLOAD_OK=false
+        echo "ERROR: /opt/setup-workstation-tools.sh missing or invalid" >&2
+        echo "WARNING: Skipping tool installation. Continuing with shell/editor/AI config..." >&2
     fi
-    if ! head -1 "$${TOOLS_SCRIPT}" | grep -q '^#\!.*bash'; then
-        echo "ERROR: Downloaded file is not a bash script (possible 404 HTML page):" >&2
-        head -5 "$${TOOLS_SCRIPT}" >&2
-        exit 1
-    fi
-    chmod +x "$${TOOLS_SCRIPT}"
-    bash "$${TOOLS_SCRIPT}" "${admin_username}"
-
-    # ---- xcsh (OpenCode fork with fixes) ----
-    curl -fsSL https://f5xc-salesdemos.github.io/apt-repo/gpg.key \
-      | gpg --dearmor -o /usr/share/keyrings/xcsh-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/xcsh-archive-keyring.gpg] https://f5xc-salesdemos.github.io/apt-repo stable main" \
-      | tee /etc/apt/sources.list.d/xcsh.list > /dev/null
-    apt-get update
-    cd /tmp && apt-get download xcsh && dpkg --force-depends -i xcsh_*.deb && rm -f xcsh_*.deb
 
     # ---- Zsh default shell ----
     sed -i 's|SHELL=/bin/sh|SHELL=/bin/zsh|' /etc/default/useradd
     chsh -s /usr/bin/zsh ${admin_username}
 
     # ---- Oh-my-zsh + plugins + p10k (as user) ----
-    su - ${admin_username} -c 'export RUNZSH=no KEEP_ZSHRC=yes && sh -c "$$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+    # Create minimal .zshrc first to suppress zsh-newuser-install wizard on first login
+    su - ${admin_username} -c 'touch $HOME/.zshrc'
+    su - ${admin_username} -c 'export RUNZSH=no KEEP_ZSHRC=yes && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
     su - ${admin_username} -c '
-      ZSH_CUSTOM=$$HOME/.oh-my-zsh/custom
-      git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git $$ZSH_CUSTOM/plugins/zsh-autosuggestions
-      git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git $$ZSH_CUSTOM/plugins/zsh-syntax-highlighting
-      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $$ZSH_CUSTOM/themes/powerlevel10k
-      $$ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install
-      git clone --depth=1 https://github.com/tmux-plugins/tpm $$HOME/.tmux/plugins/tpm
-      sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" $$HOME/.zshrc
-      sed -i "s/^plugins=(.*/plugins=(zsh-syntax-highlighting zsh-autosuggestions git colored-man-pages command-not-found history tmux)/" $$HOME/.zshrc
-      sed -i "s/^# HYPHEN_INSENSITIVE=.*/HYPHEN_INSENSITIVE=\"true\"/" $$HOME/.zshrc
-      sed -i "s/^# COMPLETION_WAITING_DOTS=.*/COMPLETION_WAITING_DOTS=\"true\"/" $$HOME/.zshrc
-      sed -i "s/^# HIST_STAMPS=.*/HIST_STAMPS=\"yyyy-mm-dd\"/" $$HOME/.zshrc
+      ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
+      # External plugins (community)
+      git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions 2>/dev/null || true
+      git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting 2>/dev/null || true
+      git clone --depth=1 https://github.com/conda-incubator/conda-zsh-completion.git $ZSH_CUSTOM/plugins/conda-zsh-completion 2>/dev/null || true
+      git clone --depth=1 https://github.com/z-shell/zsh-eza.git $ZSH_CUSTOM/plugins/zsh-eza 2>/dev/null || true
+      git clone --depth=1 https://github.com/cda0/zsh-tfenv.git $ZSH_CUSTOM/plugins/zsh-tfenv 2>/dev/null || true
+      git clone --depth=1 https://github.com/wbingli/zsh-claudecode-completion.git $ZSH_CUSTOM/plugins/zsh-claudecode-completion 2>/dev/null || true
+      # Custom gh-clone-complete plugin (GitHub repo tab completion for git clone)
+      mkdir -p $ZSH_CUSTOM/plugins/gh-clone-complete
+      curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/gh-clone-complete.plugin.zsh \
+        -o $ZSH_CUSTOM/plugins/gh-clone-complete/gh-clone-complete.plugin.zsh 2>/dev/null || true
+      # Theme
+      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k 2>/dev/null || true
+      [ -x $ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install ] && $ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install || true
+      # tmux plugin manager
+      git clone --depth=1 https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm 2>/dev/null || true
+      # _gog completion
+      mkdir -p $ZSH_CUSTOM/completions
+      curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/_gog \
+        -o $ZSH_CUSTOM/completions/_gog 2>/dev/null || true
+      # Configure .zshrc
+      sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" $HOME/.zshrc 2>/dev/null || true
+      sed -i "s/^plugins=(.*/plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-interactive-cd jsontools gh gh-clone-complete common-aliases zsh-eza zsh-tfenv conda-zsh-completion z pip terraform fluxcd azure git-auto-fetch helm istioctl kube-ps1 kubectl sudo vscode aws fzf docker history colored-man-pages command-not-found tmux zsh-claudecode-completion dotenv emoji gcloud git pre-commit ubuntu)/" $HOME/.zshrc 2>/dev/null || true
+      sed -i "s/^# HYPHEN_INSENSITIVE=.*/HYPHEN_INSENSITIVE=\"true\"/" $HOME/.zshrc 2>/dev/null || true
+      sed -i "s/^# COMPLETION_WAITING_DOTS=.*/COMPLETION_WAITING_DOTS=\"true\"/" $HOME/.zshrc 2>/dev/null || true
+      sed -i "s/^# HIST_STAMPS=.*/HIST_STAMPS=\"yyyy-mm-dd\"/" $HOME/.zshrc 2>/dev/null || true
+      # Suppress dotenv prompt (must go before oh-my-zsh.sh sourcing)
+      sed -i "/source.*oh-my-zsh.sh/i export ZSH_DOTENV_PROMPT=false" $HOME/.zshrc 2>/dev/null || true
     '
-    su - ${admin_username} -c 'cat >> $$HOME/.zshrc <<'"'"'ZSHEOF'"'"'
+    cat >> /home/${admin_username}/.zshrc <<'ZSHEOF'
     export HISTSIZE=50000
     export SAVEHIST=50000
     [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-    export PATH="$$HOME/.local/bin:/usr/local/bin:$$PATH"
+    export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
     export OPENAI_API_KEY="local-vllm"
     alias vim=nvim
+    alias codex-exec="codex exec --skip-git-repo-check"
     export LESS="-R -F -X -i -J --mouse"
     export BAT_THEME="Coldark-Dark"
     export LESSOPEN="|~/.lessfilter %s"
-    export LESSHISTFILE="$$HOME/.cache/lesshst"
-    ZSHEOF'
+    export LESSHISTFILE="$HOME/.cache/lesshst"
+    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+    export BROWSER="browsh"
+    ZSHEOF
+    chown ${admin_username}:${admin_username} /home/${admin_username}/.zshrc
+
+    # ---- .hushlogin (suppress login banner) ----
+    touch /home/${admin_username}/.hushlogin
+    chown ${admin_username}:${admin_username} /home/${admin_username}/.hushlogin
+
+    # ---- /etc/zsh/zshenv (OAuth token forwarding for Claude Code) ----
+    mkdir -p /etc/zsh
+    cat >> /etc/zsh/zshenv <<'ZSHENV'
+    if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$ANTHROPIC_OAUTH_TOKEN" ]; then
+      export ANTHROPIC_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN"
+    fi
+    ZSHENV
 
     # ---- p10k config (download from devcontainer repo) ----
     curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/.p10k.zsh \
-      -o /home/${admin_username}/.p10k.zsh
+      -o /home/${admin_username}/.p10k.zsh || true
     chown ${admin_username}:${admin_username} /home/${admin_username}/.p10k.zsh
+
+    # ---- Initialize zsh completions ----
+    su - ${admin_username} -c 'zsh -c "autoload -U compinit && compinit"' 2>/dev/null || true
 
     # ---- Neovim plugins (lazy.nvim — as user) ----
     mkdir -p /home/${admin_username}/.config/nvim
@@ -446,7 +483,7 @@ write_files:
     cp /home/${admin_username}/.config/nvim/init.lua /etc/skel/.config/nvim/init.lua
     cp -r /home/${admin_username}/.local/share/nvim /etc/skel/.local/share/nvim 2>/dev/null || true
     # Fix skel .zshrc to use $HOME instead of hardcoded path
-    sed -i "s|/home/${admin_username}|\\$$HOME|g" /etc/skel/.zshrc 2>/dev/null || true
+    sed -i "s|/home/${admin_username}|\$HOME|g" /etc/skel/.zshrc 2>/dev/null || true
 
     # ---- Claude Code configuration ----
     mkdir -p /home/${admin_username}/.claude
@@ -550,17 +587,6 @@ write_files:
             "${devstral_served_name}": {
               "name": "${devstral_served_name} (Coding Agent / Tool Calling)",
               "limit": { "context": ${devstral_max_model_len}, "output": 4096 }
-            }
-          }
-        },
-        "vllm-docs": {
-          "npm": "@ai-sdk/openai-compatible",
-          "name": "Qwen3-32B (${qwen3_ip})",
-          "options": { "baseURL": "http://${qwen3_ip}:${qwen3_port}/v1", "apiKey": "local-vllm" },
-          "models": {
-            "${qwen3_served_name}": {
-              "name": "${qwen3_served_name} (Docs/Markdown/OpenAPI)",
-              "limit": { "context": ${qwen3_max_model_len}, "output": 8192 }
             }
           }
         }
@@ -817,7 +843,6 @@ write_files:
     echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
     echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
     echo -n "Devstral (${devstral_ip}:${devstral_port}):    "; curl -sf http://${devstral_ip}:${devstral_port}/health && echo "UP" || echo "DOWN"
-    echo -n "Qwen3    (${qwen3_ip}:${qwen3_port}):    "; curl -sf http://${qwen3_ip}:${qwen3_port}/health && echo "UP" || echo "DOWN"
     SCRIPT
     chmod +x /usr/local/bin/check-llm-servers
 
@@ -826,30 +851,31 @@ write_files:
     cat > /etc/update-motd.d/01-xcsh <<'MOTD'
     #!/bin/bash
     R='\033[0;31m' W='\033[1;37m' N='\033[0m'
+    # Note: $${} escaping required for Terraform templatefile()
     echo ""
-    echo -e "${R}╭──────────────────────────────────────────────────╮${N}"
-    echo -e "${R}│${N}                                                  ${R}│${N}"
-    echo -e "${R}│${N}                     ${R}________${N}                     ${R}│${N}"
-    echo -e "${R}│${N}                ${R}(${N}${R}▒▒▒▒${N}${R}████████${N}${R}▒▒▒▒${N}${R})${N}                ${R}│${N}"
-    echo -e "${R}│${N}           ${R}(${N}${R}▒▒▒${N}${R}█████████████████████${N}${R}▒▒▒${N}${R})${N}          ${R}│${N}"
-    echo -e "${R}│${N}        ${R}(${N}${R}▒▒${N}${R}████${N}${W}██████████${N}${R}████${N}${W}█████████████${N}${R})${N}       ${R}│${N}"
-    echo -e "${R}│${N}      ${R}(${N}${R}▒${N}${R}████${N}${W}██████${N}${R}▒▒▒▒▒${N}${W}███${N}${R}██${N}${W}██████████████${N}${R}▒${N}${R})${N}      ${R}│${N}"
-    echo -e "${R}│${N}     ${R}(${N}${R}▒${N}${R}████${N}${W}██████${N}${R}▒${N}${R}█████${N}${R}▒▒▒${N}${R}█${N}${W}██${N}${R}▒▒▒▒▒▒▒▒▒▒▒▒▒${N}${R}█${N}${R}▒${N}${R})${N}     ${R}│${N}"
-    echo -e "${R}│${N}    ${R}(${N}${R}▒${N}${R}█████${N}${W}██████${N}${R}█████████${N}${W}██${N}${R}▒${N}${R}███████████████${N}${R}▒${N}${R})${N}    ${R}│${N}"
-    echo -e "${R}│${N}   ${R}(${N}${R}▒${N}${R}██${N}${W}███████████████${N}${R}████${N}${W}█████████████${N}${R}██████${N}${R}▒${N}${R})${N}   ${R}│${N}"
-    echo -e "${R}│${N}  ${R}(${N}${R}▒${N}${R}███${N}${R}▒▒▒${N}${W}███████${N}${R}▒▒▒▒▒${N}${R}███${N}${W}████████████████${N}${R}█████${N}${R}▒${N}${R})${N}  ${R}│${N}"
-    echo -e "${R}│${N}  ${R}|${N}${R}▒${N}${R}██████${N}${R}▒${N}${W}██████${N}${R}███████${N}${W}████████████████████${N}${R}██${N}${R}▒${N}${R}|${N}  ${R}│${N}"
-    echo -e "${R}│${N}  ${R}|${N}${R}▒${N}${R}███████${N}${W}██████${N}${R}███████${N}${R}▒▒▒▒▒▒▒▒▒▒▒${N}${W}██████████${N}${R}█${N}${R}▒${N}${R}|${N}  ${R}│${N}"
-    echo -e "${R}│${N}  ${R}(${N}${R}▒${N}${R}███████${N}${W}██████${N}${R}██████████████████${N}${R}▒▒${N}${W}████████${N}${R}▒▒${N}${R})${N}  ${R}│${N}"
-    echo -e "${R}│${N}   ${R}(${N}${R}▒${N}${R}██████${N}${W}██████${N}${R}███████${N}${W}███${N}${R}██████████${N}${R}▒▒▒${N}${W}████${N}${R}▒▒${N}${R})${N}   ${R}│${N}"
-    echo -e "${R}│${N}    ${R}(${N}${R}▒${N}${R}█████${N}${W}██████${N}${R}██████${N}${W}█████${N}${R}████████████${N}${W}███${N}${R}▒▒${N}${R})${N}    ${R}│${N}"
-    echo -e "${R}│${N}     ${R}(${N}${R}▒▒${N}${W}██████████${N}${R}█████${N}${R}▒${N}${W}██████${N}${R}████████${N}${W}███${N}${R}▒▒▒${N}${R})${N}     ${R}│${N}"
-    echo -e "${R}│${N}      ${R}(${N}${R}▒▒▒▒▒${N}${W}██████████${N}${R}██${N}${R}▒▒${N}${W}█████████████${N}${R}▒▒${N}${R}█${N}${R}▒${N}${R})${N}      ${R}│${N}"
-    echo -e "${R}│${N}        ${R}(${N}${R}▒${N}${R}██${N}${R}▒▒▒▒▒▒▒▒▒▒${N}${R}████${N}${R}▒▒▒▒▒▒▒▒▒▒▒▒▒${N}${R}█${N}${R}▒${N}${R})${N}        ${R}│${N}"
-    echo -e "${R}│${N}           ${R}(${N}${R}▒▒▒${N}${R}████████████████████${N}${R}▒▒▒${N}${R})${N}           ${R}│${N}"
-    echo -e "${R}│${N}                ${R}(${N}${R}▒▒▒▒${N}${R}████████${N}${R}▒▒▒▒${N}${R})${N}                ${R}│${N}"
-    echo -e "${R}│${N}                                                  ${R}│${N}"
-    echo -e "${R}╰──────────────────────────────────────────────────╯${N}"
+    echo -e "$${R}╭──────────────────────────────────────────────────╮$${N}"
+    echo -e "$${R}│$${N}                                                  $${R}│$${N}"
+    echo -e "$${R}│$${N}                     $${R}________$${N}                     $${R}│$${N}"
+    echo -e "$${R}│$${N}                $${R}($${N}$${R}▒▒▒▒$${N}$${R}████████$${N}$${R}▒▒▒▒$${N}$${R})$${N}                $${R}│$${N}"
+    echo -e "$${R}│$${N}           $${R}($${N}$${R}▒▒▒$${N}$${R}█████████████████████$${N}$${R}▒▒▒$${N}$${R})$${N}          $${R}│$${N}"
+    echo -e "$${R}│$${N}        $${R}($${N}$${R}▒▒$${N}$${R}████$${N}$${W}██████████$${N}$${R}████$${N}$${W}█████████████$${N}$${R})$${N}       $${R}│$${N}"
+    echo -e "$${R}│$${N}      $${R}($${N}$${R}▒$${N}$${R}████$${N}$${W}██████$${N}$${R}▒▒▒▒▒$${N}$${W}███$${N}$${R}██$${N}$${W}██████████████$${N}$${R}▒$${N}$${R})$${N}      $${R}│$${N}"
+    echo -e "$${R}│$${N}     $${R}($${N}$${R}▒$${N}$${R}████$${N}$${W}██████$${N}$${R}▒$${N}$${R}█████$${N}$${R}▒▒▒$${N}$${R}█$${N}$${W}██$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}     $${R}│$${N}"
+    echo -e "$${R}│$${N}    $${R}($${N}$${R}▒$${N}$${R}█████$${N}$${W}██████$${N}$${R}█████████$${N}$${W}██$${N}$${R}▒$${N}$${R}███████████████$${N}$${R}▒$${N}$${R})$${N}    $${R}│$${N}"
+    echo -e "$${R}│$${N}   $${R}($${N}$${R}▒$${N}$${R}██$${N}$${W}███████████████$${N}$${R}████$${N}$${W}█████████████$${N}$${R}██████$${N}$${R}▒$${N}$${R})$${N}   $${R}│$${N}"
+    echo -e "$${R}│$${N}  $${R}($${N}$${R}▒$${N}$${R}███$${N}$${R}▒▒▒$${N}$${W}███████$${N}$${R}▒▒▒▒▒$${N}$${R}███$${N}$${W}████████████████$${N}$${R}█████$${N}$${R}▒$${N}$${R})$${N}  $${R}│$${N}"
+    echo -e "$${R}│$${N}  $${R}|$${N}$${R}▒$${N}$${R}██████$${N}$${R}▒$${N}$${W}██████$${N}$${R}███████$${N}$${W}████████████████████$${N}$${R}██$${N}$${R}▒$${N}$${R}|$${N}  $${R}│$${N}"
+    echo -e "$${R}│$${N}  $${R}|$${N}$${R}▒$${N}$${R}███████$${N}$${W}██████$${N}$${R}███████$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒$${N}$${W}██████████$${N}$${R}█$${N}$${R}▒$${N}$${R}|$${N}  $${R}│$${N}"
+    echo -e "$${R}│$${N}  $${R}($${N}$${R}▒$${N}$${R}███████$${N}$${W}██████$${N}$${R}██████████████████$${N}$${R}▒▒$${N}$${W}████████$${N}$${R}▒▒$${N}$${R})$${N}  $${R}│$${N}"
+    echo -e "$${R}│$${N}   $${R}($${N}$${R}▒$${N}$${R}██████$${N}$${W}██████$${N}$${R}███████$${N}$${W}███$${N}$${R}██████████$${N}$${R}▒▒▒$${N}$${W}████$${N}$${R}▒▒$${N}$${R})$${N}   $${R}│$${N}"
+    echo -e "$${R}│$${N}    $${R}($${N}$${R}▒$${N}$${R}█████$${N}$${W}██████$${N}$${R}██████$${N}$${W}█████$${N}$${R}████████████$${N}$${W}███$${N}$${R}▒▒$${N}$${R})$${N}    $${R}│$${N}"
+    echo -e "$${R}│$${N}     $${R}($${N}$${R}▒▒$${N}$${W}██████████$${N}$${R}█████$${N}$${R}▒$${N}$${W}██████$${N}$${R}████████$${N}$${W}███$${N}$${R}▒▒▒$${N}$${R})$${N}     $${R}│$${N}"
+    echo -e "$${R}│$${N}      $${R}($${N}$${R}▒▒▒▒▒$${N}$${W}██████████$${N}$${R}██$${N}$${R}▒▒$${N}$${W}█████████████$${N}$${R}▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}      $${R}│$${N}"
+    echo -e "$${R}│$${N}        $${R}($${N}$${R}▒$${N}$${R}██$${N}$${R}▒▒▒▒▒▒▒▒▒▒$${N}$${R}████$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}        $${R}│$${N}"
+    echo -e "$${R}│$${N}           $${R}($${N}$${R}▒▒▒$${N}$${R}████████████████████$${N}$${R}▒▒▒$${N}$${R})$${N}           $${R}│$${N}"
+    echo -e "$${R}│$${N}                $${R}($${N}$${R}▒▒▒▒$${N}$${R}████████$${N}$${R}▒▒▒▒$${N}$${R})$${N}                $${R}│$${N}"
+    echo -e "$${R}│$${N}                                                  $${R}│$${N}"
+    echo -e "$${R}╰──────────────────────────────────────────────────╯$${N}"
     echo ""
     MOTD
     chmod +x /etc/update-motd.d/01-xcsh
@@ -858,7 +884,30 @@ write_files:
     sed -i 's/#PrintLastLog yes/PrintLastLog no/' /etc/ssh/sshd_config
     systemctl restart ssh
 
+    # ---- Post-setup validation: check critical tools ----
+    echo "=== Tool Validation Report ==="
+    VALIDATION_PASS=0
+    VALIDATION_FAIL=0
+    for tool in zsh git curl gh nvim node npm claude opencode pi hermes fzf bat rg fd jq yq kubectl helm terraform; do
+        if command -v "$${tool}" >/dev/null 2>&1; then
+            echo "  [OK]   $${tool}: $(command -v $${tool})"
+            VALIDATION_PASS=$((VALIDATION_PASS + 1))
+        else
+            echo "  [MISS] $${tool}: not found"
+            VALIDATION_FAIL=$((VALIDATION_FAIL + 1))
+        fi
+    done
+    echo "Validation: $${VALIDATION_PASS} present, $${VALIDATION_FAIL} missing"
+    if [ "$${TOOLS_EXIT:-0}" -ne 0 ]; then
+        echo "NOTE: Tools script exited with code $${TOOLS_EXIT}. Check /var/log/workstation-tools-setup.log"
+    fi
+    if [ "$${TOOLS_DOWNLOAD_OK:-false}" != true ]; then
+        echo "NOTE: Tools script was never downloaded. All external tools missing."
+    fi
+    echo "=== End Tool Validation ==="
+
     echo "=== Workstation Setup Completed: $(date) ==="
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - bash /opt/setup-workstation.sh
+- reboot

@@ -89,11 +89,6 @@ output "vllm_devstral_endpoint" {
   value       = "http://10.0.0.11:${var.devstral_port}/v1"
 }
 
-output "vllm_qwen3_endpoint" {
-  description = "Qwen3-32B vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.11:${var.qwen3_port}/v1"
-}
-
 output "resource_group" {
   description = "Resource group name"
   value       = azurerm_resource_group.this.name

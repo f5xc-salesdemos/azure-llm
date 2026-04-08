@@ -1,0 +1,240 @@
+[2026-04-06 17:18:47] Stopping vLLM...
+[2026-04-06 17:18:50] Waiting for GPU memory to be released (timeout: 120s)...
+[2026-04-06 17:18:50] GPU memory is free (max used: 0 MiB)
+[2026-04-06 17:18:50] ============================================================
+[2026-04-06 17:18:50] Throughput Benchmark — Sub-Agent Candidates
+[2026-04-06 17:18:50] Run ID: throughput_subagent_20260406_171843
+[2026-04-06 17:18:50] Results: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843
+[2026-04-06 17:18:50] Models: qwen25-coder-7b phi4-mini deepseek-v2-lite qwen3-coder-30b-a3b
+[2026-04-06 17:18:50] Concurrency: 1,2,4,8,16,32
+[2026-04-06 17:18:50] Iterations: 3
+[2026-04-06 17:18:50] ============================================================
+[2026-04-06 17:18:50] 
+[2026-04-06 17:18:50] ============================================================
+[2026-04-06 17:18:50] MODEL: qwen25-coder-7b
+[2026-04-06 17:18:50]   HuggingFace: Qwen/Qwen2.5-Coder-7B-Instruct
+[2026-04-06 17:18:50]   Tool parser: hermes
+[2026-04-06 17:18:50]   Max context: 32768
+[2026-04-06 17:18:50] ============================================================
+[2026-04-06 17:18:50] Stopping vLLM...
+[2026-04-06 17:18:53] Waiting for GPU memory to be released (timeout: 120s)...
+[2026-04-06 17:18:53] GPU memory is free (max used: 0 MiB)
+[2026-04-06 17:18:53] Starting vLLM server: Qwen/Qwen2.5-Coder-7B-Instruct (TP=1)...
+[2026-04-06 17:18:53] vLLM server PID: 52763
+[2026-04-06 17:18:53] Waiting for service at http://localhost:8000/health (timeout: 900s)...
+[2026-04-06 17:19:44] Service is ready at http://localhost:8000/health
+[2026-04-06 17:19:44] Starting throughput benchmark: model=Qwen/Qwen2.5-Coder-7B-Instruct concurrency=1,2,4,8,16,32
+Benchmark: vllm / Qwen/Qwen2.5-Coder-7B-Instruct
+Concurrency levels: [1, 2, 4, 8, 16, 32]
+Iterations: 3, Warmup: 2
+API: http://localhost:8000/v1
+------------------------------------------------------------
+
+Running concurrency=1... done (3 ok, 0 errors)
+
+Running concurrency=2... done (6 ok, 0 errors)
+
+Running concurrency=4... done (12 ok, 0 errors)
+
+Running concurrency=8... done (24 ok, 0 errors)
+
+Running concurrency=16... done (48 ok, 0 errors)
+
+Running concurrency=32... done (96 ok, 0 errors)
+
+Engine: vllm | Model: Qwen/Qwen2.5-Coder-7B-Instruct
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|   Concurrency |   TTFT p50 |   TTFT p99 |   Latency p50 |   Latency p99 |   Agg Throughput |   Errors |
+|               |       (ms) |       (ms) |          (ms) |          (ms) |          (tok/s) |          |
++===============+============+============+===============+===============+==================+==========+
+|             1 |         24 |         24 |           488 |           563 |            259.5 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             2 |         22 |         22 |          1950 |          3332 |            307.1 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             4 |         24 |         37 |          1626 |          3366 |            566.6 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             8 |         40 |       6326 |          3148 |          9717 |            726   |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            16 |         49 |         66 |          1758 |          5715 |           1585.1 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            32 |         69 |         76 |          2303 |          5845 |           3263.9 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+
+
+Results saved to: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/qwen25-coder-7b_throughput.json
+[2026-04-06 17:21:16] Throughput benchmark complete: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/qwen25-coder-7b_throughput.json
+[2026-04-06 17:21:16] Stopping vLLM...
+[2026-04-06 17:21:20] 
+[2026-04-06 17:21:20] ============================================================
+[2026-04-06 17:21:20] MODEL: phi4-mini
+[2026-04-06 17:21:20]   HuggingFace: microsoft/Phi-4-mini-instruct
+[2026-04-06 17:21:20]   Tool parser: hermes
+[2026-04-06 17:21:20]   Max context: 16384
+[2026-04-06 17:21:20] ============================================================
+[2026-04-06 17:21:20] Stopping vLLM...
+[2026-04-06 17:21:23] Waiting for GPU memory to be released (timeout: 120s)...
+[2026-04-06 17:21:23] GPU memory is free (max used: 0 MiB)
+[2026-04-06 17:21:23] Starting vLLM server: microsoft/Phi-4-mini-instruct (TP=1)...
+[2026-04-06 17:21:23] vLLM server PID: 53263
+[2026-04-06 17:21:23] Waiting for service at http://localhost:8000/health (timeout: 900s)...
+[2026-04-06 17:22:13] Service is ready at http://localhost:8000/health
+[2026-04-06 17:22:13] Starting throughput benchmark: model=microsoft/Phi-4-mini-instruct concurrency=1,2,4,8,16,32
+Benchmark: vllm / microsoft/Phi-4-mini-instruct
+Concurrency levels: [1, 2, 4, 8, 16, 32]
+Iterations: 3, Warmup: 2
+API: http://localhost:8000/v1
+------------------------------------------------------------
+
+Running concurrency=1... done (3 ok, 0 errors)
+
+Running concurrency=2... done (6 ok, 0 errors)
+
+Running concurrency=4... done (12 ok, 0 errors)
+
+Running concurrency=8... done (24 ok, 0 errors)
+
+Running concurrency=16... done (48 ok, 0 errors)
+
+Running concurrency=32... done (96 ok, 0 errors)
+
+Engine: vllm | Model: microsoft/Phi-4-mini-instruct
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|   Concurrency |   TTFT p50 |   TTFT p99 |   Latency p50 |   Latency p99 |   Agg Throughput |   Errors |
+|               |       (ms) |       (ms) |          (ms) |          (ms) |          (tok/s) |          |
++===============+============+============+===============+===============+==================+==========+
+|             1 |         14 |         15 |           335 |           335 |            447.4 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             2 |         21 |         23 |          1173 |          2003 |            524.5 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             4 |         23 |         24 |          1308 |          2046 |           1028.1 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             8 |         27 |         34 |          1096 |          2106 |           1774   |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            16 |         38 |         42 |          1550 |          3594 |           2594.2 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            32 |         55 |         59 |          1461 |          3817 |           4812.8 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+
+
+Results saved to: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/phi4-mini_throughput.json
+[2026-04-06 17:23:06] Throughput benchmark complete: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/phi4-mini_throughput.json
+[2026-04-06 17:23:06] Stopping vLLM...
+[2026-04-06 17:23:10] 
+[2026-04-06 17:23:10] ============================================================
+[2026-04-06 17:23:10] MODEL: deepseek-v2-lite
+[2026-04-06 17:23:10]   HuggingFace: deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+[2026-04-06 17:23:10]   Tool parser: hermes
+[2026-04-06 17:23:10]   Max context: 32768
+[2026-04-06 17:23:10] ============================================================
+[2026-04-06 17:23:10] Stopping vLLM...
+[2026-04-06 17:23:13] Waiting for GPU memory to be released (timeout: 120s)...
+[2026-04-06 17:23:13] GPU memory is free (max used: 0 MiB)
+[2026-04-06 17:23:13] Starting vLLM server: deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct (TP=1)...
+[2026-04-06 17:23:13] vLLM server PID: 53704
+[2026-04-06 17:23:13] Waiting for service at http://localhost:8000/health (timeout: 900s)...
+[2026-04-06 17:24:23] Service is ready at http://localhost:8000/health
+[2026-04-06 17:24:23] Starting throughput benchmark: model=deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct concurrency=1,2,4,8,16,32
+Benchmark: vllm / deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+Concurrency levels: [1, 2, 4, 8, 16, 32]
+Iterations: 3, Warmup: 2
+API: http://localhost:8000/v1
+------------------------------------------------------------
+
+Running concurrency=1... done (3 ok, 0 errors)
+
+Running concurrency=2... done (6 ok, 0 errors)
+
+Running concurrency=4... done (12 ok, 0 errors)
+
+Running concurrency=8... done (24 ok, 0 errors)
+
+Running concurrency=16... done (48 ok, 0 errors)
+
+Running concurrency=32... done (96 ok, 0 errors)
+
+Engine: vllm | Model: deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|   Concurrency |   TTFT p50 |   TTFT p99 |   Latency p50 |   Latency p99 |   Agg Throughput |   Errors |
+|               |       (ms) |       (ms) |          (ms) |          (ms) |          (tok/s) |          |
++===============+============+============+===============+===============+==================+==========+
+|             1 |         49 |         49 |           540 |           551 |            159.6 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             2 |         72 |         89 |          2843 |          5116 |            193.5 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             4 |         90 |         98 |          3005 |          5170 |            399   |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             8 |        106 |       2305 |          3906 |          7337 |            715.2 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            16 |        114 |       2337 |          4139 |         10108 |            948.7 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            32 |        122 |        127 |          4167 |          9577 |           1948   |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+
+
+Results saved to: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/deepseek-v2-lite_throughput.json
+[2026-04-06 17:26:42] Throughput benchmark complete: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/deepseek-v2-lite_throughput.json
+[2026-04-06 17:26:42] Stopping vLLM...
+[2026-04-06 17:26:45] 
+[2026-04-06 17:26:45] ============================================================
+[2026-04-06 17:26:45] MODEL: qwen3-coder-30b-a3b
+[2026-04-06 17:26:45]   HuggingFace: Qwen/Qwen3-Coder-30B-A3B-Instruct
+[2026-04-06 17:26:45]   Tool parser: qwen3_coder
+[2026-04-06 17:26:45]   Max context: 32768
+[2026-04-06 17:26:45] ============================================================
+[2026-04-06 17:26:45] Stopping vLLM...
+[2026-04-06 17:26:48] Waiting for GPU memory to be released (timeout: 120s)...
+[2026-04-06 17:26:48] GPU memory is free (max used: 0 MiB)
+[2026-04-06 17:26:48] Starting vLLM server: Qwen/Qwen3-Coder-30B-A3B-Instruct (TP=1)...
+[2026-04-06 17:26:48] vLLM server PID: 54170
+[2026-04-06 17:26:48] Waiting for service at http://localhost:8000/health (timeout: 900s)...
+[2026-04-06 17:28:04] Service is ready at http://localhost:8000/health
+[2026-04-06 17:28:04] Starting throughput benchmark: model=Qwen/Qwen3-Coder-30B-A3B-Instruct concurrency=1,2,4,8,16,32
+Benchmark: vllm / Qwen/Qwen3-Coder-30B-A3B-Instruct
+Concurrency levels: [1, 2, 4, 8, 16, 32]
+Iterations: 3, Warmup: 2
+API: http://localhost:8000/v1
+------------------------------------------------------------
+
+Running concurrency=1... done (3 ok, 0 errors)
+
+Running concurrency=2... done (6 ok, 0 errors)
+
+Running concurrency=4... done (12 ok, 0 errors)
+
+Running concurrency=8... done (24 ok, 0 errors)
+
+Running concurrency=16... done (48 ok, 0 errors)
+
+Running concurrency=32... done (96 ok, 0 errors)
+
+Engine: vllm | Model: Qwen/Qwen3-Coder-30B-A3B-Instruct
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|   Concurrency |   TTFT p50 |   TTFT p99 |   Latency p50 |   Latency p99 |   Agg Throughput |   Errors |
+|               |       (ms) |       (ms) |          (ms) |          (ms) |          (tok/s) |          |
++===============+============+============+===============+===============+==================+==========+
+|             1 |         20 |         21 |           388 |           429 |            343.2 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             2 |         32 |         45 |          1611 |          2663 |            390.4 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             4 |         50 |         65 |          2778 |          3727 |            584.2 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|             8 |         63 |       6302 |          4801 |         11185 |            584.8 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            16 |         77 |        135 |          4750 |          8516 |           1142.9 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+|            32 |         83 |        111 |          5197 |         10512 |           1891.7 |        0 |
++---------------+------------+------------+---------------+---------------+------------------+----------+
+
+
+Results saved to: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/qwen3-coder-30b-a3b_throughput.json
+[2026-04-06 17:29:59] Throughput benchmark complete: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/qwen3-coder-30b-a3b_throughput.json
+[2026-04-06 17:29:59] Stopping vLLM...
+[2026-04-06 17:30:02] 
+[2026-04-06 17:30:02] ============================================================
+[2026-04-06 17:30:02] Generating comparison summary...
+[2026-04-06 17:30:02] ============================================================
+[2026-04-06 17:30:02] Restarting Gemma 4 production service...
+[2026-04-06 17:30:03] 
+[2026-04-06 17:30:03] All throughput benchmarks complete. Results in: /home/azureuser/benchmarks/results/throughput_subagent_20260406_171843/
+[2026-04-06 17:30:03] Cleaning up...
+[2026-04-06 17:30:03] Stopping vLLM...

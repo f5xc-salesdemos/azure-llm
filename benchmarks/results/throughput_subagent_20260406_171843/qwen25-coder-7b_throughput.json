@@ -1,0 +1,1728 @@
+{
+  "metadata": {
+    "engine": "vllm",
+    "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "base_url": "http://localhost:8000/v1",
+    "timestamp": "2026-04-06T17:21:16Z",
+    "concurrency_levels": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "iterations": 3,
+    "warmup_requests": 2,
+    "timeout_seconds": 180,
+    "prompt_count": 10
+  },
+  "concurrency_results": {
+    "1": {
+      "concurrency": 1,
+      "ttft_ms": {
+        "mean": 22.51,
+        "p50": 23.67,
+        "p95": 23.9,
+        "p99": 23.92,
+        "min": 19.93,
+        "max": 23.92
+      },
+      "total_latency_ms": {
+        "mean": 423.81,
+        "p50": 487.88,
+        "p95": 556.8,
+        "p99": 562.93,
+        "min": 219.08,
+        "max": 564.46
+      },
+      "tokens_per_second": {
+        "mean": 85.61,
+        "p50": 86.09,
+        "p95": 88.33,
+        "p99": 88.53,
+        "min": 82.16,
+        "max": 88.58
+      },
+      "aggregate_throughput_tps": 259.5,
+      "total_requests": 3,
+      "failed_requests": 0
+    },
+    "2": {
+      "concurrency": 2,
+      "ttft_ms": {
+        "mean": 21.71,
+        "p50": 21.7,
+        "p95": 21.92,
+        "p99": 21.94,
+        "min": 21.42,
+        "max": 21.94
+      },
+      "total_latency_ms": {
+        "mean": 1903.98,
+        "p50": 1950.27,
+        "p95": 3331.3,
+        "p99": 3331.64,
+        "min": 403.32,
+        "max": 3331.72
+      },
+      "tokens_per_second": {
+        "mean": 87.87,
+        "p50": 88.83,
+        "p95": 90.09,
+        "p99": 90.09,
+        "min": 84.3,
+        "max": 90.09
+      },
+      "aggregate_throughput_tps": 307.13,
+      "total_requests": 6,
+      "failed_requests": 0
+    },
+    "4": {
+      "concurrency": 4,
+      "ttft_ms": {
+        "mean": 25.89,
+        "p50": 23.75,
+        "p95": 36.82,
+        "p99": 36.95,
+        "min": 23.38,
+        "max": 36.98
+      },
+      "total_latency_ms": {
+        "mean": 1798.76,
+        "p50": 1626.02,
+        "p95": 3363.0,
+        "p99": 3366.19,
+        "min": 408.29,
+        "max": 3366.99
+      },
+      "tokens_per_second": {
+        "mean": 87.07,
+        "p50": 87.49,
+        "p95": 89.43,
+        "p99": 89.57,
+        "min": 83.27,
+        "max": 89.61
+      },
+      "aggregate_throughput_tps": 566.63,
+      "total_requests": 12,
+      "failed_requests": 0
+    },
+    "8": {
+      "concurrency": 8,
+      "ttft_ms": {
+        "mean": 2131.75,
+        "p50": 40.43,
+        "p95": 6325.94,
+        "p99": 6326.16,
+        "min": 26.77,
+        "max": 6326.22
+      },
+      "total_latency_ms": {
+        "mean": 4029.28,
+        "p50": 3148.05,
+        "p95": 9627.41,
+        "p99": 9717.15,
+        "min": 513.59,
+        "max": 9719.3
+      },
+      "tokens_per_second": {
+        "mean": 63.32,
+        "p50": 83.64,
+        "p95": 87.54,
+        "p99": 87.69,
+        "min": 5.36,
+        "max": 87.73
+      },
+      "aggregate_throughput_tps": 725.97,
+      "total_requests": 24,
+      "failed_requests": 0
+    },
+    "16": {
+      "concurrency": 16,
+      "ttft_ms": {
+        "mean": 50.99,
+        "p50": 49.21,
+        "p95": 66.16,
+        "p99": 66.38,
+        "min": 27.07,
+        "max": 66.45
+      },
+      "total_latency_ms": {
+        "mean": 2145.17,
+        "p50": 1758.28,
+        "p95": 4569.62,
+        "p99": 5715.48,
+        "min": 438.27,
+        "max": 5722.9
+      },
+      "tokens_per_second": {
+        "mean": 83.57,
+        "p50": 84.36,
+        "p95": 86.68,
+        "p99": 87.5,
+        "min": 77.57,
+        "max": 87.61
+      },
+      "aggregate_throughput_tps": 1585.11,
+      "total_requests": 48,
+      "failed_requests": 0
+    },
+    "32": {
+      "concurrency": 32,
+      "ttft_ms": {
+        "mean": 65.45,
+        "p50": 68.94,
+        "p95": 75.15,
+        "p99": 75.97,
+        "min": 21.37,
+        "max": 76.03
+      },
+      "total_latency_ms": {
+        "mean": 2401.67,
+        "p50": 2302.96,
+        "p95": 5836.24,
+        "p99": 5844.79,
+        "min": 420.5,
+        "max": 5845.0
+      },
+      "tokens_per_second": {
+        "mean": 80.44,
+        "p50": 81.9,
+        "p95": 85.54,
+        "p99": 85.65,
+        "min": 68.97,
+        "max": 85.68
+      },
+      "aggregate_throughput_tps": 3263.91,
+      "total_requests": 96,
+      "failed_requests": 0
+    }
+  },
+  "raw_results": {
+    "1": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 19.93,
+        "total_latency_ms": 219.08,
+        "tokens_generated": 18,
+        "tokens_per_second": 82.16,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 23.92,
+        "total_latency_ms": 487.88,
+        "tokens_generated": 42,
+        "tokens_per_second": 86.09,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 23.67,
+        "total_latency_ms": 564.46,
+        "tokens_generated": 50,
+        "tokens_per_second": 88.58,
+        "error": null
+      }
+    ],
+    "2": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 21.86,
+        "total_latency_ms": 458.28,
+        "tokens_generated": 39,
+        "tokens_per_second": 85.1,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 21.61,
+        "total_latency_ms": 3329.85,
+        "tokens_generated": 300,
+        "tokens_per_second": 90.09,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 21.94,
+        "total_latency_ms": 403.32,
+        "tokens_generated": 34,
+        "tokens_per_second": 84.3,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 21.73,
+        "total_latency_ms": 3330.03,
+        "tokens_generated": 300,
+        "tokens_per_second": 90.09,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 21.67,
+        "total_latency_ms": 570.7,
+        "tokens_generated": 50,
+        "tokens_per_second": 87.61,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 21.42,
+        "total_latency_ms": 3331.72,
+        "tokens_generated": 300,
+        "tokens_per_second": 90.04,
+        "error": null
+      }
+    ],
+    "4": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 23.92,
+        "total_latency_ms": 408.29,
+        "tokens_generated": 34,
+        "tokens_per_second": 83.27,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 23.74,
+        "total_latency_ms": 3366.99,
+        "tokens_generated": 300,
+        "tokens_per_second": 89.1,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 36.98,
+        "total_latency_ms": 1756.04,
+        "tokens_generated": 153,
+        "tokens_per_second": 87.13,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 36.69,
+        "total_latency_ms": 2383.27,
+        "tokens_generated": 209,
+        "tokens_per_second": 87.69,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 23.84,
+        "total_latency_ms": 507.89,
+        "tokens_generated": 43,
+        "tokens_per_second": 84.66,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 23.64,
+        "total_latency_ms": 3359.74,
+        "tokens_generated": 300,
+        "tokens_per_second": 89.29,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 23.43,
+        "total_latency_ms": 1496.0,
+        "tokens_generated": 131,
+        "tokens_per_second": 87.57,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 23.38,
+        "total_latency_ms": 2045.12,
+        "tokens_generated": 180,
+        "tokens_per_second": 88.01,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 24.01,
+        "total_latency_ms": 417.43,
+        "tokens_generated": 35,
+        "tokens_per_second": 83.85,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 23.76,
+        "total_latency_ms": 3347.73,
+        "tokens_generated": 300,
+        "tokens_per_second": 89.61,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 23.7,
+        "total_latency_ms": 1180.88,
+        "tokens_generated": 103,
+        "tokens_per_second": 87.22,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 23.55,
+        "total_latency_ms": 1315.71,
+        "tokens_generated": 115,
+        "tokens_per_second": 87.41,
+        "error": null
+      }
+    ],
+    "8": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 6323.61,
+        "total_latency_ms": 6721.45,
+        "tokens_generated": 36,
+        "tokens_per_second": 5.36,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 6323.4,
+        "total_latency_ms": 9709.95,
+        "tokens_generated": 300,
+        "tokens_per_second": 30.9,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 6323.29,
+        "total_latency_ms": 7877.1,
+        "tokens_generated": 136,
+        "tokens_per_second": 17.27,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 6322.97,
+        "total_latency_ms": 8192.67,
+        "tokens_generated": 164,
+        "tokens_per_second": 20.02,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 6326.22,
+        "total_latency_ms": 7103.09,
+        "tokens_generated": 68,
+        "tokens_per_second": 9.57,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 6325.96,
+        "total_latency_ms": 9719.3,
+        "tokens_generated": 300,
+        "tokens_per_second": 30.87,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 6325.85,
+        "total_latency_ms": 6998.25,
+        "tokens_generated": 59,
+        "tokens_per_second": 8.43,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 6325.66,
+        "total_latency_ms": 9159.68,
+        "tokens_generated": 250,
+        "tokens_per_second": 27.29,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 27.62,
+        "total_latency_ms": 582.06,
+        "tokens_generated": 50,
+        "tokens_per_second": 85.9,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 27.43,
+        "total_latency_ms": 3426.63,
+        "tokens_generated": 300,
+        "tokens_per_second": 87.55,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 27.23,
+        "total_latency_ms": 1807.16,
+        "tokens_generated": 155,
+        "tokens_per_second": 85.77,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 40.86,
+        "total_latency_ms": 2381.88,
+        "tokens_generated": 205,
+        "tokens_per_second": 86.07,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 40.78,
+        "total_latency_ms": 801.71,
+        "tokens_generated": 67,
+        "tokens_per_second": 83.57,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 40.77,
+        "total_latency_ms": 3436.41,
+        "tokens_generated": 300,
+        "tokens_per_second": 87.3,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 40.53,
+        "total_latency_ms": 685.77,
+        "tokens_generated": 57,
+        "tokens_per_second": 83.12,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 40.33,
+        "total_latency_ms": 2876.63,
+        "tokens_generated": 250,
+        "tokens_per_second": 86.91,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 27.15,
+        "total_latency_ms": 513.59,
+        "tokens_generated": 43,
+        "tokens_per_second": 83.72,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 26.97,
+        "total_latency_ms": 3419.47,
+        "tokens_generated": 300,
+        "tokens_per_second": 87.73,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 26.77,
+        "total_latency_ms": 1519.53,
+        "tokens_generated": 130,
+        "tokens_per_second": 85.55,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 39.97,
+        "total_latency_ms": 1981.37,
+        "tokens_generated": 170,
+        "tokens_per_second": 85.8,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 39.79,
+        "total_latency_ms": 791.6,
+        "tokens_generated": 66,
+        "tokens_per_second": 83.38,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 39.61,
+        "total_latency_ms": 3429.29,
+        "tokens_generated": 300,
+        "tokens_per_second": 87.48,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 39.68,
+        "total_latency_ms": 698.94,
+        "tokens_generated": 58,
+        "tokens_per_second": 82.98,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 39.54,
+        "total_latency_ms": 2869.09,
+        "tokens_generated": 250,
+        "tokens_per_second": 87.14,
+        "error": null
+      }
+    ],
+    "16": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 27.18,
+        "total_latency_ms": 539.4,
+        "tokens_generated": 43,
+        "tokens_per_second": 79.72,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 27.07,
+        "total_latency_ms": 3488.01,
+        "tokens_generated": 300,
+        "tokens_per_second": 86.01,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 66.45,
+        "total_latency_ms": 2028.04,
+        "tokens_generated": 171,
+        "tokens_per_second": 84.32,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 66.3,
+        "total_latency_ms": 2004.16,
+        "tokens_generated": 169,
+        "tokens_per_second": 84.32,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 66.16,
+        "total_latency_ms": 838.95,
+        "tokens_generated": 67,
+        "tokens_per_second": 79.86,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 66.15,
+        "total_latency_ms": 3509.73,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.48,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 65.8,
+        "total_latency_ms": 746.49,
+        "tokens_generated": 59,
+        "tokens_per_second": 79.04,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 65.54,
+        "total_latency_ms": 2932.18,
+        "tokens_generated": 250,
+        "tokens_per_second": 85.26,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 65.45,
+        "total_latency_ms": 5722.9,
+        "tokens_generated": 500,
+        "tokens_per_second": 87.37,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 65.17,
+        "total_latency_ms": 1367.29,
+        "tokens_generated": 113,
+        "tokens_per_second": 82.65,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 65.22,
+        "total_latency_ms": 618.77,
+        "tokens_generated": 48,
+        "tokens_per_second": 77.57,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 65.2,
+        "total_latency_ms": 3508.93,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.5,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 64.68,
+        "total_latency_ms": 1573.92,
+        "tokens_generated": 131,
+        "tokens_per_second": 83.23,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 64.78,
+        "total_latency_ms": 1574.04,
+        "tokens_generated": 131,
+        "tokens_per_second": 83.23,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 64.62,
+        "total_latency_ms": 837.36,
+        "tokens_generated": 67,
+        "tokens_per_second": 80.01,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 64.76,
+        "total_latency_ms": 3508.35,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.51,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 32.19,
+        "total_latency_ms": 450.04,
+        "tokens_generated": 36,
+        "tokens_per_second": 79.99,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 32.01,
+        "total_latency_ms": 3482.06,
+        "tokens_generated": 300,
+        "tokens_per_second": 86.16,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 31.87,
+        "total_latency_ms": 1781.85,
+        "tokens_generated": 152,
+        "tokens_per_second": 85.3,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 46.73,
+        "total_latency_ms": 1313.35,
+        "tokens_generated": 110,
+        "tokens_per_second": 83.76,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 46.67,
+        "total_latency_ms": 830.18,
+        "tokens_generated": 68,
+        "tokens_per_second": 81.91,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 46.87,
+        "total_latency_ms": 3493.29,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.88,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 46.83,
+        "total_latency_ms": 761.07,
+        "tokens_generated": 62,
+        "tokens_per_second": 81.46,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 46.62,
+        "total_latency_ms": 2918.58,
+        "tokens_generated": 250,
+        "tokens_per_second": 85.66,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 46.36,
+        "total_latency_ms": 5707.12,
+        "tokens_generated": 500,
+        "tokens_per_second": 87.61,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 46.44,
+        "total_latency_ms": 1451.11,
+        "tokens_generated": 122,
+        "tokens_per_second": 84.07,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 46.48,
+        "total_latency_ms": 438.27,
+        "tokens_generated": 34,
+        "tokens_per_second": 77.58,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 46.4,
+        "total_latency_ms": 3322.99,
+        "tokens_generated": 284,
+        "tokens_per_second": 85.47,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 46.19,
+        "total_latency_ms": 1587.59,
+        "tokens_generated": 134,
+        "tokens_per_second": 84.4,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 45.99,
+        "total_latency_ms": 1734.7,
+        "tokens_generated": 147,
+        "tokens_per_second": 84.74,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 45.95,
+        "total_latency_ms": 979.06,
+        "tokens_generated": 81,
+        "tokens_per_second": 82.73,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 45.58,
+        "total_latency_ms": 3492.3,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.9,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 34.99,
+        "total_latency_ms": 533.7,
+        "tokens_generated": 43,
+        "tokens_per_second": 80.57,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 50.05,
+        "total_latency_ms": 3503.59,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.63,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 50.24,
+        "total_latency_ms": 1789.04,
+        "tokens_generated": 151,
+        "tokens_per_second": 84.4,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 49.78,
+        "total_latency_ms": 1935.9,
+        "tokens_generated": 164,
+        "tokens_per_second": 84.72,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 49.89,
+        "total_latency_ms": 845.01,
+        "tokens_generated": 69,
+        "tokens_per_second": 81.66,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 49.83,
+        "total_latency_ms": 3503.17,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.64,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 49.61,
+        "total_latency_ms": 741.23,
+        "tokens_generated": 60,
+        "tokens_per_second": 80.95,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 49.67,
+        "total_latency_ms": 2923.82,
+        "tokens_generated": 250,
+        "tokens_per_second": 85.5,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 49.64,
+        "total_latency_ms": 5140.33,
+        "tokens_generated": 447,
+        "tokens_per_second": 86.96,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 49.57,
+        "total_latency_ms": 2343.21,
+        "tokens_generated": 200,
+        "tokens_per_second": 85.35,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 49.28,
+        "total_latency_ms": 498.03,
+        "tokens_generated": 39,
+        "tokens_per_second": 78.31,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 49.01,
+        "total_latency_ms": 3502.56,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.65,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 49.14,
+        "total_latency_ms": 1548.08,
+        "tokens_generated": 130,
+        "tokens_per_second": 83.98,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 48.93,
+        "total_latency_ms": 1317.69,
+        "tokens_generated": 110,
+        "tokens_per_second": 83.48,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 49.0,
+        "total_latency_ms": 798.35,
+        "tokens_generated": 65,
+        "tokens_per_second": 81.42,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 49.07,
+        "total_latency_ms": 3502.34,
+        "tokens_generated": 300,
+        "tokens_per_second": 85.66,
+        "error": null
+      }
+    ],
+    "32": [
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 21.53,
+        "total_latency_ms": 575.56,
+        "tokens_generated": 45,
+        "tokens_per_second": 78.18,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 21.37,
+        "total_latency_ms": 3545.48,
+        "tokens_generated": 300,
+        "tokens_per_second": 84.61,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 63.79,
+        "total_latency_ms": 2280.9,
+        "tokens_generated": 187,
+        "tokens_per_second": 81.99,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 63.62,
+        "total_latency_ms": 1651.06,
+        "tokens_generated": 133,
+        "tokens_per_second": 80.55,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 63.02,
+        "total_latency_ms": 899.86,
+        "tokens_generated": 69,
+        "tokens_per_second": 76.68,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 63.11,
+        "total_latency_ms": 3578.85,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.83,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 63.06,
+        "total_latency_ms": 792.56,
+        "tokens_generated": 60,
+        "tokens_per_second": 75.7,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 62.52,
+        "total_latency_ms": 3000.02,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.33,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 62.65,
+        "total_latency_ms": 5835.75,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.68,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 62.1,
+        "total_latency_ms": 1790.56,
+        "tokens_generated": 145,
+        "tokens_per_second": 80.98,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 62.5,
+        "total_latency_ms": 586.0,
+        "tokens_generated": 43,
+        "tokens_per_second": 73.38,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 62.09,
+        "total_latency_ms": 3577.87,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.85,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 62.03,
+        "total_latency_ms": 2418.42,
+        "tokens_generated": 200,
+        "tokens_per_second": 82.7,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 61.77,
+        "total_latency_ms": 1520.59,
+        "tokens_generated": 122,
+        "tokens_per_second": 80.23,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 61.69,
+        "total_latency_ms": 910.67,
+        "tokens_generated": 70,
+        "tokens_per_second": 76.87,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 61.6,
+        "total_latency_ms": 3577.35,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.86,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 61.31,
+        "total_latency_ms": 753.78,
+        "tokens_generated": 57,
+        "tokens_per_second": 75.62,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 61.0,
+        "total_latency_ms": 2998.46,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.38,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 76.03,
+        "total_latency_ms": 5844.78,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.55,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 75.97,
+        "total_latency_ms": 1812.35,
+        "tokens_generated": 146,
+        "tokens_per_second": 80.56,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 75.69,
+        "total_latency_ms": 620.96,
+        "tokens_generated": 45,
+        "tokens_per_second": 72.47,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 75.28,
+        "total_latency_ms": 3588.39,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.6,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 75.48,
+        "total_latency_ms": 1812.09,
+        "tokens_generated": 146,
+        "tokens_per_second": 80.57,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 75.03,
+        "total_latency_ms": 2346.85,
+        "tokens_generated": 192,
+        "tokens_per_second": 81.81,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 74.61,
+        "total_latency_ms": 872.6,
+        "tokens_generated": 66,
+        "tokens_per_second": 75.64,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 75.11,
+        "total_latency_ms": 3587.86,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.62,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 74.89,
+        "total_latency_ms": 789.45,
+        "tokens_generated": 59,
+        "tokens_per_second": 74.74,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 74.42,
+        "total_latency_ms": 3008.62,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.09,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 74.66,
+        "total_latency_ms": 5843.24,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.57,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 74.06,
+        "total_latency_ms": 1413.01,
+        "tokens_generated": 112,
+        "tokens_per_second": 79.26,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 73.8,
+        "total_latency_ms": 667.97,
+        "tokens_generated": 50,
+        "tokens_per_second": 74.85,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 74.13,
+        "total_latency_ms": 3586.93,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.64,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 41.46,
+        "total_latency_ms": 506.42,
+        "tokens_generated": 38,
+        "tokens_per_second": 75.04,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 41.24,
+        "total_latency_ms": 3568.78,
+        "tokens_generated": 300,
+        "tokens_per_second": 84.06,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 41.06,
+        "total_latency_ms": 2325.02,
+        "tokens_generated": 192,
+        "tokens_per_second": 82.58,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 48.56,
+        "total_latency_ms": 3001.02,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.3,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 48.39,
+        "total_latency_ms": 868.18,
+        "tokens_generated": 67,
+        "tokens_per_second": 77.17,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 71.02,
+        "total_latency_ms": 3592.04,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.52,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 70.33,
+        "total_latency_ms": 795.45,
+        "tokens_generated": 60,
+        "tokens_per_second": 75.43,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 71.11,
+        "total_latency_ms": 3012.74,
+        "tokens_generated": 250,
+        "tokens_per_second": 82.98,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 70.98,
+        "total_latency_ms": 5845.0,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.54,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 70.47,
+        "total_latency_ms": 1512.85,
+        "tokens_generated": 121,
+        "tokens_per_second": 79.98,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 70.41,
+        "total_latency_ms": 602.35,
+        "tokens_generated": 44,
+        "tokens_per_second": 73.05,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 70.73,
+        "total_latency_ms": 3591.66,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.53,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 70.47,
+        "total_latency_ms": 2429.84,
+        "tokens_generated": 200,
+        "tokens_per_second": 82.31,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 70.62,
+        "total_latency_ms": 2569.34,
+        "tokens_generated": 211,
+        "tokens_per_second": 82.12,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 70.08,
+        "total_latency_ms": 854.63,
+        "tokens_generated": 65,
+        "tokens_per_second": 76.06,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 69.88,
+        "total_latency_ms": 3591.1,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.54,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 69.58,
+        "total_latency_ms": 782.13,
+        "tokens_generated": 59,
+        "tokens_per_second": 75.44,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 69.54,
+        "total_latency_ms": 3011.96,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.0,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 68.92,
+        "total_latency_ms": 5843.47,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.57,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 69.18,
+        "total_latency_ms": 2428.59,
+        "tokens_generated": 200,
+        "tokens_per_second": 82.35,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 68.76,
+        "total_latency_ms": 661.4,
+        "tokens_generated": 50,
+        "tokens_per_second": 75.6,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 69.33,
+        "total_latency_ms": 3497.27,
+        "tokens_generated": 291,
+        "tokens_per_second": 83.21,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 68.88,
+        "total_latency_ms": 2251.69,
+        "tokens_generated": 184,
+        "tokens_per_second": 81.72,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 69.07,
+        "total_latency_ms": 1675.51,
+        "tokens_generated": 135,
+        "tokens_per_second": 80.57,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 68.88,
+        "total_latency_ms": 853.21,
+        "tokens_generated": 65,
+        "tokens_per_second": 76.18,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 68.26,
+        "total_latency_ms": 3589.59,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.57,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 68.75,
+        "total_latency_ms": 757.29,
+        "tokens_generated": 57,
+        "tokens_per_second": 75.27,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 67.92,
+        "total_latency_ms": 3010.06,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.05,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 68.21,
+        "total_latency_ms": 5314.96,
+        "tokens_generated": 452,
+        "tokens_per_second": 85.04,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 68.14,
+        "total_latency_ms": 1498.89,
+        "tokens_generated": 120,
+        "tokens_per_second": 80.06,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 67.97,
+        "total_latency_ms": 478.59,
+        "tokens_generated": 34,
+        "tokens_per_second": 71.04,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 68.01,
+        "total_latency_ms": 3588.85,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.59,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 39.15,
+        "total_latency_ms": 457.16,
+        "tokens_generated": 34,
+        "tokens_per_second": 74.37,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 47.43,
+        "total_latency_ms": 3575.13,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.91,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 47.25,
+        "total_latency_ms": 1723.68,
+        "tokens_generated": 140,
+        "tokens_per_second": 81.22,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 47.2,
+        "total_latency_ms": 2995.76,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.45,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 47.17,
+        "total_latency_ms": 854.16,
+        "tokens_generated": 66,
+        "tokens_per_second": 77.27,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 70.45,
+        "total_latency_ms": 3586.99,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.64,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 70.17,
+        "total_latency_ms": 782.73,
+        "tokens_generated": 59,
+        "tokens_per_second": 75.38,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 70.35,
+        "total_latency_ms": 3007.14,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.14,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 70.05,
+        "total_latency_ms": 5493.31,
+        "tokens_generated": 468,
+        "tokens_per_second": 85.19,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 70.0,
+        "total_latency_ms": 1665.0,
+        "tokens_generated": 134,
+        "tokens_per_second": 80.48,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 70.05,
+        "total_latency_ms": 420.5,
+        "tokens_generated": 29,
+        "tokens_per_second": 68.97,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 69.48,
+        "total_latency_ms": 3586.66,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.64,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 69.45,
+        "total_latency_ms": 1804.84,
+        "tokens_generated": 146,
+        "tokens_per_second": 80.89,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 69.86,
+        "total_latency_ms": 3006.61,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.15,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 69.12,
+        "total_latency_ms": 877.15,
+        "tokens_generated": 67,
+        "tokens_per_second": 76.38,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 69.81,
+        "total_latency_ms": 3586.55,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.65,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 69.56,
+        "total_latency_ms": 817.63,
+        "tokens_generated": 62,
+        "tokens_per_second": 75.83,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 69.16,
+        "total_latency_ms": 3006.6,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.15,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 68.91,
+        "total_latency_ms": 5837.72,
+        "tokens_generated": 500,
+        "tokens_per_second": 85.65,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 68.96,
+        "total_latency_ms": 1781.23,
+        "tokens_generated": 144,
+        "tokens_per_second": 80.84,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 69.22,
+        "total_latency_ms": 491.73,
+        "tokens_generated": 35,
+        "tokens_per_second": 71.18,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 69.26,
+        "total_latency_ms": 3585.99,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.66,
+        "error": null
+      },
+      {
+        "prompt_id": "reasoning",
+        "ttft_ms": 68.99,
+        "total_latency_ms": 1464.34,
+        "tokens_generated": 117,
+        "tokens_per_second": 79.9,
+        "error": null
+      },
+      {
+        "prompt_id": "creative_writing",
+        "ttft_ms": 68.98,
+        "total_latency_ms": 1991.53,
+        "tokens_generated": 162,
+        "tokens_per_second": 81.34,
+        "error": null
+      },
+      {
+        "prompt_id": "summarization",
+        "ttft_ms": 68.55,
+        "total_latency_ms": 911.82,
+        "tokens_generated": 70,
+        "tokens_per_second": 76.77,
+        "error": null
+      },
+      {
+        "prompt_id": "technical_explanation",
+        "ttft_ms": 68.92,
+        "total_latency_ms": 3585.46,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.67,
+        "error": null
+      },
+      {
+        "prompt_id": "translation",
+        "ttft_ms": 68.35,
+        "total_latency_ms": 756.46,
+        "tokens_generated": 57,
+        "tokens_per_second": 75.35,
+        "error": null
+      },
+      {
+        "prompt_id": "math_problem",
+        "ttft_ms": 68.05,
+        "total_latency_ms": 3005.55,
+        "tokens_generated": 250,
+        "tokens_per_second": 83.18,
+        "error": null
+      },
+      {
+        "prompt_id": "long_analysis",
+        "ttft_ms": 68.08,
+        "total_latency_ms": 5491.88,
+        "tokens_generated": 468,
+        "tokens_per_second": 85.22,
+        "error": null
+      },
+      {
+        "prompt_id": "multi_turn",
+        "ttft_ms": 68.47,
+        "total_latency_ms": 2177.16,
+        "tokens_generated": 178,
+        "tokens_per_second": 81.76,
+        "error": null
+      },
+      {
+        "prompt_id": "simple_qa",
+        "ttft_ms": 68.69,
+        "total_latency_ms": 648.25,
+        "tokens_generated": 48,
+        "tokens_per_second": 74.05,
+        "error": null
+      },
+      {
+        "prompt_id": "code_generation",
+        "ttft_ms": 67.95,
+        "total_latency_ms": 3585.2,
+        "tokens_generated": 300,
+        "tokens_per_second": 83.68,
+        "error": null
+      }
+    ]
+  }
+}

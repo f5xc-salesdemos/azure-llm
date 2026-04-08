@@ -133,20 +133,20 @@ resource "azurerm_linux_virtual_machine" "gemma" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-gemma.yaml", {
-    admin_username        = var.admin_username
-    hf_token              = var.hf_token
-    model_id              = var.gemma_model_id
-    served_name           = var.gemma_served_name
-    max_model_len         = var.gemma_max_model_len
+    admin_username         = var.admin_username
+    hf_token               = var.hf_token
+    model_id               = var.gemma_model_id
+    served_name            = var.gemma_served_name
+    max_model_len          = var.gemma_max_model_len
     gpu_memory_utilization = var.gemma_gpu_memory_utilization
-    tool_call_parser      = var.gemma_tool_call_parser
-    tp_size               = var.gemma_tp_size
-    vllm_port             = var.vllm_port
+    tool_call_parser       = var.gemma_tool_call_parser
+    tp_size                = var.gemma_tp_size
+    vllm_port              = var.vllm_port
   }))
 }
 
 ###############################################################################
-# Phi VM — 1x A100 80GB, Phi-4-mini, TP=1, GitHub operations sub-agent
+# Phi VM — 4x A100 80GB, 3 models: Phi-4-mini + Qwen-VL + Devstral
 ###############################################################################
 
 resource "azurerm_network_security_group" "phi" {
@@ -202,17 +202,6 @@ resource "azurerm_network_security_group" "phi" {
     destination_address_prefix = "*"
   }
 
-  security_rule {
-    name                       = "AllowQwen3FromSubnet"
-    priority                   = 1040
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = tostring(var.qwen3_port)
-    source_address_prefix      = local.subnet_cidr
-    destination_address_prefix = "*"
-  }
 }
 
 resource "azurerm_public_ip" "phi" {
@@ -274,29 +263,34 @@ resource "azurerm_linux_virtual_machine" "phi" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-phi.yaml", {
-    admin_username             = var.admin_username
-    hf_token                   = var.hf_token
-    phi_model_id               = var.phi_model_id
-    phi_served_name            = var.phi_served_name
-    phi_max_model_len          = var.phi_max_model_len
-    phi_gpu_memory_utilization = var.phi_gpu_memory_utilization
-    phi_tool_call_parser       = var.phi_tool_call_parser
-    phi_port                   = var.phi_port
-    qwen_vl_model_id               = var.qwen_vl_model_id
-    qwen_vl_served_name            = var.qwen_vl_served_name
-    qwen_vl_max_model_len          = var.qwen_vl_max_model_len
-    qwen_vl_gpu_memory_utilization = var.qwen_vl_gpu_memory_utilization
-    qwen_vl_port                   = var.qwen_vl_port
+    admin_username                  = var.admin_username
+    hf_token                        = var.hf_token
+    phi_model_id                    = var.phi_model_id
+    phi_served_name                 = var.phi_served_name
+    phi_max_model_len               = var.phi_max_model_len
+    phi_gpu_memory_utilization      = var.phi_gpu_memory_utilization
+    phi_tool_call_parser            = var.phi_tool_call_parser
+    phi_port                        = var.phi_port
+    phi_cuda_devices                = var.phi_cuda_devices
+    phi_speculative_model           = var.phi_speculative_model
+    phi_num_speculative_tokens      = var.phi_num_speculative_tokens
+    phi_ngram_prompt_lookup_min     = var.phi_ngram_prompt_lookup_min
+    phi_ngram_prompt_lookup_max     = var.phi_ngram_prompt_lookup_max
+    phi_enable_chunked_prefill      = var.phi_enable_chunked_prefill
+    phi_vllm_compile_level          = var.phi_vllm_compile_level
+    qwen_vl_model_id                = var.qwen_vl_model_id
+    qwen_vl_served_name             = var.qwen_vl_served_name
+    qwen_vl_max_model_len           = var.qwen_vl_max_model_len
+    qwen_vl_gpu_memory_utilization  = var.qwen_vl_gpu_memory_utilization
+    qwen_vl_port                    = var.qwen_vl_port
+    qwen_vl_cuda_devices            = var.qwen_vl_cuda_devices
     devstral_model_id               = var.devstral_model_id
     devstral_served_name            = var.devstral_served_name
     devstral_max_model_len          = var.devstral_max_model_len
     devstral_gpu_memory_utilization = var.devstral_gpu_memory_utilization
     devstral_port                   = var.devstral_port
-    qwen3_model_id               = var.qwen3_model_id
-    qwen3_served_name            = var.qwen3_served_name
-    qwen3_max_model_len          = var.qwen3_max_model_len
-    qwen3_gpu_memory_utilization = var.qwen3_gpu_memory_utilization
-    qwen3_port                   = var.qwen3_port
+    devstral_tp_size                = var.devstral_tp_size
+    devstral_cuda_devices           = var.devstral_cuda_devices
   }))
 }
 
@@ -382,27 +376,24 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-workstation.yaml", {
-    admin_username   = var.admin_username
-    hf_token         = var.hf_token
-    gemma_ip         = "10.0.0.10"
-    gemma_port       = var.vllm_port
-    gemma_served_name = var.gemma_served_name
-    gemma_max_model_len = var.gemma_max_model_len
-    phi_ip              = "10.0.0.11"
-    phi_port            = var.phi_port
-    phi_served_name     = var.phi_served_name
-    phi_max_model_len   = var.phi_max_model_len
-    qwen_vl_ip          = "10.0.0.11"
-    qwen_vl_port        = var.qwen_vl_port
-    qwen_vl_served_name = var.qwen_vl_served_name
-    qwen_vl_max_model_len = var.qwen_vl_max_model_len
-    devstral_ip             = "10.0.0.11"
-    devstral_port           = var.devstral_port
-    devstral_served_name    = var.devstral_served_name
-    devstral_max_model_len  = var.devstral_max_model_len
-    qwen3_ip            = "10.0.0.11"
-    qwen3_port          = var.qwen3_port
-    qwen3_served_name   = var.qwen3_served_name
-    qwen3_max_model_len = var.qwen3_max_model_len
+    admin_username         = var.admin_username
+    hf_token               = var.hf_token
+    gemma_ip               = "10.0.0.10"
+    gemma_port             = var.vllm_port
+    gemma_served_name      = var.gemma_served_name
+    gemma_max_model_len    = var.gemma_max_model_len
+    phi_ip                 = "10.0.0.11"
+    phi_port               = var.phi_port
+    phi_served_name        = var.phi_served_name
+    phi_max_model_len      = var.phi_max_model_len
+    qwen_vl_ip             = "10.0.0.11"
+    qwen_vl_port           = var.qwen_vl_port
+    qwen_vl_served_name    = var.qwen_vl_served_name
+    qwen_vl_max_model_len  = var.qwen_vl_max_model_len
+    devstral_ip            = "10.0.0.11"
+    devstral_port          = var.devstral_port
+    devstral_served_name   = var.devstral_served_name
+    devstral_max_model_len = var.devstral_max_model_len
+    tools_script_b64       = base64encode(file("${path.module}/scripts/setup-workstation-tools.sh"))
   }))
 }

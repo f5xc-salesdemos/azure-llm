@@ -116,7 +116,7 @@ variable "gemma_tool_call_parser" {
 }
 
 ###############################################################################
-# Phi VM — sub-agent server (1x A100 80GB, two models)
+# Phi VM — sub-agent server (4x A100 80GB, three models)
 ###############################################################################
 
 variable "phi_vm_size" {
@@ -151,15 +151,15 @@ variable "phi_served_name" {
 }
 
 variable "phi_max_model_len" {
-  description = "Maximum context length for Phi"
+  description = "Maximum context length for Phi (128K on dedicated GPU 0)"
   type        = number
-  default     = 16384
+  default     = 131072
 }
 
 variable "phi_gpu_memory_utilization" {
-  description = "GPU memory fraction for Phi (shares GPU with Qwen VL)"
+  description = "GPU memory fraction for Phi (dedicated GPU 0)"
   type        = number
-  default     = 0.45
+  default     = 0.88
 }
 
 variable "phi_tool_call_parser" {
@@ -172,6 +172,48 @@ variable "phi_port" {
   description = "Port for Phi vLLM API"
   type        = number
   default     = 8000
+}
+
+variable "phi_cuda_devices" {
+  description = "CUDA device IDs for Phi (dedicated GPU 0)"
+  type        = string
+  default     = "0"
+}
+
+variable "phi_speculative_model" {
+  description = "Speculative decoding model ('[ngram]' for n-gram, '' to disable)"
+  type        = string
+  default     = "[ngram]"
+}
+
+variable "phi_num_speculative_tokens" {
+  description = "Number of speculative tokens per decoding step"
+  type        = number
+  default     = 5
+}
+
+variable "phi_ngram_prompt_lookup_min" {
+  description = "Minimum n-gram size for prompt-lookup speculative decoding"
+  type        = number
+  default     = 4
+}
+
+variable "phi_ngram_prompt_lookup_max" {
+  description = "Maximum n-gram size for prompt-lookup speculative decoding"
+  type        = number
+  default     = 8
+}
+
+variable "phi_enable_chunked_prefill" {
+  description = "Enable chunked prefill (must be false when speculative decoding is active)"
+  type        = bool
+  default     = false
+}
+
+variable "phi_vllm_compile_level" {
+  description = "vLLM torch compile optimization level (0=off, 3=max CUDA graph capture)"
+  type        = number
+  default     = 3
 }
 
 # Model 2: Qwen2.5-VL-7B (port 8001) — vision/multimodal sub-agent
@@ -194,15 +236,21 @@ variable "qwen_vl_max_model_len" {
 }
 
 variable "qwen_vl_gpu_memory_utilization" {
-  description = "GPU memory fraction for Qwen VL (shares GPU with Phi)"
+  description = "GPU memory fraction for Qwen VL (dedicated GPU 2)"
   type        = number
-  default     = 0.45
+  default     = 0.90
 }
 
 variable "qwen_vl_port" {
   description = "Port for Qwen VL vLLM API"
   type        = number
   default     = 8001
+}
+
+variable "qwen_vl_cuda_devices" {
+  description = "CUDA device IDs for Qwen-VL (dedicated GPU 2)"
+  type        = string
+  default     = "2"
 }
 
 # Model 3: Devstral-Small-2-24B (port 8002) — coding agent / tool calling / API orchestration
@@ -242,35 +290,10 @@ variable "devstral_port" {
   default     = 8002
 }
 
-# Model 4: Qwen3-32B (port 8003) — documentation / markdown / OpenAPI specialist
-variable "qwen3_model_id" {
-  description = "HuggingFace model ID for Qwen3-32B"
+variable "devstral_cuda_devices" {
+  description = "CUDA device IDs for Devstral (GPU 1+3, TP=2)"
   type        = string
-  default     = "Qwen/Qwen3-32B"
-}
-
-variable "qwen3_served_name" {
-  description = "Model name exposed by Qwen3 vLLM API"
-  type        = string
-  default     = "qwen3-32b"
-}
-
-variable "qwen3_max_model_len" {
-  description = "Maximum context length for Qwen3"
-  type        = number
-  default     = 32768
-}
-
-variable "qwen3_gpu_memory_utilization" {
-  description = "GPU memory fraction for Qwen3 (dedicated GPU 2)"
-  type        = number
-  default     = 0.90
-}
-
-variable "qwen3_port" {
-  description = "Port for Qwen3 vLLM API"
-  type        = number
-  default     = 8003
+  default     = "1,3"
 }
 
 ###############################################################################

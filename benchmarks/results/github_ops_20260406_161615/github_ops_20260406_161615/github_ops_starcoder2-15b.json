@@ -1,0 +1,572 @@
+{
+  "metadata": {
+    "model": "bigcode/starcoder2-15b",
+    "base_url": "http://localhost:8000/v1",
+    "timestamp": "2026-04-06T16:33:34Z",
+    "total_test_cases": 56,
+    "total_duration_s": 0.12,
+    "categories": [
+      "pr_description",
+      "code_review",
+      "issue_triage",
+      "commit_message",
+      "gh_cli"
+    ]
+  },
+  "summary": {
+    "overall_score": 0.0,
+    "by_category": {
+      "code_review": {
+        "category": "code_review",
+        "mean_score": 0.0,
+        "median_score": 0.0,
+        "min_score": 0.0,
+        "max_score": 0.0,
+        "total_cases": 12,
+        "failed_cases": 12
+      },
+      "commit_message": {
+        "category": "commit_message",
+        "mean_score": 0.0,
+        "median_score": 0.0,
+        "min_score": 0.0,
+        "max_score": 0.0,
+        "total_cases": 12,
+        "failed_cases": 12
+      },
+      "gh_cli": {
+        "category": "gh_cli",
+        "mean_score": 0.0,
+        "median_score": 0.0,
+        "min_score": 0.0,
+        "max_score": 0.0,
+        "total_cases": 10,
+        "failed_cases": 10
+      },
+      "issue_triage": {
+        "category": "issue_triage",
+        "mean_score": 0.0,
+        "median_score": 0.0,
+        "min_score": 0.0,
+        "max_score": 0.0,
+        "total_cases": 10,
+        "failed_cases": 10
+      },
+      "pr_description": {
+        "category": "pr_description",
+        "mean_score": 0.0,
+        "median_score": 0.0,
+        "min_score": 0.0,
+        "max_score": 0.0,
+        "total_cases": 12,
+        "failed_cases": 12
+      }
+    }
+  },
+  "results": [
+    {
+      "test_case_id": "pr_desc_001",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_002",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_003",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_004",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_005",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_006",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_007",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_008",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_009",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_010",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_011",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "pr_desc_012",
+      "category": "pr_description",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_001",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "review_002",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_003",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_004",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_005",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_006",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "review_007",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_008",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_009",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_010",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "review_011",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "review_012",
+      "category": "code_review",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_001",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_002",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_003",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_004",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "triage_005",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_006",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_007",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_008",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "triage_009",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "triage_010",
+      "category": "issue_triage",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_001",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_002",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_003",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_004",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "commit_005",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_006",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_007",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_008",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_009",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "commit_010",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_011",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "commit_012",
+      "category": "commit_message",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_001",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_002",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "ghcli_003",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_004",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_005",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_006",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_007",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "Server disconnected"
+    },
+    {
+      "test_case_id": "ghcli_008",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_009",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    },
+    {
+      "test_case_id": "ghcli_010",
+      "category": "gh_cli",
+      "score": 0.0,
+      "subscores": {},
+      "model_output": "",
+      "latency_ms": 0.0,
+      "error": "HTTP 400: {\"error\":{\"message\":\"As of transformers v4.44, default chat template is no longer allowed, so you must provide a chat template if the tokenizer does not define one.\",\"type\":\"BadRequestError\",\"param\":n"
+    }
+  ]
+}
