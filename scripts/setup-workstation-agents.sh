@@ -717,6 +717,98 @@ PISANITIZER
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.pi"
 
 # ============================================================
+# 2b. Oh-My-Pi (omp) config — fork of Pi with enhanced features
+# ============================================================
+# Binary is pre-installed in devcontainer image via @oh-my-pi/pi-coding-agent
+# Config dir: ~/.omp/agent/ (separate from ~/.pi/)
+mkdir -p "${UHOME}/.omp/agent/agents"
+
+# config.yml — omp uses YAML, auto-migrates from JSON
+cat > "${UHOME}/.omp/agent/config.yml" <<OMPCONF
+defaultProvider: openai
+defaultModel: __LARGE_LLM_MODEL__
+defaultThinkingLevel: high
+hideThinkingBlock: true
+quietStartup: true
+collapseChangelog: true
+enabledModels:
+  - __LARGE_LLM_MODEL__
+  - __MEDIUM_LLM_MODEL__
+  - __SMALL_LLM_MODEL__
+disabledProviders:
+  - anthropic
+  - google
+  - groq
+  - mistral
+  - bedrock
+  - huggingface
+  - cerebras
+  - kimi
+  - cloudflare
+  - cursor
+OMPCONF
+sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.omp/agent/config.yml"
+
+# models.yml — same 3-provider setup as Pi
+cat > "${UHOME}/.omp/agent/models.yml" <<OMPMODELS
+providers:
+  openai:
+    baseUrl: __LARGE_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __LARGE_LLM_MODEL__
+        name: Large LLM (vLLM)
+        api: openai-completions
+        reasoning: true
+        contextWindow: __LARGE_LLM_CTX__
+        maxTokens: 8192
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: false
+          thinkingFormat: qwen-chat-template
+  mediumllm:
+    baseUrl: __MEDIUM_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __MEDIUM_LLM_MODEL__
+        name: Medium LLM (vLLM)
+        api: openai-completions
+        reasoning: true
+        contextWindow: __MEDIUM_LLM_CTX__
+        maxTokens: 4096
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: true
+          reasoningEffortMap:
+            minimal: none
+            low: none
+            medium: high
+            high: high
+            xhigh: high
+  smallllm:
+    baseUrl: __SMALL_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __SMALL_LLM_MODEL__
+        name: Small LLM (vLLM)
+        api: openai-completions
+        reasoning: false
+        contextWindow: __SMALL_LLM_CTX__
+        maxTokens: 4096
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: false
+OMPMODELS
+sed -i "s|__LARGE_LLM_BASE_URL__|${LARGE_LLM_BASE_URL}|g; s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__LARGE_LLM_CTX__|${LARGE_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
+sed -i "s|__MEDIUM_LLM_BASE_URL__|${MEDIUM_LLM_BASE_URL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__MEDIUM_LLM_CTX__|${MEDIUM_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
+sed -i "s|__SMALL_LLM_BASE_URL__|${SMALL_LLM_BASE_URL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g; s|__SMALL_LLM_CTX__|${SMALL_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
+
+# Reuse Pi's APPEND_SYSTEM.md (F5 domain context + query enrichment)
+cp "${UHOME}/.pi/agent/APPEND_SYSTEM.md" "${UHOME}/.omp/agent/APPEND_SYSTEM.md" 2>/dev/null || true
+
+chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.omp"
+
+# ============================================================
 # 3. Hermes config (vLLM/largeLLM)
 # ============================================================
 mkdir -p "${UHOME}/.hermes"/{sessions,logs,memories,skills,hooks,cron,image_cache,audio_cache}

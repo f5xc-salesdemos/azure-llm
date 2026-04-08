@@ -165,7 +165,7 @@ write_files:
     echo "=== Tool Validation Report ==="
     VALIDATION_PASS=0
     VALIDATION_FAIL=0
-    for tool in zsh git curl gh nvim node npm pnpm claude opencode pi hermes fzf bat rg fd jq yq kubectl helm terraform; do
+    for tool in zsh git curl gh nvim node npm pnpm claude opencode pi omp hermes fzf bat rg fd jq yq kubectl helm terraform; do
         if command -v "$${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(command -v $${tool})"
             VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
