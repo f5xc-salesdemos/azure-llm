@@ -412,21 +412,32 @@ mkdir -p "${UHOME}/.pi/agent/extensions"
 cat > "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" <<'PISANITIZER'
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
-const REPLACEMENTS: [RegExp, string][] = [
-  [/\$\\rightarrow\$/g, "→"], [/\$\\leftarrow\$/g, "←"],
-  [/\$\\leftrightarrow\$/g, "↔"], [/\$\\uparrow\$/g, "↑"],
-  [/\$\\downarrow\$/g, "↓"], [/\$\\to\$/g, "→"], [/\$\\gets\$/g, "←"],
-  [/\$\\alpha\$/g, "α"], [/\$\\beta\$/g, "β"], [/\$\\gamma\$/g, "γ"],
-  [/\$\\delta\$/g, "δ"], [/\$\\theta\$/g, "θ"], [/\$\\lambda\$/g, "λ"],
-  [/\$\\pi\$/g, "π"], [/\$\\sigma\$/g, "σ"], [/\$\\omega\$/g, "ω"],
-  [/\$\\geq\$/g, "≥"], [/\$\\leq\$/g, "≤"], [/\$\\neq\$/g, "≠"],
-  [/\$\\pm\$/g, "±"], [/\$\\times\$/g, "×"], [/\$\\div\$/g, "÷"],
-  [/\$\\infty\$/g, "∞"], [/\$\\in\$/g, "∈"], [/\$\\sum\$/g, "∑"],
-];
+// Known LaTeX → Unicode mappings (checked first for clean output)
+const KNOWN: Record<string, string> = {
+  "\\rightarrow": "→", "\\leftarrow": "←", "\\leftrightarrow": "↔",
+  "\\uparrow": "↑", "\\downarrow": "↓", "\\to": "→", "\\gets": "←",
+  "\\Rightarrow": "⇒", "\\Leftarrow": "⇐", "\\Leftrightarrow": "⇔",
+  "\\alpha": "α", "\\beta": "β", "\\gamma": "γ", "\\delta": "δ",
+  "\\theta": "θ", "\\lambda": "λ", "\\pi": "π", "\\sigma": "σ",
+  "\\omega": "ω", "\\mu": "μ", "\\epsilon": "ε", "\\phi": "φ",
+  "\\geq": "≥", "\\leq": "≤", "\\neq": "≠", "\\approx": "≈",
+  "\\pm": "±", "\\times": "×", "\\div": "÷", "\\cdot": "·",
+  "\\infty": "∞", "\\in": "∈", "\\sum": "∑", "\\prod": "∏",
+  "\\vdots": "…", "\\cdots": "⋯", "\\ldots": "…", "\\dots": "…",
+  "\\checkmark": "✓", "\\star": "★", "\\bullet": "•", "\\dag": "†",
+};
 
 function sanitize(text: string): string {
   let r = text;
-  for (const [p, s] of REPLACEMENTS) r = r.replace(p, s);
+  // Pass 1: replace known $\command$ patterns with Unicode
+  for (const [cmd, uni] of Object.entries(KNOWN)) {
+    // Escape the backslash for regex: \\alpha -> \\\\alpha
+    const escaped = cmd.replace(/\\/g, "\\\\");
+    r = r.replace(new RegExp("\\$" + escaped + "\\$", "g"), uni);
+  }
+  // Pass 2: catch-all — strip any remaining $\command$ that we missed
+  // Matches $\anycommand$ and removes the $ delimiters and backslash
+  r = r.replace(/\$\\([a-zA-Z]+)\$/g, (_, cmd) => cmd);
   return r;
 }
 
