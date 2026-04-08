@@ -287,6 +287,7 @@ cat > "${UHOME}/.pi/agent/settings.json" <<'PICONF'
   "defaultProvider": "openai",
   "defaultModel": "__LARGE_LLM_MODEL__",
   "quietStartup": true,
+  "collapseChangelog": true,
   "defaultThinkingLevel": "high",
   "hideThinkingBlock": true,
   "packages": ["npm:@mjakl/pi-subagent"]
