@@ -52,6 +52,7 @@ apt-get install -y \
     redis-server \
     postgresql \
     postgresql-contrib \
+    postgresql-16-cron \
     rabbitmq-server \
     python3-venv \
     python3-dev
@@ -65,8 +66,19 @@ echo "--- Section 2: PostgreSQL configuration ---"
 PG_HBA=$(find /etc/postgresql -name pg_hba.conf -print -quit 2>/dev/null)
 if [ -n "${PG_HBA}" ]; then
     sed -i 's/peer/trust/g; s/scram-sha-256/trust/g' "${PG_HBA}"
-    systemctl restart postgresql
 fi
+
+# Enable pg_cron extension (required by Firecrawl NuQ job scheduler)
+PG_CONF=$(find /etc/postgresql -name postgresql.conf -print -quit 2>/dev/null)
+if [ -n "${PG_CONF}" ]; then
+    if ! grep -q "pg_cron" "${PG_CONF}"; then
+        echo "shared_preload_libraries = 'pg_cron'" >> "${PG_CONF}"
+        echo "cron.database_name = 'firecrawl'" >> "${PG_CONF}"
+        echo "Configured pg_cron in postgresql.conf"
+    fi
+fi
+
+systemctl restart postgresql
 
 # Wait for PostgreSQL readiness
 for _i in $(seq 1 10); do
@@ -74,12 +86,14 @@ for _i in $(seq 1 10); do
     sleep 1
 done
 
-# Create firecrawl database
+# Create firecrawl database and pg_cron extension
 if pg_isready -q 2>/dev/null; then
     if ! psql -U postgres -lqt 2>/dev/null | grep -qw firecrawl; then
         createdb -U postgres firecrawl
         echo "Created firecrawl database"
     fi
+    psql -U postgres -d firecrawl -c "CREATE EXTENSION IF NOT EXISTS pg_cron;" 2>/dev/null
+    echo "pg_cron extension ready"
 fi
 
 # ============================================================
@@ -162,6 +176,21 @@ enabled_plugins:
   - Self Information
   - Tracker URL remover
 SEARXNG_SETTINGS
+
+# SearXNG bot detection config (suppress X-Forwarded-For warning, local-only instance)
+cat > /opt/searxng/etc/limiter.toml << 'LIMITER_CONF'
+# Local-only instance — permissive bot detection
+[botdetection]
+ipv4_prefix = 32
+ipv6_prefix = 128
+
+[botdetection.ip_limit]
+link_token = false
+filter_link_local = false
+
+[botdetection.ip_lists]
+pass_searxng_org = true
+LIMITER_CONF
 
 # SearXNG systemd service
 cat > /etc/systemd/system/searxng.service << 'SEARXNG_SVC'
