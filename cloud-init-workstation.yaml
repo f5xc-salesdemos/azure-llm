@@ -28,13 +28,15 @@ write_files:
     export MEDIUM_LLM_BASE_URL="${medium_llm_base_url}"
     export MEDIUM_LLM_MODEL="${medium_llm_model}"
     export MEDIUM_LLM_CTX="${medium_llm_ctx}"
+    export FIRECRAWL_API_URL="http://localhost:3002"
+    export SEARXNG_API_URL="http://localhost:8888"
 - path: /opt/setup-workstation.sh
   permissions: '0755'
   content: |
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/workstation-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-08-v8-modular"
+    CLOUD_INIT_VERSION="2026-04-08-v9-firecrawl"
     echo "Cloud-init version: $${CLOUD_INIT_VERSION}"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
@@ -83,7 +85,7 @@ write_files:
     # ---- Download setup scripts from GitHub ----
     REPO_RAW="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts"
     SCRIPTS_DIR="/opt"
-    for script in setup-workstation-tools.sh setup-workstation-shell.sh setup-workstation-agents.sh; do
+    for script in setup-workstation-tools.sh setup-workstation-shell.sh setup-workstation-agents.sh setup-workstation-firecrawl.sh; do
         echo "Downloading $${script}..."
         curl -fsSL --retry 3 --retry-delay 5 --max-time 60 \
           "$${REPO_RAW}/$${script}" -o "$${SCRIPTS_DIR}/$${script}" || true
@@ -112,11 +114,18 @@ write_files:
         [ "$${AGENTS_EXIT}" -ne 0 ] && echo "WARNING: agents script exited $${AGENTS_EXIT}" >&2
     fi
 
+    FIRECRAWL_EXIT=0
+    if [ -x "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" ]; then
+        echo "Running setup-workstation-firecrawl.sh..."
+        bash "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" || FIRECRAWL_EXIT=$?
+        [ "$${FIRECRAWL_EXIT}" -ne 0 ] && echo "WARNING: firecrawl script exited $${FIRECRAWL_EXIT}" >&2
+    fi
+
     # ---- Post-setup validation ----
     echo "=== Tool Validation Report ==="
     VALIDATION_PASS=0
     VALIDATION_FAIL=0
-    for tool in zsh git curl gh nvim node npm claude opencode pi hermes fzf bat rg fd jq yq kubectl helm terraform; do
+    for tool in zsh git curl gh nvim node npm claude opencode pi hermes fzf bat rg fd jq yq kubectl helm terraform check-firecrawl; do
         if command -v "$${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(command -v $${tool})"
             VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
