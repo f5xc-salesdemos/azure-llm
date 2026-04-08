@@ -466,7 +466,7 @@ cat > "${UHOME}/.pi/agent/agents/web-research.md" <<'PIWEBAGENT'
 ---
 name: web-research
 description: "ALWAYS delegate to this agent when the task involves ANY of: searching the web, looking something up online, finding information on the internet, fetching a URL or web page, reading documentation from a website, researching a topic, checking current events or recent news, finding release notes or changelogs, looking up CVEs or security advisories, verifying facts from authoritative sources, comparing technologies or products, finding API documentation, reading blog posts or articles, checking package versions or compatibility, finding tutorials or guides, answering questions that require up-to-date information beyond training data, or any task where web access would provide verifiable sources."
-model: mediumllm/__MEDIUM_LLM_MODEL__
+model: openai/__LARGE_LLM_MODEL__
 tools: bash,read
 thinking: high
 ---
@@ -512,7 +512,7 @@ Write a complete, well-formatted answer:
 3. **Your output IS the user-facing answer.** Write it as if speaking directly to the user.
 4. **Always cite sources.** End with a Sources section listing URLs you used.
 PIWEBAGENT
-sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
+sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
 # ---- Ensure pi-subagent and pi are installed before patching ----
 if ! command -v pi >/dev/null 2>&1; then
