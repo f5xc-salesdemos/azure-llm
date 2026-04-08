@@ -125,7 +125,7 @@ name: f5xc-api
 description: "ALWAYS delegate to this agent for any F5 Distributed Cloud, F5 XC, Volterra, load balancer, origin pool, WAF, DNS, or API platform operation. This agent executes curl commands against the F5 XC REST API using environment variables F5XC_API_URL, F5XC_API_TOKEN, and F5XC_NAMESPACE."
 model: mediumllm/__MEDIUM_LLM_MODEL__
 tools: bash
-thinking: off
+thinking: high
 ---
 
 You are an F5 Distributed Cloud API operations agent. You MUST execute REST API calls using the bash tool with curl commands. NEVER output curl commands as text — always execute them.
@@ -205,7 +205,7 @@ name: web-research
 description: "ALWAYS delegate to this agent when the task involves ANY of: searching the web, looking something up online, finding information on the internet, fetching a URL or web page, reading documentation from a website, researching a topic, checking current events or recent news, finding release notes or changelogs, looking up CVEs or security advisories, verifying facts from authoritative sources, comparing technologies or products, finding API documentation, reading blog posts or articles, checking package versions or compatibility, finding tutorials or guides, answering questions that require up-to-date information beyond training data, or any task where web access would provide verifiable sources."
 model: mediumllm/__MEDIUM_LLM_MODEL__
 tools: bash,read
-thinking: off
+thinking: high
 ---
 
 You are a web research specialist with access to a local Firecrawl API (web scraper) and SearXNG (metasearch engine). You MUST execute all web operations using the bash tool with curl commands. NEVER output commands as text — always execute them.
