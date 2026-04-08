@@ -891,8 +891,29 @@ sed -i "s|__LARGE_LLM_BASE_URL__|${LARGE_LLM_BASE_URL}|g; s|__LARGE_LLM_MODEL__|
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.hermes"
 
 # ============================================================
-# 4. Claude Code — settings.json + .claude.json
+# 4. Claude Code — install binary + settings.json + .claude.json
 # ============================================================
+# Install Claude Code natively if not already present
+# (Group A in tools script may fail; this is the safety net)
+if ! su - "${ADMIN_USER}" -c 'export PATH="$HOME/.local/bin:$PATH"; command -v claude' >/dev/null 2>&1; then
+    echo "Claude Code not found, installing..."
+    retry_cmd 3 10 npm install -g @anthropic-ai/claude-code
+    su - "${ADMIN_USER}" -c "claude install --force" 2>/dev/null || true
+    npm uninstall -g @anthropic-ai/claude-code 2>/dev/null || true
+fi
+
+# Ensure ~/.local/bin is in PATH via /etc/profile.d (affects all shells)
+if [ ! -f /etc/profile.d/local-bin-path.sh ]; then
+    cat > /etc/profile.d/local-bin-path.sh <<'PATHFIX'
+# Ensure ~/.local/bin is in PATH for all users (Claude Code installs here)
+if [ -d "$HOME/.local/bin" ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+PATHFIX
+    chmod 644 /etc/profile.d/local-bin-path.sh
+    echo "Added ~/.local/bin to system PATH via profile.d"
+fi
+
 mkdir -p "${UHOME}/.claude"
 
 # ~/.claude/settings.json — permissions, model, vLLM env vars, UI prefs
