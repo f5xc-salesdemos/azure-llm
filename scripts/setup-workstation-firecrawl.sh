@@ -205,6 +205,15 @@ fi
 # Remove .git to save space
 rm -rf /opt/firecrawl/.git
 
+# Patch: force Chat Completions API for vLLM compatibility
+# The @ai-sdk/openai defaults to the Responses API which sends
+# "input_text" content type that vLLM doesn't support.
+GENERIC_AI="/opt/firecrawl/apps/api/dist/src/lib/generic-ai.js"
+if grep -q 'return providerList\[provider\](modelName);' "${GENERIC_AI}" 2>/dev/null; then
+    sed -i 's|return providerList\[provider\](modelName);|if (provider === "openai" \&\& providerList.openai.chat) { return providerList.openai.chat(modelName); } return providerList[provider](modelName);|' "${GENERIC_AI}"
+    echo "Patched Firecrawl to use Chat Completions API for vLLM"
+fi
+
 # ============================================================
 # 7. Load database schema
 # ============================================================
