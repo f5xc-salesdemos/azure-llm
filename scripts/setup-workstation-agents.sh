@@ -320,6 +320,93 @@ else:
 " 2>/dev/null || true
 fi
 
+# Patch pi-subagent render.ts for minimal collapsed output (one-line summary)
+PI_SUBAGENT_RENDER=$(find /usr/lib/node_modules/@mjakl/pi-subagent -name "render.ts" -print -quit 2>/dev/null)
+if [ -n "${PI_SUBAGENT_RENDER}" ]; then
+    python3 -c "
+import re, sys
+
+p = '${PI_SUBAGENT_RENDER}'
+with open(p) as f:
+    c = f.read()
+
+patched = False
+
+# --- Patch renderSingleCollapsed: icon + agent name only ---
+old_single = re.compile(
+    r'function renderSingleCollapsed\([\s\S]*?\): Text \{[\s\S]*?\n\treturn new Text\(text, 0, 0\);\n\}',
+)
+new_single = '''function renderSingleCollapsed(
+\tr: SingleResult,
+\tdelegationMode: DelegationMode,
+\ticon: string,
+\terror: boolean,
+\tdisplayItems: DisplayItem[],
+\ttheme: { fg: ThemeFg; bold: (s: string) => string },
+): Text {
+\tlet text = \x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(r.agent))}\x60;
+\tif (error && r.stopReason) text += \x60 \x24{theme.fg(\"error\", \x60[\x24{r.stopReason}]\x60)}\x60;
+\tif (error && r.errorMessage) {
+\t\ttext += \x60\\n\x24{theme.fg(\"error\", \x60Error: \x24{r.errorMessage}\x60)}\x60;
+\t}
+\treturn new Text(text, 0, 0);
+}'''
+if old_single.search(c):
+    c = old_single.sub(new_single, c, count=1)
+    patched = True
+    print('Patched renderSingleCollapsed -> minimal')
+
+# --- Patch renderParallelCollapsed: one-line status + per-agent icons ---
+old_parallel = re.compile(
+    r'function renderParallelCollapsed\([\s\S]*?\): Text \{[\s\S]*?\n\treturn new Text\(text, 0, 0\);\n\}',
+)
+new_parallel = '''function renderParallelCollapsed(
+\tdetails: SubagentDetails,
+\tdelegationMode: DelegationMode,
+\ticon: string,
+\tstatus: string,
+\tisRunning: boolean,
+\texpanded: boolean,
+\ttheme: { fg: ThemeFg; bold: (s: string) => string },
+): Text {
+\tlet text = \x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(\"parallel \"))}\x24{theme.fg(\"accent\", status)}\x60;
+\tfor (const r of details.results) {
+\t\tconst rIcon = statusIcon(r, theme);
+\t\ttext += \x60  \x24{theme.fg(\"accent\", r.agent)} \x24{rIcon}\x60;
+\t}
+\treturn new Text(text, 0, 0);
+}'''
+if old_parallel.search(c):
+    c = old_parallel.sub(new_parallel, c, count=1)
+    patched = True
+    print('Patched renderParallelCollapsed -> minimal')
+
+# --- Patch renderCall: agent name only, no mode badge or task preview ---
+old_call = re.compile(
+    r'export function renderCall\([\s\S]*?\): Text \{[\s\S]*?\n\treturn new Text\(text, 0, 0\);\n\}',
+)
+new_call = '''export function renderCall(args: Record<string, any>, theme: { fg: ThemeFg; bold: (s: string) => string }): Text {
+\tif (args.tasks && args.tasks.length > 0) {
+\t\tconst names = args.tasks.map((t: any) => t.agent).join(\", \");
+\t\treturn new Text(theme.fg(\"toolTitle\", theme.bold(\"subagent \")) + theme.fg(\"accent\", names), 0, 0);
+\t}
+\tconst agentName = args.agent || \"...\";
+\treturn new Text(theme.fg(\"toolTitle\", theme.bold(\"subagent \")) + theme.fg(\"accent\", agentName), 0, 0);
+}'''
+if old_call.search(c):
+    c = old_call.sub(new_call, c, count=1)
+    patched = True
+    print('Patched renderCall -> minimal')
+
+if patched:
+    with open(p, 'w') as f:
+        f.write(c)
+    print('render.ts patched for minimal subagent output')
+else:
+    print('render.ts already patched or function signatures changed')
+" 2>/dev/null || true
+fi
+
 # Output sanitizer extension — deterministically strips LaTeX from all LLM output
 mkdir -p "${UHOME}/.pi/agent/extensions"
 cat > "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" <<'PISANITIZER'
