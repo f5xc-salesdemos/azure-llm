@@ -1,48 +1,48 @@
 ###############################################################################
-# Gemma VM
+# llm01 — Large LLM
 ###############################################################################
 
-output "gemma_public_ip" {
-  description = "Gemma VM public IP"
+output "llm01_public_ip" {
+  description = "llm01 public IP"
   value       = azurerm_public_ip.gemma.ip_address
 }
 
-output "gemma_private_ip" {
-  description = "Gemma VM private IP (for VNet access)"
+output "llm01_private_ip" {
+  description = "llm01 private IP (for VNet access)"
   value       = azurerm_network_interface.gemma.private_ip_address
 }
 
-output "gemma_ssh" {
-  description = "SSH to Gemma VM"
+output "llm01_ssh" {
+  description = "SSH to llm01"
   value       = "ssh ${var.admin_username}@${azurerm_public_ip.gemma.ip_address}"
 }
 
-output "gemma_fqdn" {
-  description = "Gemma VM FQDN"
+output "llm01_fqdn" {
+  description = "llm01 FQDN"
   value       = azurerm_public_ip.gemma.fqdn
 }
 
 ###############################################################################
-# Phi VM
+# llm02 — Small/Medium/Vision LLM
 ###############################################################################
 
-output "phi_public_ip" {
-  description = "Phi VM public IP"
+output "llm02_public_ip" {
+  description = "llm02 public IP"
   value       = azurerm_public_ip.phi.ip_address
 }
 
-output "phi_private_ip" {
-  description = "Phi VM private IP (for VNet access)"
+output "llm02_private_ip" {
+  description = "llm02 private IP (for VNet access)"
   value       = azurerm_network_interface.phi.private_ip_address
 }
 
-output "phi_ssh" {
-  description = "SSH to Phi VM"
+output "llm02_ssh" {
+  description = "SSH to llm02"
   value       = "ssh ${var.admin_username}@${azurerm_public_ip.phi.ip_address}"
 }
 
-output "phi_fqdn" {
-  description = "Phi VM FQDN"
+output "llm02_fqdn" {
+  description = "llm02 FQDN"
   value       = azurerm_public_ip.phi.fqdn
 }
 
@@ -66,26 +66,26 @@ output "workstation_fqdn" {
 }
 
 ###############################################################################
-# Service endpoints (from workstation, use private IPs)
+# Service endpoints (abstract names, from workstation via private IPs)
 ###############################################################################
 
-output "vllm_gemma_endpoint" {
-  description = "Gemma vLLM API endpoint (from workstation)"
+output "vllm_large_llm_endpoint" {
+  description = "Large LLM vLLM API endpoint"
   value       = "http://${azurerm_network_interface.gemma.private_ip_address}:${var.vllm_port}/v1"
 }
 
-output "vllm_phi_endpoint" {
-  description = "Phi vLLM API endpoint (from workstation)"
+output "vllm_small_llm_endpoint" {
+  description = "Small LLM vLLM API endpoint"
   value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.phi_port}/v1"
 }
 
-output "vllm_qwen_vl_endpoint" {
-  description = "Qwen2.5-VL vLLM API endpoint (from workstation)"
+output "vllm_vision_llm_endpoint" {
+  description = "Vision LLM vLLM API endpoint"
   value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.qwen_vl_port}/v1"
 }
 
-output "vllm_devstral_endpoint" {
-  description = "Devstral-24B vLLM API endpoint (from workstation)"
+output "vllm_medium_llm_endpoint" {
+  description = "Medium LLM vLLM API endpoint"
   value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.devstral_port}/v1"
 }
 

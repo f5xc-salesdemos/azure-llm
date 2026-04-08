@@ -41,11 +41,11 @@ resource "azurerm_subnet" "this" {
 }
 
 ###############################################################################
-# Gemma VM — 4x A100 80GB, Gemma 4 31B, TP=4, 256K context
+# llm01 — Large LLM server (4x A100 80GB, TP=4, 256K context)
 ###############################################################################
 
 resource "azurerm_network_security_group" "gemma" {
-  name                = "gemma-nsg"
+  name                = "llm01-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
@@ -75,17 +75,17 @@ resource "azurerm_network_security_group" "gemma" {
 }
 
 resource "azurerm_public_ip" "gemma" {
-  name                = "gemma-pip"
+  name                = "llm01-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.gemma_zone != "" ? [var.gemma_zone] : []
-  domain_name_label   = "gemma-llm"
+  domain_name_label   = "llm01"
 }
 
 resource "azurerm_network_interface" "gemma" {
-  name                = "gemma-nic"
+  name                = "llm01-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
@@ -104,7 +104,7 @@ resource "azurerm_network_interface_security_group_association" "gemma" {
 }
 
 resource "azurerm_linux_virtual_machine" "gemma" {
-  name                            = "gemma-vm"
+  name                            = "llm01"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
   size                            = var.gemma_vm_size
@@ -146,11 +146,11 @@ resource "azurerm_linux_virtual_machine" "gemma" {
 }
 
 ###############################################################################
-# Phi VM — 4x A100 80GB, 3 models: Phi-4-mini + Qwen-VL + Devstral
+# llm02 — Small/Medium/Vision LLM server (4x A100 80GB, 3 models)
 ###############################################################################
 
 resource "azurerm_network_security_group" "phi" {
-  name                = "phi-nsg"
+  name                = "llm02-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
@@ -205,17 +205,17 @@ resource "azurerm_network_security_group" "phi" {
 }
 
 resource "azurerm_public_ip" "phi" {
-  name                = "phi-pip"
+  name                = "llm02-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.phi_zone != "" ? [var.phi_zone] : []
-  domain_name_label   = "phi-llm"
+  domain_name_label   = "llm02"
 }
 
 resource "azurerm_network_interface" "phi" {
-  name                = "phi-nic"
+  name                = "llm02-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
@@ -234,7 +234,7 @@ resource "azurerm_network_interface_security_group_association" "phi" {
 }
 
 resource "azurerm_linux_virtual_machine" "phi" {
-  name                            = "phi-vm"
+  name                            = "llm02"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
   size                            = var.phi_vm_size

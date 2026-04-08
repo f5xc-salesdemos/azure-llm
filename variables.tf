@@ -58,7 +58,7 @@ variable "vllm_port" {
 }
 
 ###############################################################################
-# Gemma VM — primary inference server (4x A100 80GB)
+# llm01 — Large LLM inference server (4x A100 80GB)
 ###############################################################################
 
 variable "gemma_vm_size" {
@@ -116,7 +116,7 @@ variable "gemma_tool_call_parser" {
 }
 
 ###############################################################################
-# Phi VM — sub-agent server (4x A100 80GB, three models)
+# llm02 — Small/Medium/Vision LLM server (4x A100 80GB, three models)
 ###############################################################################
 
 variable "phi_vm_size" {

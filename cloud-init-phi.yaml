@@ -1,8 +1,8 @@
 #cloud-config
-# Sub-agent server: 3 models on 4x A100 80GB
-#   GPU 0 (dedicated): Phi-4-mini (port ${phi_port}) — GitHub ops, 128K ctx, speculative decoding
-#   GPU 1+3 (TP=2):    Devstral-Small-2-24B (port ${devstral_port}) — 256K ctx
-#   GPU 2 (dedicated):  Qwen2.5-VL-7B (port ${qwen_vl_port}) — vision/multimodal
+# llm02 — Small/Medium/Vision LLM server: 3 models on 4x A100 80GB
+#   GPU 0 (dedicated): small-llm (port ${phi_port}) — 128K ctx, speculative decoding
+#   GPU 1+3 (TP=2):    medium-llm (port ${devstral_port}) — 256K ctx
+#   GPU 2 (dedicated):  vision-llm (port ${qwen_vl_port}) — multimodal
 package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf

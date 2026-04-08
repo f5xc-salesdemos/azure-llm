@@ -3,12 +3,12 @@ location            = "centralus"
 admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
-# Gemma VM — 4x A100 80GB, 256K context
+# llm01 — Large LLM (4x A100 80GB, 256K context)
 gemma_vm_size   = "Standard_NC96ads_A100_v4"
 gemma_zone      = "2"
 gemma_disk_size = 256
 
-# Phi VM — 4x A100 80GB (Phi GPU 0, Qwen-VL GPU 2, Devstral GPU 1+3)
+# llm02 — Small/Medium/Vision LLM (4x A100 80GB, 3 models)
 phi_vm_size = "Standard_NC96ads_A100_v4"
 phi_zone    = "2"
 
