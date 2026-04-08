@@ -86,9 +86,9 @@ variable "gemma_model_id" {
 }
 
 variable "gemma_served_name" {
-  description = "Model name exposed by Gemma vLLM API"
+  description = "Abstract served-model-name for the large LLM (model-agnostic)"
   type        = string
-  default     = "gemma-4-31b"
+  default     = "large-llm"
 }
 
 variable "gemma_max_model_len" {
@@ -145,9 +145,9 @@ variable "phi_model_id" {
 }
 
 variable "phi_served_name" {
-  description = "Model name exposed by Phi vLLM API"
+  description = "Abstract served-model-name for the small LLM (model-agnostic)"
   type        = string
-  default     = "phi-4-mini"
+  default     = "small-llm"
 }
 
 variable "phi_max_model_len" {
@@ -224,9 +224,9 @@ variable "qwen_vl_model_id" {
 }
 
 variable "qwen_vl_served_name" {
-  description = "Model name exposed by Qwen VL vLLM API"
+  description = "Abstract served-model-name for the vision LLM (model-agnostic)"
   type        = string
-  default     = "qwen2.5-vl-7b"
+  default     = "vision-llm"
 }
 
 variable "qwen_vl_max_model_len" {
@@ -261,9 +261,9 @@ variable "devstral_model_id" {
 }
 
 variable "devstral_served_name" {
-  description = "Model name exposed by Devstral vLLM API"
+  description = "Abstract served-model-name for the medium LLM (model-agnostic)"
   type        = string
-  default     = "devstral-24b"
+  default     = "medium-llm"
 }
 
 variable "devstral_max_model_len" {

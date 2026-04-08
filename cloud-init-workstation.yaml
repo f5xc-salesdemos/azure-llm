@@ -1,7 +1,7 @@
 #cloud-config
-# Workstation VM — developer tools, Claude Code, OpenCode, benchmarks
+# Workstation VM — minimal bootstrap, downloads setup scripts from GitHub
 # T4 GPU for Chrome/Playwright rendering only (no vLLM serving)
-# Connects to Gemma (${gemma_ip}:${gemma_port}) and Phi (${phi_ip}:${phi_port}) over VNet
+# LLM endpoints rendered by Terraform into /etc/profile.d/llm-endpoints.sh
 package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
@@ -10,20 +10,37 @@ write_files:
     $nrconf{kernelhints} = 0;
 
     '
-- path: /opt/setup-workstation-tools.sh
-  permissions: '0755'
-  encoding: gzip+b64
-  content: ${tools_script_gzb64}
+- path: /etc/profile.d/llm-endpoints.sh
+  permissions: '0644'
+  content: |
+    # LLM endpoint configuration — rendered by Terraform at provision time
+    export LLM_ADMIN_USER="${admin_username}"
+    export HF_TOKEN="${hf_token}"
+    export LARGE_LLM_BASE_URL="${large_llm_base_url}"
+    export LARGE_LLM_MODEL="${large_llm_model}"
+    export LARGE_LLM_CTX="${large_llm_ctx}"
+    export SMALL_LLM_BASE_URL="${small_llm_base_url}"
+    export SMALL_LLM_MODEL="${small_llm_model}"
+    export SMALL_LLM_CTX="${small_llm_ctx}"
+    export VISION_LLM_BASE_URL="${vision_llm_base_url}"
+    export VISION_LLM_MODEL="${vision_llm_model}"
+    export VISION_LLM_CTX="${vision_llm_ctx}"
+    export MEDIUM_LLM_BASE_URL="${medium_llm_base_url}"
+    export MEDIUM_LLM_MODEL="${medium_llm_model}"
+    export MEDIUM_LLM_CTX="${medium_llm_ctx}"
 - path: /opt/setup-workstation.sh
   permissions: '0755'
   content: |
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/workstation-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-08-v7-resilient"
-    echo "Cloud-init version: $CLOUD_INIT_VERSION"
+    CLOUD_INIT_VERSION="2026-04-08-v8-modular"
+    echo "Cloud-init version: $${CLOUD_INIT_VERSION}"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
+
+    # Source LLM endpoint env vars (rendered by Terraform)
+    source /etc/profile.d/llm-endpoints.sh
 
     echo "=== Workstation Setup Started: $(date) ==="
 
@@ -44,12 +61,12 @@ write_files:
     wait_for_apt
     apt-get remove -y unattended-upgrades 2>/dev/null || true
 
-    # ---- Minimal bootstrap packages (needed to run setup script) ----
+    # ---- Minimal bootstrap packages ----
     wait_for_apt
     apt-get update -y
     apt-get install -y git curl wget unzip python3-pip zsh
 
-    # ---- GitHub CLI (needed for xcsh apt repo below) ----
+    # ---- GitHub CLI ----
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
@@ -57,852 +74,58 @@ write_files:
     apt-get update
     apt-get install -y gh
 
-    # ---- NVIDIA drivers (T4 for Chrome GPU rendering, not inference) ----
+    # ---- NVIDIA drivers (T4 for Chrome GPU rendering) ----
     wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
     dpkg -i cuda-keyring_1.1-1_all.deb
     apt-get update
     apt-get install -y cuda-drivers
 
-    # ---- Full toolset — run embedded setup script (non-fatal) ----
-    # Script is written by cloud-init write_files (base64-encoded, no GitHub dependency)
-    TOOLS_SCRIPT="/opt/setup-workstation-tools.sh"
+    # ---- Download setup scripts from GitHub ----
+    REPO_RAW="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts"
+    SCRIPTS_DIR="/opt"
+    for script in setup-workstation-tools.sh setup-workstation-shell.sh setup-workstation-agents.sh; do
+        echo "Downloading $${script}..."
+        curl -fsSL --retry 3 --retry-delay 5 --max-time 60 \
+          "$${REPO_RAW}/$${script}" -o "$${SCRIPTS_DIR}/$${script}" || true
+        chmod +x "$${SCRIPTS_DIR}/$${script}" 2>/dev/null || true
+    done
+
+    # ---- Run setup scripts (graceful degradation) ----
     TOOLS_EXIT=0
-    TOOLS_DOWNLOAD_OK=true
-    if [ -s "$${TOOLS_SCRIPT}" ] && head -1 "$${TOOLS_SCRIPT}" | grep -q '^#\!.*bash'; then
-        chmod +x "$${TOOLS_SCRIPT}"
+    if [ -x "$${SCRIPTS_DIR}/setup-workstation-tools.sh" ]; then
         echo "Running setup-workstation-tools.sh..."
-        bash "$${TOOLS_SCRIPT}" "${admin_username}" || TOOLS_EXIT=$?
-        if [ "$${TOOLS_EXIT}" -ne 0 ]; then
-            echo "WARNING: setup-workstation-tools.sh exited with code $${TOOLS_EXIT}" >&2
-            echo "WARNING: Continuing with shell/editor/AI agent configuration..." >&2
-        fi
-    else
-        TOOLS_DOWNLOAD_OK=false
-        echo "ERROR: /opt/setup-workstation-tools.sh missing or invalid" >&2
-        echo "WARNING: Skipping tool installation. Continuing with shell/editor/AI config..." >&2
+        bash "$${SCRIPTS_DIR}/setup-workstation-tools.sh" "$${LLM_ADMIN_USER}" || TOOLS_EXIT=$?
+        [ "$${TOOLS_EXIT}" -ne 0 ] && echo "WARNING: tools script exited $${TOOLS_EXIT}" >&2
     fi
 
-    # ---- Zsh default shell ----
-    sed -i 's|SHELL=/bin/sh|SHELL=/bin/zsh|' /etc/default/useradd
-    chsh -s /usr/bin/zsh ${admin_username}
-
-    # ---- Oh-my-zsh + plugins + p10k (as user) ----
-    # Create minimal .zshrc first to suppress zsh-newuser-install wizard on first login
-    su - ${admin_username} -c 'touch $HOME/.zshrc'
-    su - ${admin_username} -c 'export RUNZSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
-    su - ${admin_username} -c '
-      ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
-      # Pre-install tfenv so zsh-tfenv plugin doesn't noisily clone on first login
-      git clone --depth=1 https://github.com/tfutils/tfenv.git $HOME/.tfenv 2>/dev/null || true
-      # External plugins (community)
-      git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions 2>/dev/null || true
-      git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting 2>/dev/null || true
-      git clone --depth=1 https://github.com/conda-incubator/conda-zsh-completion.git $ZSH_CUSTOM/plugins/conda-zsh-completion 2>/dev/null || true
-      git clone --depth=1 https://github.com/z-shell/zsh-eza.git $ZSH_CUSTOM/plugins/zsh-eza 2>/dev/null || true
-      git clone --depth=1 https://github.com/cda0/zsh-tfenv.git $ZSH_CUSTOM/plugins/zsh-tfenv 2>/dev/null || true
-      git clone --depth=1 https://github.com/wbingli/zsh-claudecode-completion.git $ZSH_CUSTOM/plugins/zsh-claudecode-completion 2>/dev/null || true
-      # Custom gh-clone-complete plugin (GitHub repo tab completion for git clone)
-      mkdir -p $ZSH_CUSTOM/plugins/gh-clone-complete
-      curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/gh-clone-complete.plugin.zsh \
-        -o $ZSH_CUSTOM/plugins/gh-clone-complete/gh-clone-complete.plugin.zsh 2>/dev/null || true
-      # Theme
-      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k 2>/dev/null || true
-      [ -x $ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install ] && $ZSH_CUSTOM/themes/powerlevel10k/gitstatus/install || true
-      # tmux plugin manager
-      git clone --depth=1 https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm 2>/dev/null || true
-      # _gog completion
-      mkdir -p $ZSH_CUSTOM/completions
-      curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/_gog \
-        -o $ZSH_CUSTOM/completions/_gog 2>/dev/null || true
-      # Configure .zshrc
-      sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" $HOME/.zshrc 2>/dev/null || true
-      sed -i "s/^plugins=(.*/plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-interactive-cd jsontools gh gh-clone-complete common-aliases zsh-eza zsh-tfenv conda-zsh-completion z pip terraform fluxcd azure git-auto-fetch helm istioctl kube-ps1 kubectl sudo vscode aws fzf docker history colored-man-pages command-not-found tmux zsh-claudecode-completion dotenv emoji gcloud git pre-commit ubuntu)/" $HOME/.zshrc 2>/dev/null || true
-      sed -i "s/^# HYPHEN_INSENSITIVE=.*/HYPHEN_INSENSITIVE=\"true\"/" $HOME/.zshrc 2>/dev/null || true
-      sed -i "s/^# COMPLETION_WAITING_DOTS=.*/COMPLETION_WAITING_DOTS=\"true\"/" $HOME/.zshrc 2>/dev/null || true
-      sed -i "s/^# HIST_STAMPS=.*/HIST_STAMPS=\"yyyy-mm-dd\"/" $HOME/.zshrc 2>/dev/null || true
-      # Suppress dotenv prompt (must go before oh-my-zsh.sh sourcing)
-      sed -i "/source.*oh-my-zsh.sh/i export ZSH_DOTENV_PROMPT=false" $HOME/.zshrc 2>/dev/null || true
-    '
-    cat >> /home/${admin_username}/.zshrc <<'ZSHEOF'
-    export HISTSIZE=50000
-    export SAVEHIST=50000
-    [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-    export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
-    export OPENAI_API_KEY="local-vllm"
-    alias vim=nvim
-    alias codex-exec="codex exec --skip-git-repo-check"
-    export LESS="-R -F -X -i -J --mouse"
-    export BAT_THEME="Coldark-Dark"
-    export LESSOPEN="|~/.lessfilter %s"
-    export LESSHISTFILE="$HOME/.cache/lesshst"
-    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-    export BROWSER="browsh"
-    ZSHEOF
-    chown ${admin_username}:${admin_username} /home/${admin_username}/.zshrc
-
-
-    # ---- /etc/zsh/zshenv (OAuth token forwarding for Claude Code) ----
-    mkdir -p /etc/zsh
-    cat >> /etc/zsh/zshenv <<'ZSHENV'
-    if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && [ -z "$ANTHROPIC_OAUTH_TOKEN" ]; then
-      export ANTHROPIC_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN"
+    SHELL_EXIT=0
+    if [ -x "$${SCRIPTS_DIR}/setup-workstation-shell.sh" ]; then
+        echo "Running setup-workstation-shell.sh..."
+        bash "$${SCRIPTS_DIR}/setup-workstation-shell.sh" || SHELL_EXIT=$?
+        [ "$${SHELL_EXIT}" -ne 0 ] && echo "WARNING: shell script exited $${SHELL_EXIT}" >&2
     fi
-    ZSHENV
 
-    # ---- p10k config (download from devcontainer repo) ----
-    curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/.p10k.zsh \
-      -o /home/${admin_username}/.p10k.zsh || true
-    chown ${admin_username}:${admin_username} /home/${admin_username}/.p10k.zsh
-
-    # ---- Initialize zsh completions ----
-    su - ${admin_username} -c 'zsh -c "autoload -U compinit && compinit"' 2>/dev/null || true
-
-    # ---- Neovim plugins (lazy.nvim — as user) ----
-    mkdir -p /home/${admin_username}/.config/nvim
-    curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/init.lua \
-      -o /home/${admin_username}/.config/nvim/init.lua
-    LAZY_DIR="/home/${admin_username}/.local/share/nvim/lazy/lazy.nvim"
-    su - ${admin_username} -c "
-      mkdir -p $$(dirname $$LAZY_DIR) && \
-      git clone --filter=blob:none --branch=stable https://github.com/folke/lazy.nvim.git $$LAZY_DIR && \
-      nvim --headless '+Lazy! sync' +qa
-    " 2>/dev/null || true
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.config /home/${admin_username}/.local
-
-    # ---- rc files (matching devcontainer) ----
-    cat > /home/${admin_username}/.digrc <<'DIGRC'
-    +nostats +nocomments +nocmd +noquestion +recurse +search
-    DIGRC
-    cat > /home/${admin_username}/.inputrc <<'INPUTRC'
-    set completion-ignore-case on
-    set completion-map-case on
-    set show-all-if-ambiguous on
-    set show-all-if-unmodified on
-    set colored-stats on
-    set mark-directories on
-    set mark-symlinked-directories on
-    set colored-completion-prefix on
-    set bell-style none
-    set history-preserve-point on
-    set input-meta on
-    set output-meta on
-    set convert-meta off
-    "\e[A": history-search-backward
-    "\e[B": history-search-forward
-    "\e[1;5C": forward-word
-    "\e[1;5D": backward-word
-    INPUTRC
-    cat > /home/${admin_username}/.tmux.conf <<'TMUX'
-    set -g default-shell /usr/bin/zsh
-    set -g default-terminal "tmux-256color"
-    set -as terminal-features ",xterm-256color:RGB"
-    set -s extended-keys always
-    set -as terminal-features ",xterm-256color:extkeys"
-    bind-key -n S-Enter send-keys Escape "[13;2u"
-    set -g history-limit 50000
-    set -g mouse on
-    set -g focus-events on
-    set -g set-clipboard on
-    set -g allow-passthrough on
-    set -g base-index 1
-    setw -g pane-base-index 1
-    set -g renumber-windows on
-    set -sg escape-time 10
-    bind | split-window -h -c "#{pane_current_path}"
-    bind - split-window -v -c "#{pane_current_path}"
-    bind c new-window -c "#{pane_current_path}"
-    bind h select-pane -L
-    bind j select-pane -D
-    bind k select-pane -U
-    bind l select-pane -R
-    bind -r H resize-pane -L 5
-    bind -r J resize-pane -D 5
-    bind -r K resize-pane -U 5
-    bind -r L resize-pane -R 5
-    bind r source-file ~/.tmux.conf \; display "Config reloaded"
-    setw -g mode-keys vi
-    bind -T copy-mode-vi v send-keys -X begin-selection
-    bind -T copy-mode-vi y send-keys -X copy-selection-and-cancel
-    set -g @plugin 'tmux-plugins/tpm'
-    set -g @plugin 'tmux-plugins/tmux-sensible'
-    set -g status-position bottom
-    set -g status-interval 5
-    set -g status-style 'bg=colour32,fg=colour15'
-    set -g status-left "#[fg=colour15,bold] #S "
-    set -g status-right "#[fg=colour15] %H:%M "
-    set -g window-status-style 'bg=default,fg=default'
-    setw -g window-status-current-style 'bg=colour39,fg=colour15,bold'
-    run '~/.tmux/plugins/tpm/tpm'
-    TMUX
-    cat > /home/${admin_username}/.nanorc <<'NANORC'
-    set linenumbers
-    set tabsize 4
-    set tabstospaces
-    set softwrap
-    set smooth
-    set autoindent
-    set constantshow
-    set mouse
-    set suspend
-    include "/usr/share/nano/*.nanorc"
-    include "/usr/share/nano/extra/*.nanorc"
-    NANORC
-    cat > /home/${admin_username}/.lessfilter <<'LESSF'
-    #!/usr/bin/env bash
-    if command -v bat > /dev/null 2>&1; then
-        bat --color=always --style=plain --paging=never -- "$1"
-        exit 0
+    AGENTS_EXIT=0
+    if [ -x "$${SCRIPTS_DIR}/setup-workstation-agents.sh" ]; then
+        echo "Running setup-workstation-agents.sh..."
+        bash "$${SCRIPTS_DIR}/setup-workstation-agents.sh" || AGENTS_EXIT=$?
+        [ "$${AGENTS_EXIT}" -ne 0 ] && echo "WARNING: agents script exited $${AGENTS_EXIT}" >&2
     fi
-    exit 1
-    LESSF
-    chmod +x /home/${admin_username}/.lessfilter
-    cat > /home/${admin_username}/.aider.conf.yml <<'AIDER'
-    model: anthropic/claude-opus-4-6
-    dark-mode: true
-    AIDER
-    chown ${admin_username}:${admin_username} /home/${admin_username}/.digrc \
-      /home/${admin_username}/.inputrc /home/${admin_username}/.tmux.conf \
-      /home/${admin_username}/.nanorc /home/${admin_username}/.lessfilter \
-      /home/${admin_username}/.aider.conf.yml
 
-    # ---- Codex config (vLLM/gemma4) ----
-    mkdir -p /home/${admin_username}/.codex
-    cat > /home/${admin_username}/.codex/config.toml <<'CODEX'
-    model = "gemma-4-31b"
-    model_provider = "vllm-local"
-    sandbox_mode = "danger-full-access"
-    approval_policy = "never"
-    model_reasoning_effort = "high"
-    personality = "pragmatic"
-    hide_agent_reasoning = true
-    [model_providers.vllm-local]
-    name = "vLLM Gemma4"
-    base_url = "http://${gemma_ip}:${gemma_port}/v1"
-    env_key = "OPENAI_API_KEY"
-    wire_api = "responses"
-    query_params = {}
-    [features]
-    multi_agent = true
-    shell_tool = true
-    fast_mode = true
-    [projects."/home/${admin_username}"]
-    trust_level = "trusted"
-    CODEX
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.codex
-
-    # ---- Pi config (vLLM multi-model + subagents) ----
-    mkdir -p /home/${admin_username}/.pi/agent/agents
-    cat > /home/${admin_username}/.pi/agent/settings.json <<'PICONF'
-    {
-      "defaultProvider": "openai",
-      "defaultModel": "${gemma_served_name}",
-      "quietStartup": true,
-      "defaultThinkingLevel": "off",
-      "hideThinkingBlock": true,
-      "packages": ["npm:@mjakl/pi-subagent"]
-    }
-    PICONF
-    cat > /home/${admin_username}/.pi/agent/models.json <<'PIMODELS'
-    {
-      "providers": {
-        "openai": {
-          "baseUrl": "http://${gemma_ip}:${gemma_port}/v1",
-          "apiKey": "local-vllm",
-          "models": [
-            {
-              "id": "${gemma_served_name}",
-              "name": "Gemma 4 31B (vLLM)",
-              "api": "openai-completions",
-              "reasoning": true,
-              "contextWindow": ${gemma_max_model_len},
-              "maxTokens": 8192
-            }
-          ]
-        },
-        "devstral": {
-          "baseUrl": "http://${devstral_ip}:${devstral_port}/v1",
-          "apiKey": "local-vllm",
-          "models": [
-            {
-              "id": "${devstral_served_name}",
-              "name": "Devstral-Small-2-24B (vLLM)",
-              "api": "openai-completions",
-              "reasoning": true,
-              "contextWindow": ${devstral_max_model_len},
-              "maxTokens": 4096
-            }
-          ]
-        },
-        "phi": {
-          "baseUrl": "http://${phi_ip}:${phi_port}/v1",
-          "apiKey": "local-vllm",
-          "models": [
-            {
-              "id": "${phi_served_name}",
-              "name": "Phi-4-mini (vLLM)",
-              "api": "openai-completions",
-              "reasoning": false,
-              "contextWindow": ${phi_max_model_len},
-              "maxTokens": 4096
-            }
-          ]
-        }
-      }
-    }
-    PIMODELS
-    cat > /home/${admin_username}/.pi/agent/agents/f5xc-api.md <<'PIF5XC'
-    ---
-    name: f5xc-api
-    description: "ALWAYS delegate to this agent for any F5 Distributed Cloud, F5 XC, Volterra, load balancer, origin pool, WAF, DNS, or API platform operation. This agent executes curl commands against the F5 XC REST API using environment variables F5XC_API_URL, F5XC_API_TOKEN, and F5XC_NAMESPACE."
-    model: devstral/${devstral_served_name}
-    tools: bash
-    ---
-
-    You are an F5 Distributed Cloud API operations agent. You MUST execute REST API calls using the bash tool with curl commands. NEVER output curl commands as text — always execute them.
-
-    ## Authentication
-    All API calls use: curl -s "$F5XC_API_URL/..." -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .
-    Required env vars: F5XC_API_URL, F5XC_API_TOKEN, F5XC_NAMESPACE
-
-    ## CRUD Pattern
-    - List:    GET    /api/config/namespaces/{ns}/{resources}
-    - Create:  POST   /api/config/namespaces/{ns}/{resources}
-    - Get:     GET    /api/config/namespaces/{ns}/{resources}/{name}
-    - Replace: PUT    /api/config/namespaces/{ns}/{resources}/{name}
-    - Delete:  DELETE /api/config/namespaces/{ns}/{resources}/{name}
-
-    ## Rules
-    1. Always use curl -s with APIToken header
-    2. Always pipe through jq
-    3. Use env vars — never hardcode URLs or tokens
-    PIF5XC
-    cat > /home/${admin_username}/.pi/agent/agents/github-ops.md <<'PIGHOPS'
-    ---
-    name: github-ops
-    description: "ALWAYS delegate to this agent for ANY GitHub operation: pull requests, issues, branches, merges, forks, worktrees, workflow runs, code review, commit messages, release management, repository settings, and any gh CLI or GitHub API task."
-    model: phi/${phi_served_name}
-    tools: bash,read
-    ---
-
-    You are a specialized GitHub operations agent. You MUST execute all GitHub operations using the bash tool with gh CLI or git commands. NEVER output commands as text — always execute them.
-
-    ## Pull Requests
-    - Create: gh pr create --title "..." --body "..." [--draft] [--base main]
-    - List: gh pr list [--state open|closed|merged]
-    - Merge: gh pr merge <number> [--squash|--merge|--rebase] [--delete-branch]
-    - Review: gh pr review <number> --approve|--request-changes --body "..."
-    - Checks: gh pr checks <number>
-
-    ## Issues
-    - Create: gh issue create --title "..." --body "..." [--label bug]
-    - List: gh issue list [--state open|closed] [--label "..."]
-    - Close: gh issue close <number>
-
-    ## Branches & Worktrees
-    - Branch: git checkout -b <branch> && git push -u origin <branch>
-    - Worktree: git worktree add <path> -b <branch>
-    - Fork: gh repo fork [--clone]
-
-    ## Workflows & CI
-    - List runs: gh run list [--workflow <name>]
-    - Watch: gh run watch <run-id>
-    - Trigger: gh workflow run <workflow> [--ref <branch>]
-    - Rerun: gh run rerun <run-id> [--failed]
-
-    ## Releases
-    - Create: gh release create <tag> [--generate-notes]
-    - List: gh release list
-
-    ## Commit Messages
-    Conventional Commits: type(scope): description
-    Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
-
-    ## Rules
-    1. Always use gh CLI when possible
-    2. For advanced ops use gh api with GitHub REST API
-    3. Always check and report operation results
-    PIGHOPS
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.pi
-
-    # ---- Hermes config (vLLM/gemma4) ----
-    mkdir -p /home/${admin_username}/.hermes/{sessions,logs,memories,skills,hooks,cron,image_cache,audio_cache}
-    cat > /home/${admin_username}/.hermes/config.yaml <<'HERMES'
-    model:
-      default: "gemma-4-31b"
-      provider: "openai"
-      base_url: "http://${gemma_ip}:${gemma_port}/v1"
-    terminal:
-      backend: "local"
-      cwd: "."
-      timeout: 180
-    compression:
-      enabled: true
-      threshold: 0.50
-      target_ratio: 0.20
-      protect_last_n: 20
-    memory:
-      memory_enabled: true
-      user_profile_enabled: true
-      memory_char_limit: 2200
-      user_char_limit: 1375
-      nudge_interval: 10
-      flush_min_turns: 6
-    agent:
-      max_turns: 60
-      verbose: false
-      reasoning_effort: "medium"
-    display:
-      compact: false
-      tool_progress: all
-      streaming: true
-      show_reasoning: false
-      skin: default
-    HERMES
-    cat > /home/${admin_username}/.hermes/.env <<'HENV'
-    OPENAI_API_KEY=local-vllm
-    OPENAI_BASE_URL=http://${gemma_ip}:${gemma_port}/v1
-    LLM_MODEL=gemma-4-31b
-    HENV
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.hermes
-
-    # ---- Populate /etc/skel from user home ----
-    cp /home/${admin_username}/.zshrc /etc/skel/.zshrc
-    cp /home/${admin_username}/.p10k.zsh /etc/skel/.p10k.zsh
-    cp -r /home/${admin_username}/.oh-my-zsh /etc/skel/.oh-my-zsh
-    cp -r /home/${admin_username}/.tmux /etc/skel/.tmux
-    cp /home/${admin_username}/.digrc /home/${admin_username}/.inputrc \
-       /home/${admin_username}/.tmux.conf /home/${admin_username}/.nanorc \
-       /home/${admin_username}/.lessfilter /home/${admin_username}/.aider.conf.yml /etc/skel/
-    chmod +x /etc/skel/.lessfilter
-    cp -r /home/${admin_username}/.codex /etc/skel/.codex
-    cp -r /home/${admin_username}/.pi /etc/skel/.pi
-    mkdir -p /etc/skel/.hermes
-    cp /home/${admin_username}/.hermes/config.yaml /home/${admin_username}/.hermes/.env /etc/skel/.hermes/
-    mkdir -p /etc/skel/.config/nvim
-    cp /home/${admin_username}/.config/nvim/init.lua /etc/skel/.config/nvim/init.lua
-    cp -r /home/${admin_username}/.local/share/nvim /etc/skel/.local/share/nvim 2>/dev/null || true
-    # Fix skel .zshrc to use $HOME instead of hardcoded path
-    sed -i "s|/home/${admin_username}|\$HOME|g" /etc/skel/.zshrc 2>/dev/null || true
-
-    # ---- Claude Code configuration ----
-    mkdir -p /home/${admin_username}/.claude
-
-    # ~/.claude/settings.json — permissions, model, vLLM env vars, UI prefs
-    cat > /home/${admin_username}/.claude/settings.json <<'SETTINGS'
-    {
-      "defaultMode": "bypassPermissions",
-      "skipDangerousModePermissionPrompt": true,
-      "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*"] },
-      "model": "sonnet",
-      "spinnerTipsEnabled": false,
-      "terminalProgressBarEnabled": false,
-      "showTurnDuration": false,
-      "prefersReducedMotion": true,
-      "companyAnnouncements": [],
-      "env": {
-        "ANTHROPIC_BASE_URL": "http://${gemma_ip}:${gemma_port}",
-        "ANTHROPIC_API_KEY": "local-vllm",
-        "ANTHROPIC_SMALL_FAST_MODEL": "${gemma_served_name}",
-        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "${gemma_served_name}",
-        "ANTHROPIC_DEFAULT_SONNET_MODEL": "${gemma_served_name}",
-        "ANTHROPIC_DEFAULT_OPUS_MODEL": "${gemma_served_name}",
-        "DEBIAN_FRONTEND": "noninteractive"
-      }
-    }
-    SETTINGS
-
-    # ~/.claude.json — theme, onboarding, API key approval (must be at home root)
-    cat > /home/${admin_username}/.claude.json <<'CLAUDEJSON'
-    {
-      "hasCompletedOnboarding": true,
-      "theme": "dark-daltonized",
-      "opusProMigrationComplete": true,
-      "sonnet1m45MigrationComplete": true,
-      "customApiKeyResponses": {
-        "approved": ["local-vllm"],
-        "rejected": []
-      },
-      "autoUpdates": true,
-      "projects": {
-        "/home/${admin_username}": {
-          "hasTrustDialogAccepted": true,
-          "hasTrustDialogHooksAccepted": true,
-          "projectOnboardingSeenCount": 1,
-          "hasClaudeMdExternalIncludesApproved": true,
-          "hasClaudeMdExternalIncludesWarningShown": true
-        }
-      }
-    }
-    CLAUDEJSON
-
-    chown ${admin_username}:${admin_username} /home/${admin_username}/.claude.json
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.claude
-
-    # ---- OpenCode configuration (dual provider) ----
-    mkdir -p /home/${admin_username}/.opencode/agents /home/${admin_username}/.opencode/skills/github-ops
-
-    cat > /home/${admin_username}/.opencode/opencode.json <<'OCCONF'
-    {
-      "$schema": "https://opencode.ai/config.json",
-      "provider": {
-        "vllm": {
-          "npm": "@ai-sdk/openai-compatible",
-          "name": "Gemma 4 31B (${gemma_ip})",
-          "options": { "baseURL": "http://${gemma_ip}:${gemma_port}/v1", "apiKey": "local-vllm" },
-          "models": {
-            "${gemma_served_name}": {
-              "name": "${gemma_served_name}",
-              "limit": { "context": ${gemma_max_model_len}, "output": 8192 }
-            }
-          }
-        },
-        "vllm-subagent": {
-          "npm": "@ai-sdk/openai-compatible",
-          "name": "Phi-4-mini (${phi_ip})",
-          "options": { "baseURL": "http://${phi_ip}:${phi_port}/v1", "apiKey": "local-vllm" },
-          "models": {
-            "${phi_served_name}": {
-              "name": "${phi_served_name}",
-              "limit": { "context": ${phi_max_model_len}, "output": 4096 }
-            }
-          }
-        },
-        "vllm-vision": {
-          "npm": "@ai-sdk/openai-compatible",
-          "name": "Qwen2.5-VL (${qwen_vl_ip})",
-          "options": { "baseURL": "http://${qwen_vl_ip}:${qwen_vl_port}/v1", "apiKey": "local-vllm" },
-          "models": {
-            "${qwen_vl_served_name}": {
-              "name": "${qwen_vl_served_name}",
-              "limit": { "context": ${qwen_vl_max_model_len}, "output": 4096 }
-            }
-          }
-        },
-        "vllm-devstral": {
-          "npm": "@ai-sdk/openai-compatible",
-          "name": "Devstral-24B (${devstral_ip})",
-          "options": { "baseURL": "http://${devstral_ip}:${devstral_port}/v1", "apiKey": "local-vllm" },
-          "models": {
-            "${devstral_served_name}": {
-              "name": "${devstral_served_name} (Coding Agent / Tool Calling)",
-              "limit": { "context": ${devstral_max_model_len}, "output": 4096 }
-            }
-          }
-        }
-      },
-      "model": "vllm/${gemma_served_name}"
-    }
-    OCCONF
-
-    cat > /home/${admin_username}/.opencode/agents/github-ops.md <<'AGENT'
-    ---
-    description: GitHub operations specialist — PR descriptions, code review, issue triage, commit messages, gh CLI commands
-    mode: subagent
-    model: vllm-subagent/${phi_served_name}
-    temperature: 0.3
-    permission:
-      bash:
-        "gh *": allow
-        "git log *": allow
-        "git diff *": allow
-        "git status": allow
-        "*": deny
-      edit: deny
-      webfetch: deny
-    ---
-
-    You are a specialized GitHub operations agent running on ${phi_served_name}. Your expertise:
-    - PR descriptions from diffs, code review for bugs/security, issue triage with JSON, conventional commit messages, gh CLI commands.
-    AGENT
-
-    cat > /home/${admin_username}/.opencode/skills/github-ops/SKILL.md <<'SKILL'
-    ---
-    name: github-ops
-    description: GitHub operations toolkit — PR descriptions, code review, issue triage, commit messages, and gh CLI command generation
-    compatibility: opencode
-    metadata:
-      model: ${phi_served_name}
-      endpoint: "http://${phi_ip}:${phi_port}/v1"
-    ---
-
-    # GitHub Operations Skill
-
-    Use this skill for any GitHub-related operation.
-
-    ## When to use
-    - Writing PR titles and descriptions from diffs
-    - Reviewing code for bugs and security issues
-    - Triaging issues with labels and priority
-    - Generating conventional commit messages
-    - Constructing gh CLI commands
-
-    ## PR Description Workflow
-    1. Run git diff to get the changes
-    2. Write a concise title (under 70 chars)
-    3. Write a markdown body: what changed, why, and testing notes
-
-    ## Code Review Workflow
-    1. Read the code carefully
-    2. Check for: injection, auth issues, resource leaks, race conditions
-    3. For each issue: state bug type, severity (critical/high/medium/low), and fix
-
-    ## Issue Triage
-    Respond with JSON: {"labels": [...], "priority": "high|medium|low", "category": "..."}
-
-    ## Commit Messages
-    Conventional Commits: type(scope): description
-    Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
-
-    ## gh CLI Reference
-    - gh pr create --draft --title "..." --body "..."
-    - gh issue create --title "..." --label bug
-    - gh pr merge 42 --squash --delete-branch
-    - gh release create v1.0.0 --generate-notes
-    SKILL
-
-    # ---- F5 XC API agent + skill (Devstral tool calling) ----
-    mkdir -p /home/${admin_username}/.opencode/skills/f5xc-api/references
-
-    cat > /home/${admin_username}/.opencode/agents/f5xc-api.md <<'F5AGENT'
-    ---
-    description: F5 Distributed Cloud API operations — authenticate, list, create, read, update, delete any F5 XC platform resource using REST API with curl and jq
-    mode: subagent
-    model: vllm-devstral/${devstral_served_name}
-    temperature: 0.1
-    permission:
-      bash:
-        "curl *": allow
-        "jq *": allow
-        "cat *": allow
-        "echo *": allow
-        "*": deny
-      edit: deny
-      webfetch: deny
-    ---
-
-    You are an F5 Distributed Cloud API operations agent running on Devstral-24B. You MUST use the bash tool to execute curl commands. NEVER output curl commands as text.
-
-    ## Authentication
-    All API calls use: `curl -s "$F5XC_API_URL/..." -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .`
-
-    Required env vars: F5XC_API_URL, F5XC_API_TOKEN, F5XC_NAMESPACE
-    Optional: F5XC_EMAIL, F5XC_LB_NAME, F5XC_DOMAINNAME, F5XC_ROOT_DOMAIN
-
-    ## CRUD Pattern
-    - List:    GET    /api/config/namespaces/{ns}/{resources}
-    - Create:  POST   /api/config/namespaces/{ns}/{resources}
-    - Get:     GET    /api/config/namespaces/{ns}/{resources}/{name}
-    - Replace: PUT    /api/config/namespaces/{ns}/{resources}/{name}
-    - Delete:  DELETE /api/config/namespaces/{ns}/{resources}/{name}
-
-    Request body: {"metadata": {"name": "...", "namespace": "..."}, "spec": {...}}
-
-    ## Rules
-    1. Always use curl -s with APIToken header
-    2. Always pipe through jq
-    3. Use env vars, never hardcode URLs or tokens
-    4. Check RESOURCE_INDEX.md for correct API paths
-    5. Show payload before create/replace and confirm with user
-    F5AGENT
-
-    cat > /home/${admin_username}/.opencode/skills/f5xc-api/SKILL.md <<'F5SKILL'
-    ---
-    name: f5xc-api
-    description: "F5 Distributed Cloud REST API operations — authenticate, list, create, read, update, delete F5 XC resources (load balancers, origin pools, WAF, DNS, sites, namespaces). Activate when user mentions F5 XC, Distributed Cloud, volterra, API operations, or platform configuration."
-    compatibility: opencode
-    metadata:
-      model: ${devstral_served_name}
-      endpoint: "http://${devstral_ip}:${devstral_port}/v1"
-      specialization: function-calling
-    ---
-
-    # F5 Distributed Cloud API Operations
-
-    ## When to use
-    - Listing, creating, reading, updating, or deleting F5 XC resources
-    - Managing HTTP/TCP/UDP load balancers and origin pools
-    - Configuring WAF policies, bot defense, or API security
-    - Managing DNS zones and DNS load balancers
-    - Working with cloud sites (AWS, Azure, GCP)
-    - Any REST API interaction with F5 Distributed Cloud / Volterra
-
-    ## Environment Variables
-    - F5XC_API_URL: Console API base URL
-    - F5XC_API_TOKEN: API authentication token
-    - F5XC_NAMESPACE: Default namespace
-    - F5XC_EMAIL: User email
-    - F5XC_LB_NAME: Default load balancer name
-    - F5XC_DOMAINNAME: Application domain
-    - F5XC_ROOT_DOMAIN: Root domain
-
-    ## Authentication
-    curl -s "$F5XC_API_URL/api/config/namespaces/$F5XC_NAMESPACE/http_loadbalancers" \
-      -H "Authorization: APIToken $F5XC_API_TOKEN" | jq .
-
-    ## Common Resources
-    | Resource | API Path (plural) |
-    |----------|-------------------|
-    | HTTP Load Balancer | http_loadbalancers |
-    | TCP Load Balancer | tcp_loadbalancers |
-    | Origin Pool | origin_pools |
-    | Health Check | healthchecks |
-    | App Firewall (WAF) | app_firewalls |
-    | Service Policy | service_policys |
-    | Rate Limiter | rate_limiter_policys |
-    | API Definition | api_definitions |
-    | DNS Zone | dns_zones (prefix: /api/config/dns/) |
-    | DNS Load Balancer | dns_load_balancers (prefix: /api/config/dns/) |
-    | Certificate | certificates |
-    | AWS VPC Site | aws_vpc_sites |
-    | Azure VNet Site | azure_vnet_sites |
-    | Network Policy | network_policys |
-    | Virtual K8s | virtual_k8ss |
-
-    See references/RESOURCE_INDEX.md for full 149-resource index.
-
-    ## Error Codes
-    401=bad token, 403=no permission, 404=not found, 409=conflict, 429=rate limited
-    F5SKILL
-
-    # Generate the full resource index reference
-    cat > /home/${admin_username}/.opencode/skills/f5xc-api/references/RESOURCE_INDEX.md <<'F5INDEX'
-    # F5 XC API Resource Index (149 resources)
-
-    All paths under $F5XC_API_URL. Pattern: /api/config/namespaces/{ns}/{plural} for list/create, /{ns}/{plural}/{name} for get/replace/delete.
-    DNS resources use /api/config/dns/ prefix.
-
-    ## Load Balancing
-    http_loadbalancers, tcp_loadbalancers, udp_loadbalancers, cdn_loadbalancers, origin_pools, healthchecks
-
-    ## Security & WAF
-    app_firewalls, service_policys, service_policy_rules, service_policy_sets, rate_limiters, rate_limiter_policys, fast_acls, fast_acl_rules, malicious_user_mitigations, user_identifications, sensitive_data_policys, protocol_inspections, shape_bot_defense_instances, waf_exclusion_policys, enhanced_firewall_policys, filter_sets
-
-    ## API Security
-    api_crawlers, api_discoverys, api_testings, api_definitions, app_api_groups, code_base_integrations
-
-    ## DNS (prefix: /api/config/dns/)
-    dns_zones, dns_load_balancers, dns_lb_pools, dns_lb_health_checks, geo_location_sets
-    ## DNS (standard prefix)
-    dns_domains, dns_proxys, dns_compliance_checkss
-
-    ## Networking
-    network_policys, network_policy_rules, network_policy_sets, network_policy_views, network_firewalls, network_connectors, network_interfaces, virtual_networks, routes, segments, segment_connections, bgps, bgp_asn_sets, bgp_routing_policys, nat_policys, ip_prefix_sets, forwarding_classs, tunnels, policers, protocol_policers, srv6_network_slices, subnets, ike1s, ike2s, ike_phase1_profiles, ike_phase2_profiles, policy_based_routings, forward_proxy_policys
-
-    ## Cloud Sites & Infrastructure
-    aws_vpc_sites, aws_tgw_sites, azure_vnet_sites, gcp_vpc_sites, securemesh_sites, securemesh_site_v2s, voltstack_sites, cloud_connects, cloud_credentialss, cloud_elastic_ips, cloud_links, cloud_regions, fleets, nfv_services, sites, site_mesh_groups, certified_hardwares, virtual_sites
-
-    ## Kubernetes & Workloads
-    k8s_clusters, k8s_cluster_roles, k8s_cluster_role_bindings, k8s_pod_security_admissions, k8s_pod_security_policys, virtual_k8ss, workloads, workload_flavors, container_registrys, discoverys, endpoints
-
-    ## Access Control & Certificates
-    authentications, authorization_servers, certificates, certificate_chains, crls, trusted_ca_lists, secret_management_accesss, tenant_configurations
-
-    ## Monitoring & Observability
-    alert_policys, alert_receivers, global_log_receivers, log_receivers, flow_anomalys
-
-    ## BIG-IP
-    application_profiless, data_groups, irules, bigip_http_proxys, bigip_virtual_servers
-
-    ## NGINX One
-    nginx_csgs, nginx_instances, nginx_servers
-
-    ## CDN
-    cdn_cache_rules, cdn_purge_commands
-
-    ## Other
-    address_allocators, advertise_policys, app_settings, app_types, app_securitys, cminstances, clusters, dc_cluster_groups, data_types, known_labels, known_label_keys, public_ips, proxys, third_party_applications, external_connectors, usb_policys, virtual_hosts, bot_defense_app_infrastructures
-    F5INDEX
-
-    # ---- F5 XC environment variable placeholders ----
-    cat >> /home/${admin_username}/.bashrc <<'F5ENV'
-
-    # F5 Distributed Cloud API — set these before using the f5xc-api skill
-    # export F5XC_API_URL=https://<tenant>.console.ves.volterra.io
-    # export F5XC_API_TOKEN=<your-api-token>
-    # export F5XC_NAMESPACE=<your-namespace>
-    # export F5XC_EMAIL=<your-email>
-    # export F5XC_LB_NAME=<load-balancer-name>
-    # export F5XC_DOMAINNAME=<app-domain>
-    # export F5XC_ROOT_DOMAIN=<root-domain>
-    F5ENV
-
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.opencode
-
-    # ---- HuggingFace token ----
-    mkdir -p /home/${admin_username}/.cache/huggingface
-    echo "${hf_token}" > /home/${admin_username}/.cache/huggingface/token
-    chmod 600 /home/${admin_username}/.cache/huggingface/token
-    chown -R ${admin_username}:${admin_username} /home/${admin_username}/.cache
-
-    # ---- Health check script ----
-    cat > /usr/local/bin/check-llm-servers <<'SCRIPT'
-    #!/bin/bash
-    echo "=== LLM Server Status ==="
-    echo -n "Gemma    (${gemma_ip}:${gemma_port}):    "; curl -sf http://${gemma_ip}:${gemma_port}/health && echo "UP" || echo "DOWN"
-    echo -n "Phi      (${phi_ip}:${phi_port}):    "; curl -sf http://${phi_ip}:${phi_port}/health && echo "UP" || echo "DOWN"
-    echo -n "Qwen VL  (${qwen_vl_ip}:${qwen_vl_port}):    "; curl -sf http://${qwen_vl_ip}:${qwen_vl_port}/health && echo "UP" || echo "DOWN"
-    echo -n "Devstral (${devstral_ip}:${devstral_port}):    "; curl -sf http://${devstral_ip}:${devstral_port}/health && echo "UP" || echo "DOWN"
-    SCRIPT
-    chmod +x /usr/local/bin/check-llm-servers
-
-    # ---- Custom MOTD (F5 logo) ----
-    chmod -x /etc/update-motd.d/* 2>/dev/null || true
-    cat > /etc/update-motd.d/01-xcsh <<'MOTD'
-    #!/bin/bash
-    R='\033[0;31m' W='\033[1;37m' N='\033[0m'
-    # Note: $${} escaping required for Terraform templatefile()
-    echo ""
-    echo -e "$${R}╭──────────────────────────────────────────────────╮$${N}"
-    echo -e "$${R}│$${N}                                                  $${R}│$${N}"
-    echo -e "$${R}│$${N}                     $${R}________$${N}                     $${R}│$${N}"
-    echo -e "$${R}│$${N}                $${R}($${N}$${R}▒▒▒▒$${N}$${R}████████$${N}$${R}▒▒▒▒$${N}$${R})$${N}                $${R}│$${N}"
-    echo -e "$${R}│$${N}           $${R}($${N}$${R}▒▒▒$${N}$${R}█████████████████████$${N}$${R}▒▒▒$${N}$${R})$${N}          $${R}│$${N}"
-    echo -e "$${R}│$${N}        $${R}($${N}$${R}▒▒$${N}$${R}████$${N}$${W}██████████$${N}$${R}████$${N}$${W}█████████████$${N}$${R})$${N}       $${R}│$${N}"
-    echo -e "$${R}│$${N}      $${R}($${N}$${R}▒$${N}$${R}████$${N}$${W}██████$${N}$${R}▒▒▒▒▒$${N}$${W}███$${N}$${R}██$${N}$${W}██████████████$${N}$${R}▒$${N}$${R})$${N}      $${R}│$${N}"
-    echo -e "$${R}│$${N}     $${R}($${N}$${R}▒$${N}$${R}████$${N}$${W}██████$${N}$${R}▒$${N}$${R}█████$${N}$${R}▒▒▒$${N}$${R}█$${N}$${W}██$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}     $${R}│$${N}"
-    echo -e "$${R}│$${N}    $${R}($${N}$${R}▒$${N}$${R}█████$${N}$${W}██████$${N}$${R}█████████$${N}$${W}██$${N}$${R}▒$${N}$${R}███████████████$${N}$${R}▒$${N}$${R})$${N}    $${R}│$${N}"
-    echo -e "$${R}│$${N}   $${R}($${N}$${R}▒$${N}$${R}██$${N}$${W}███████████████$${N}$${R}████$${N}$${W}█████████████$${N}$${R}██████$${N}$${R}▒$${N}$${R})$${N}   $${R}│$${N}"
-    echo -e "$${R}│$${N}  $${R}($${N}$${R}▒$${N}$${R}███$${N}$${R}▒▒▒$${N}$${W}███████$${N}$${R}▒▒▒▒▒$${N}$${R}███$${N}$${W}████████████████$${N}$${R}█████$${N}$${R}▒$${N}$${R})$${N}  $${R}│$${N}"
-    echo -e "$${R}│$${N}  $${R}|$${N}$${R}▒$${N}$${R}██████$${N}$${R}▒$${N}$${W}██████$${N}$${R}███████$${N}$${W}████████████████████$${N}$${R}██$${N}$${R}▒$${N}$${R}|$${N}  $${R}│$${N}"
-    echo -e "$${R}│$${N}  $${R}|$${N}$${R}▒$${N}$${R}███████$${N}$${W}██████$${N}$${R}███████$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒$${N}$${W}██████████$${N}$${R}█$${N}$${R}▒$${N}$${R}|$${N}  $${R}│$${N}"
-    echo -e "$${R}│$${N}  $${R}($${N}$${R}▒$${N}$${R}███████$${N}$${W}██████$${N}$${R}██████████████████$${N}$${R}▒▒$${N}$${W}████████$${N}$${R}▒▒$${N}$${R})$${N}  $${R}│$${N}"
-    echo -e "$${R}│$${N}   $${R}($${N}$${R}▒$${N}$${R}██████$${N}$${W}██████$${N}$${R}███████$${N}$${W}███$${N}$${R}██████████$${N}$${R}▒▒▒$${N}$${W}████$${N}$${R}▒▒$${N}$${R})$${N}   $${R}│$${N}"
-    echo -e "$${R}│$${N}    $${R}($${N}$${R}▒$${N}$${R}█████$${N}$${W}██████$${N}$${R}██████$${N}$${W}█████$${N}$${R}████████████$${N}$${W}███$${N}$${R}▒▒$${N}$${R})$${N}    $${R}│$${N}"
-    echo -e "$${R}│$${N}     $${R}($${N}$${R}▒▒$${N}$${W}██████████$${N}$${R}█████$${N}$${R}▒$${N}$${W}██████$${N}$${R}████████$${N}$${W}███$${N}$${R}▒▒▒$${N}$${R})$${N}     $${R}│$${N}"
-    echo -e "$${R}│$${N}      $${R}($${N}$${R}▒▒▒▒▒$${N}$${W}██████████$${N}$${R}██$${N}$${R}▒▒$${N}$${W}█████████████$${N}$${R}▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}      $${R}│$${N}"
-    echo -e "$${R}│$${N}        $${R}($${N}$${R}▒$${N}$${R}██$${N}$${R}▒▒▒▒▒▒▒▒▒▒$${N}$${R}████$${N}$${R}▒▒▒▒▒▒▒▒▒▒▒▒▒$${N}$${R}█$${N}$${R}▒$${N}$${R})$${N}        $${R}│$${N}"
-    echo -e "$${R}│$${N}           $${R}($${N}$${R}▒▒▒$${N}$${R}████████████████████$${N}$${R}▒▒▒$${N}$${R})$${N}           $${R}│$${N}"
-    echo -e "$${R}│$${N}                $${R}($${N}$${R}▒▒▒▒$${N}$${R}████████$${N}$${R}▒▒▒▒$${N}$${R})$${N}                $${R}│$${N}"
-    echo -e "$${R}│$${N}                                                  $${R}│$${N}"
-    echo -e "$${R}╰──────────────────────────────────────────────────╯$${N}"
-    echo ""
-    MOTD
-    chmod +x /etc/update-motd.d/01-xcsh
-
-    # ---- Disable "Last login" message, keep MOTD ----
-    sed -i 's/#PrintLastLog yes/PrintLastLog no/' /etc/ssh/sshd_config
-    systemctl restart ssh
-
-    # ---- Post-setup validation: check critical tools ----
+    # ---- Post-setup validation ----
     echo "=== Tool Validation Report ==="
     VALIDATION_PASS=0
     VALIDATION_FAIL=0
     for tool in zsh git curl gh nvim node npm claude opencode pi hermes fzf bat rg fd jq yq kubectl helm terraform; do
         if command -v "$${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(command -v $${tool})"
-            VALIDATION_PASS=$((VALIDATION_PASS + 1))
+            VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
         else
             echo "  [MISS] $${tool}: not found"
-            VALIDATION_FAIL=$((VALIDATION_FAIL + 1))
+            VALIDATION_FAIL=$(($${VALIDATION_FAIL} + 1))
         fi
     done
     echo "Validation: $${VALIDATION_PASS} present, $${VALIDATION_FAIL} missing"
-    if [ "$${TOOLS_EXIT:-0}" -ne 0 ]; then
-        echo "NOTE: Tools script exited with code $${TOOLS_EXIT}. Check /var/log/workstation-tools-setup.log"
-    fi
-    if [ "$${TOOLS_DOWNLOAD_OK:-false}" != true ]; then
-        echo "NOTE: Tools script was never downloaded. All external tools missing."
-    fi
     echo "=== End Tool Validation ==="
 
     echo "=== Workstation Setup Completed: $(date) ==="

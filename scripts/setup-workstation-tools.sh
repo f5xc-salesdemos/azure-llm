@@ -111,7 +111,7 @@ declare -A GROUP_NAMES
 group_npm() {
     set -euo pipefail
     npm install -g \
-        pnpm opencode-ai "@mariozechner/pi-coding-agent" \
+        pnpm opencode-ai "@mariozechner/pi-coding-agent" "@mjakl/pi-subagent" \
         prettier markdownlint-cli2 markdownlint-cli eslint "@biomejs/biome" \
         stylelint htmlhint textlint textlint-rule-terminology jscpd \
         "@coffeelint/cli" "@stoplight/spectral-cli" gplint asl-validator renovate \

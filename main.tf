@@ -376,24 +376,19 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-workstation.yaml", {
-    admin_username         = var.admin_username
-    hf_token               = var.hf_token
-    gemma_ip               = "10.0.0.10"
-    gemma_port             = var.vllm_port
-    gemma_served_name      = var.gemma_served_name
-    gemma_max_model_len    = var.gemma_max_model_len
-    phi_ip                 = "10.0.0.11"
-    phi_port               = var.phi_port
-    phi_served_name        = var.phi_served_name
-    phi_max_model_len      = var.phi_max_model_len
-    qwen_vl_ip             = "10.0.0.11"
-    qwen_vl_port           = var.qwen_vl_port
-    qwen_vl_served_name    = var.qwen_vl_served_name
-    qwen_vl_max_model_len  = var.qwen_vl_max_model_len
-    devstral_ip            = "10.0.0.11"
-    devstral_port          = var.devstral_port
-    devstral_served_name   = var.devstral_served_name
-    devstral_max_model_len = var.devstral_max_model_len
-    tools_script_gzb64     = base64gzip(file("${path.module}/scripts/setup-workstation-tools.sh"))
+    admin_username      = var.admin_username
+    hf_token            = var.hf_token
+    large_llm_base_url  = "http://${azurerm_network_interface.gemma.private_ip_address}:${var.vllm_port}/v1"
+    large_llm_model     = var.gemma_served_name
+    large_llm_ctx       = var.gemma_max_model_len
+    small_llm_base_url  = "http://${azurerm_network_interface.phi.private_ip_address}:${var.phi_port}/v1"
+    small_llm_model     = var.phi_served_name
+    small_llm_ctx       = var.phi_max_model_len
+    vision_llm_base_url = "http://${azurerm_network_interface.phi.private_ip_address}:${var.qwen_vl_port}/v1"
+    vision_llm_model    = var.qwen_vl_served_name
+    vision_llm_ctx      = var.qwen_vl_max_model_len
+    medium_llm_base_url = "http://${azurerm_network_interface.phi.private_ip_address}:${var.devstral_port}/v1"
+    medium_llm_model    = var.devstral_served_name
+    medium_llm_ctx      = var.devstral_max_model_len
   }))
 }

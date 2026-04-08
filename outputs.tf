@@ -9,7 +9,7 @@ output "gemma_public_ip" {
 
 output "gemma_private_ip" {
   description = "Gemma VM private IP (for VNet access)"
-  value       = "10.0.0.10"
+  value       = azurerm_network_interface.gemma.private_ip_address
 }
 
 output "gemma_ssh" {
@@ -33,7 +33,7 @@ output "phi_public_ip" {
 
 output "phi_private_ip" {
   description = "Phi VM private IP (for VNet access)"
-  value       = "10.0.0.11"
+  value       = azurerm_network_interface.phi.private_ip_address
 }
 
 output "phi_ssh" {
@@ -71,22 +71,22 @@ output "workstation_fqdn" {
 
 output "vllm_gemma_endpoint" {
   description = "Gemma vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.10:${var.vllm_port}/v1"
+  value       = "http://${azurerm_network_interface.gemma.private_ip_address}:${var.vllm_port}/v1"
 }
 
 output "vllm_phi_endpoint" {
   description = "Phi vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.11:${var.phi_port}/v1"
+  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.phi_port}/v1"
 }
 
 output "vllm_qwen_vl_endpoint" {
   description = "Qwen2.5-VL vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.11:${var.qwen_vl_port}/v1"
+  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.qwen_vl_port}/v1"
 }
 
 output "vllm_devstral_endpoint" {
   description = "Devstral-24B vLLM API endpoint (from workstation)"
-  value       = "http://10.0.0.11:${var.devstral_port}/v1"
+  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.devstral_port}/v1"
 }
 
 output "resource_group" {
