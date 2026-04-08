@@ -193,6 +193,190 @@ Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
 PIGHOPS
 sed -i "s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/github-ops.md"
 
+# web-research extension (Firecrawl + SearXNG tools)
+mkdir -p "${UHOME}/.pi/agent/extensions"
+cat > "${UHOME}/.pi/agent/extensions/web-research.ts" <<'PIWEBEXT'
+/**
+ * Web Research Extension for Pi
+ *
+ * Provides web_search, web_fetch, and web_extract tools backed by
+ * the local Firecrawl API (port 3002) with SearXNG metasearch integration.
+ */
+
+import { Type } from "@mariozechner/pi-ai";
+import { defineTool, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const FIRECRAWL_URL = "http://localhost:3002";
+const MAX_RESULT_BYTES = 50 * 1024;
+const PER_RESULT_BYTES = 8 * 1024;
+
+function truncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return text.slice(0, max) + `\n\n[...truncated, showing ${max} of ${text.length} chars]`;
+}
+
+async function firecrawl(endpoint: string, body: object, signal?: AbortSignal): Promise<any> {
+  const res = await fetch(`${FIRECRAWL_URL}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Firecrawl ${endpoint} returned ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+const webSearchTool = defineTool({
+  name: "web_search",
+  label: "Web Search",
+  description:
+    "Search the web and return full scraped content for each result. Uses SearXNG metasearch (Google, Bing, DuckDuckGo) + Firecrawl scraping. Returns markdown content from each result page.",
+  parameters: Type.Object({
+    query: Type.String({ description: "Search query" }),
+    limit: Type.Optional(
+      Type.Number({ description: "Max results (1-10, default 5)", minimum: 1, maximum: 10 }),
+    ),
+  }),
+  promptSnippet: "Search the web via SearXNG + Firecrawl, returns scraped markdown",
+
+  async execute(_toolCallId, params, signal) {
+    const { query, limit = 5 } = params;
+    const data = await firecrawl(
+      "/v1/search",
+      { query, limit, scrapeOptions: { formats: ["markdown"], onlyMainContent: true } },
+      signal,
+    );
+    if (!data.success) {
+      return {
+        content: [{ type: "text", text: `Search failed: ${data.error || "unknown error"}` }],
+        isError: true,
+      };
+    }
+    const results = data.data || [];
+    if (results.length === 0) {
+      return { content: [{ type: "text", text: `No results found for: ${query}` }] };
+    }
+    const formatted = results
+      .map((r: any, i: number) => {
+        const content = truncate(r.markdown || r.description || "", PER_RESULT_BYTES);
+        return `## [${i + 1}] ${r.title || "Untitled"}\n**URL:** ${r.url}\n\n${content}`;
+      })
+      .join("\n\n---\n\n");
+    return {
+      content: [{ type: "text", text: truncate(formatted, MAX_RESULT_BYTES) }],
+      details: { resultCount: results.length, query },
+    };
+  },
+});
+
+const webFetchTool = defineTool({
+  name: "web_fetch",
+  label: "Web Fetch",
+  description:
+    "Fetch and scrape a single URL, returning its content as clean markdown. Handles JavaScript-rendered pages via Playwright. Use for reading documentation, articles, CVEs, or any web page.",
+  parameters: Type.Object({
+    url: Type.String({ description: "URL to fetch and scrape" }),
+  }),
+  promptSnippet: "Fetch a URL and return its content as markdown via Firecrawl",
+
+  async execute(_toolCallId, params, signal) {
+    const { url } = params;
+    const data = await firecrawl(
+      "/v1/scrape",
+      { url, formats: ["markdown"], onlyMainContent: true },
+      signal,
+    );
+    if (!data.success) {
+      return {
+        content: [{ type: "text", text: `Fetch failed for ${url}: ${data.error || "unknown error"}` }],
+        isError: true,
+      };
+    }
+    const doc = data.data || {};
+    const title = doc.metadata?.title || doc.title || "Untitled";
+    const markdown = doc.markdown || "";
+    const output = `# ${title}\n**Source:** ${url}\n\n${markdown}`;
+    return {
+      content: [{ type: "text", text: truncate(output, MAX_RESULT_BYTES) }],
+      details: { url, title, length: markdown.length },
+    };
+  },
+});
+
+const webExtractTool = defineTool({
+  name: "web_extract",
+  label: "Web Extract",
+  description:
+    "Extract structured data from web pages using LLM-powered analysis. Provide URLs and a prompt describing what to extract. Optionally provide a JSON schema for the output format.",
+  parameters: Type.Object({
+    urls: Type.Array(Type.String({ description: "URL to extract from" }), {
+      description: "URLs to extract data from (1-5)",
+      minItems: 1,
+      maxItems: 5,
+    }),
+    prompt: Type.String({ description: "What to extract from the pages" }),
+    schema: Type.Optional(
+      Type.Any({ description: "Optional JSON schema for structured output" }),
+    ),
+  }),
+  promptSnippet: "Extract structured data from web pages using LLM analysis",
+
+  async execute(_toolCallId, params, signal) {
+    const { urls, prompt, schema } = params;
+    const body: any = { urls, prompt };
+    if (schema) body.schema = schema;
+    const data = await firecrawl("/v1/extract", body, signal);
+    if (!data.success) {
+      return {
+        content: [{ type: "text", text: `Extract failed: ${data.error || "unknown error"}` }],
+        isError: true,
+      };
+    }
+    const output = JSON.stringify(data.data, null, 2);
+    return {
+      content: [{ type: "text", text: truncate(output, MAX_RESULT_BYTES) }],
+      details: { urls, prompt },
+    };
+  },
+});
+
+export default function (pi: ExtensionAPI) {
+  pi.registerTool(webSearchTool);
+  pi.registerTool(webFetchTool);
+  pi.registerTool(webExtractTool);
+}
+PIWEBEXT
+
+# web-research agent (mediumLLM with web tools)
+cat > "${UHOME}/.pi/agent/agents/web-research.md" <<'PIWEBAGENT'
+---
+name: web-research
+description: "ALWAYS delegate to this agent for web research: searching the internet, reading web pages or documentation, looking up CVEs or security advisories, fetching API references, researching technologies, and synthesizing information from multiple online sources."
+model: mediumllm/__MEDIUM_LLM_MODEL__
+tools: web_search,web_fetch,web_extract,bash,read
+---
+
+You are a web research specialist. You search the internet, read web pages, and synthesize findings into clear, structured answers.
+
+## Workflow
+1. Use `web_search` to find relevant pages for the query
+2. Use `web_fetch` to read the most promising results in full
+3. Use `web_extract` for structured data extraction when needed
+4. Synthesize findings into a clear markdown response with citations
+
+## Rules
+1. Always cite sources with URLs
+2. Prefer authoritative sources (official docs, RFCs, CVE databases)
+3. Cross-reference multiple sources for factual claims
+4. If search results are insufficient, refine the query and search again
+5. Format output as structured markdown with headers and bullet points
+6. Include a "Sources" section at the end listing all referenced URLs
+PIWEBAGENT
+sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
+
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.pi"
 
 # ============================================================
