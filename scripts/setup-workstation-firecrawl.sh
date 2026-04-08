@@ -107,7 +107,17 @@ fi
 mkdir -p /opt/searxng/etc
 SEARXNG_SECRET=$(openssl rand -hex 32)
 cat > /opt/searxng/etc/settings.yml << SEARXNG_SETTINGS
-use_default_settings: true
+use_default_settings:
+  engines:
+    keep_only:
+      - google
+      - duckduckgo
+      - startpage
+      - wikipedia
+      - aol
+      - bing
+      - mojeek
+      - qwant
 
 general:
   instance_name: "SearXNG"
