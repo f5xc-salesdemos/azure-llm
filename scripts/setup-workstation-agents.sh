@@ -49,6 +49,23 @@ chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.codex"
 # ============================================================
 mkdir -p "${UHOME}/.pi/agent/agents"
 
+# APPEND_SYSTEM.md — global rules appended to the main agent's system prompt
+cat > "${UHOME}/.pi/agent/APPEND_SYSTEM.md" <<'PIAPPEND'
+## CRITICAL Output Formatting Rules
+
+**ABSOLUTE RULE — NO EXCEPTIONS:** You must NEVER output LaTeX math notation in any response. This includes but is not limited to:
+- $\rightarrow$ — write → instead
+- $\leftarrow$ — write ← instead
+- $\leftrightarrow$ — write ↔ instead
+- $\alpha$, $\beta$, $\gamma$ — write α, β, γ instead
+- $\geq$, $\leq$, $\neq$ — write ≥, ≤, ≠ instead
+- Any text wrapped in dollar signs ($...$) that contains backslash commands
+
+Your output is displayed in a terminal emulator that CANNOT render LaTeX. Dollar-sign expressions appear as ugly raw text like "$\rightarrow$" instead of arrows. Always use plain Unicode: → ← ↔ ↑ ↓ ≥ ≤ ≠ ± × ÷ ∞ ∑ ∈ ∉ ⊂ ⊃ ∪ ∩
+
+This rule applies to ALL output including flow diagrams, mathematical expressions, navigation paths, and process descriptions.
+PIAPPEND
+
 # settings.json
 cat > "${UHOME}/.pi/agent/settings.json" <<'PICONF'
 {
