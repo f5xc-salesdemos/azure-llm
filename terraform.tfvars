@@ -4,13 +4,13 @@ admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
 # llm01 — Large LLM (4x A100 80GB, 256K context)
-gemma_vm_size   = "Standard_NC96ads_A100_v4"
-gemma_zone      = "2"
-gemma_disk_size = 256
+llm01_vm_size   = "Standard_NC96ads_A100_v4"
+llm01_zone      = "2"
+llm01_disk_size = 256
 
 # llm02 — Small/Medium/Vision LLM (4x A100 80GB, 3 models)
-phi_vm_size = "Standard_NC96ads_A100_v4"
-phi_zone    = "2"
+llm02_vm_size = "Standard_NC96ads_A100_v4"
+llm02_zone    = "2"
 
 # Workstation — T4 for Chrome/Playwright (pending T4 quota)
 workstation_vm_size = "Standard_NC8as_T4_v3"

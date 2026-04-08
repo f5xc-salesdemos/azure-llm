@@ -44,7 +44,7 @@ resource "azurerm_subnet" "this" {
 # llm01 — Large LLM server (4x A100 80GB, TP=4, 256K context)
 ###############################################################################
 
-resource "azurerm_network_security_group" "gemma" {
+resource "azurerm_network_security_group" "llm01" {
   name                = "llm01-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -74,17 +74,17 @@ resource "azurerm_network_security_group" "gemma" {
   }
 }
 
-resource "azurerm_public_ip" "gemma" {
+resource "azurerm_public_ip" "llm01" {
   name                = "llm01-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = var.gemma_zone != "" ? [var.gemma_zone] : []
+  zones               = var.llm01_zone != "" ? [var.llm01_zone] : []
   domain_name_label   = "llm01"
 }
 
-resource "azurerm_network_interface" "gemma" {
+resource "azurerm_network_interface" "llm01" {
   name                = "llm01-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -94,25 +94,25 @@ resource "azurerm_network_interface" "gemma" {
     subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.10"
-    public_ip_address_id          = azurerm_public_ip.gemma.id
+    public_ip_address_id          = azurerm_public_ip.llm01.id
   }
 }
 
-resource "azurerm_network_interface_security_group_association" "gemma" {
-  network_interface_id      = azurerm_network_interface.gemma.id
-  network_security_group_id = azurerm_network_security_group.gemma.id
+resource "azurerm_network_interface_security_group_association" "llm01" {
+  network_interface_id      = azurerm_network_interface.llm01.id
+  network_security_group_id = azurerm_network_security_group.llm01.id
 }
 
-resource "azurerm_linux_virtual_machine" "gemma" {
+resource "azurerm_linux_virtual_machine" "llm01" {
   name                            = "llm01"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
-  size                            = var.gemma_vm_size
-  zone                            = var.gemma_zone != "" ? var.gemma_zone : null
+  size                            = var.llm01_vm_size
+  zone                            = var.llm01_zone != "" ? var.llm01_zone : null
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
-  network_interface_ids = [azurerm_network_interface.gemma.id]
+  network_interface_ids = [azurerm_network_interface.llm01.id]
 
   admin_ssh_key {
     username   = var.admin_username
@@ -122,7 +122,7 @@ resource "azurerm_linux_virtual_machine" "gemma" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
-    disk_size_gb         = var.gemma_disk_size
+    disk_size_gb         = var.llm01_disk_size
   }
 
   source_image_reference {
@@ -132,15 +132,15 @@ resource "azurerm_linux_virtual_machine" "gemma" {
     version   = var.os_image.version
   }
 
-  custom_data = base64encode(templatefile("${path.module}/cloud-init-gemma.yaml", {
+  custom_data = base64encode(templatefile("${path.module}/cloud-init-llm01.yaml", {
     admin_username         = var.admin_username
     hf_token               = var.hf_token
-    model_id               = var.gemma_model_id
-    served_name            = var.gemma_served_name
-    max_model_len          = var.gemma_max_model_len
-    gpu_memory_utilization = var.gemma_gpu_memory_utilization
-    tool_call_parser       = var.gemma_tool_call_parser
-    tp_size                = var.gemma_tp_size
+    model_id               = var.llm01_model_id
+    served_name            = var.llm01_served_name
+    max_model_len          = var.llm01_max_model_len
+    gpu_memory_utilization = var.llm01_gpu_memory_utilization
+    tool_call_parser       = var.llm01_tool_call_parser
+    tp_size                = var.llm01_tp_size
     vllm_port              = var.vllm_port
   }))
 }
@@ -149,7 +149,7 @@ resource "azurerm_linux_virtual_machine" "gemma" {
 # llm02 — Small/Medium/Vision LLM server (4x A100 80GB, 3 models)
 ###############################################################################
 
-resource "azurerm_network_security_group" "phi" {
+resource "azurerm_network_security_group" "llm02" {
   name                = "llm02-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -167,54 +167,54 @@ resource "azurerm_network_security_group" "phi" {
   }
 
   security_rule {
-    name                       = "AllowPhiVLLMFromSubnet"
+    name                       = "AllowSmallLLMFromSubnet"
     priority                   = 1010
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = tostring(var.phi_port)
+    destination_port_range     = tostring(var.small_llm_port)
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
 
   security_rule {
-    name                       = "AllowQwenVLFromSubnet"
+    name                       = "AllowVisionLLMFromSubnet"
     priority                   = 1020
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = tostring(var.qwen_vl_port)
+    destination_port_range     = tostring(var.vision_llm_port)
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
 
   security_rule {
-    name                       = "AllowXLAMFromSubnet"
+    name                       = "AllowMediumLLMFromSubnet"
     priority                   = 1030
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = tostring(var.devstral_port)
+    destination_port_range     = tostring(var.medium_llm_port)
     source_address_prefix      = local.subnet_cidr
     destination_address_prefix = "*"
   }
 
 }
 
-resource "azurerm_public_ip" "phi" {
+resource "azurerm_public_ip" "llm02" {
   name                = "llm02-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = var.phi_zone != "" ? [var.phi_zone] : []
+  zones               = var.llm02_zone != "" ? [var.llm02_zone] : []
   domain_name_label   = "llm02"
 }
 
-resource "azurerm_network_interface" "phi" {
+resource "azurerm_network_interface" "llm02" {
   name                = "llm02-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -224,25 +224,25 @@ resource "azurerm_network_interface" "phi" {
     subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.11"
-    public_ip_address_id          = azurerm_public_ip.phi.id
+    public_ip_address_id          = azurerm_public_ip.llm02.id
   }
 }
 
-resource "azurerm_network_interface_security_group_association" "phi" {
-  network_interface_id      = azurerm_network_interface.phi.id
-  network_security_group_id = azurerm_network_security_group.phi.id
+resource "azurerm_network_interface_security_group_association" "llm02" {
+  network_interface_id      = azurerm_network_interface.llm02.id
+  network_security_group_id = azurerm_network_security_group.llm02.id
 }
 
-resource "azurerm_linux_virtual_machine" "phi" {
+resource "azurerm_linux_virtual_machine" "llm02" {
   name                            = "llm02"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
-  size                            = var.phi_vm_size
-  zone                            = var.phi_zone != "" ? var.phi_zone : null
+  size                            = var.llm02_vm_size
+  zone                            = var.llm02_zone != "" ? var.llm02_zone : null
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
-  network_interface_ids = [azurerm_network_interface.phi.id]
+  network_interface_ids = [azurerm_network_interface.llm02.id]
 
   admin_ssh_key {
     username   = var.admin_username
@@ -252,7 +252,7 @@ resource "azurerm_linux_virtual_machine" "phi" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
-    disk_size_gb         = var.phi_disk_size
+    disk_size_gb         = var.llm02_disk_size
   }
 
   source_image_reference {
@@ -262,35 +262,35 @@ resource "azurerm_linux_virtual_machine" "phi" {
     version   = var.os_image.version
   }
 
-  custom_data = base64encode(templatefile("${path.module}/cloud-init-phi.yaml", {
-    admin_username                  = var.admin_username
-    hf_token                        = var.hf_token
-    phi_model_id                    = var.phi_model_id
-    phi_served_name                 = var.phi_served_name
-    phi_max_model_len               = var.phi_max_model_len
-    phi_gpu_memory_utilization      = var.phi_gpu_memory_utilization
-    phi_tool_call_parser            = var.phi_tool_call_parser
-    phi_port                        = var.phi_port
-    phi_cuda_devices                = var.phi_cuda_devices
-    phi_speculative_model           = var.phi_speculative_model
-    phi_num_speculative_tokens      = var.phi_num_speculative_tokens
-    phi_ngram_prompt_lookup_min     = var.phi_ngram_prompt_lookup_min
-    phi_ngram_prompt_lookup_max     = var.phi_ngram_prompt_lookup_max
-    phi_enable_chunked_prefill      = var.phi_enable_chunked_prefill
-    phi_vllm_compile_level          = var.phi_vllm_compile_level
-    qwen_vl_model_id                = var.qwen_vl_model_id
-    qwen_vl_served_name             = var.qwen_vl_served_name
-    qwen_vl_max_model_len           = var.qwen_vl_max_model_len
-    qwen_vl_gpu_memory_utilization  = var.qwen_vl_gpu_memory_utilization
-    qwen_vl_port                    = var.qwen_vl_port
-    qwen_vl_cuda_devices            = var.qwen_vl_cuda_devices
-    devstral_model_id               = var.devstral_model_id
-    devstral_served_name            = var.devstral_served_name
-    devstral_max_model_len          = var.devstral_max_model_len
-    devstral_gpu_memory_utilization = var.devstral_gpu_memory_utilization
-    devstral_port                   = var.devstral_port
-    devstral_tp_size                = var.devstral_tp_size
-    devstral_cuda_devices           = var.devstral_cuda_devices
+  custom_data = base64encode(templatefile("${path.module}/cloud-init-llm02.yaml", {
+    admin_username                    = var.admin_username
+    hf_token                          = var.hf_token
+    small_llm_model_id                = var.small_llm_model_id
+    small_llm_served_name             = var.small_llm_served_name
+    small_llm_max_model_len           = var.small_llm_max_model_len
+    small_llm_gpu_memory_utilization  = var.small_llm_gpu_memory_utilization
+    small_llm_tool_call_parser        = var.small_llm_tool_call_parser
+    small_llm_port                    = var.small_llm_port
+    small_llm_cuda_devices            = var.small_llm_cuda_devices
+    small_llm_speculative_model       = var.small_llm_speculative_model
+    small_llm_num_speculative_tokens  = var.small_llm_num_speculative_tokens
+    small_llm_ngram_prompt_lookup_min = var.small_llm_ngram_prompt_lookup_min
+    small_llm_ngram_prompt_lookup_max = var.small_llm_ngram_prompt_lookup_max
+    small_llm_enable_chunked_prefill  = var.small_llm_enable_chunked_prefill
+    small_llm_vllm_compile_level      = var.small_llm_vllm_compile_level
+    vision_llm_model_id               = var.vision_llm_model_id
+    vision_llm_served_name            = var.vision_llm_served_name
+    vision_llm_max_model_len          = var.vision_llm_max_model_len
+    vision_llm_gpu_memory_utilization = var.vision_llm_gpu_memory_utilization
+    vision_llm_port                   = var.vision_llm_port
+    vision_llm_cuda_devices           = var.vision_llm_cuda_devices
+    medium_llm_model_id               = var.medium_llm_model_id
+    medium_llm_served_name            = var.medium_llm_served_name
+    medium_llm_max_model_len          = var.medium_llm_max_model_len
+    medium_llm_gpu_memory_utilization = var.medium_llm_gpu_memory_utilization
+    medium_llm_port                   = var.medium_llm_port
+    medium_llm_tp_size                = var.medium_llm_tp_size
+    medium_llm_cuda_devices           = var.medium_llm_cuda_devices
   }))
 }
 
@@ -378,17 +378,17 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   custom_data = base64encode(templatefile("${path.module}/cloud-init-workstation.yaml", {
     admin_username      = var.admin_username
     hf_token            = var.hf_token
-    large_llm_base_url  = "http://${azurerm_network_interface.gemma.private_ip_address}:${var.vllm_port}/v1"
-    large_llm_model     = var.gemma_served_name
-    large_llm_ctx       = var.gemma_max_model_len
-    small_llm_base_url  = "http://${azurerm_network_interface.phi.private_ip_address}:${var.phi_port}/v1"
-    small_llm_model     = var.phi_served_name
-    small_llm_ctx       = var.phi_max_model_len
-    vision_llm_base_url = "http://${azurerm_network_interface.phi.private_ip_address}:${var.qwen_vl_port}/v1"
-    vision_llm_model    = var.qwen_vl_served_name
-    vision_llm_ctx      = var.qwen_vl_max_model_len
-    medium_llm_base_url = "http://${azurerm_network_interface.phi.private_ip_address}:${var.devstral_port}/v1"
-    medium_llm_model    = var.devstral_served_name
-    medium_llm_ctx      = var.devstral_max_model_len
+    large_llm_base_url  = "http://${azurerm_network_interface.llm01.private_ip_address}:${var.vllm_port}/v1"
+    large_llm_model     = var.llm01_served_name
+    large_llm_ctx       = var.llm01_max_model_len
+    small_llm_base_url  = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.small_llm_port}/v1"
+    small_llm_model     = var.small_llm_served_name
+    small_llm_ctx       = var.small_llm_max_model_len
+    vision_llm_base_url = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.vision_llm_port}/v1"
+    vision_llm_model    = var.vision_llm_served_name
+    vision_llm_ctx      = var.vision_llm_max_model_len
+    medium_llm_base_url = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.medium_llm_port}/v1"
+    medium_llm_model    = var.medium_llm_served_name
+    medium_llm_ctx      = var.medium_llm_max_model_len
   }))
 }

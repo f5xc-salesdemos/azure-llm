@@ -4,22 +4,22 @@
 
 output "llm01_public_ip" {
   description = "llm01 public IP"
-  value       = azurerm_public_ip.gemma.ip_address
+  value       = azurerm_public_ip.llm01.ip_address
 }
 
 output "llm01_private_ip" {
   description = "llm01 private IP (for VNet access)"
-  value       = azurerm_network_interface.gemma.private_ip_address
+  value       = azurerm_network_interface.llm01.private_ip_address
 }
 
 output "llm01_ssh" {
   description = "SSH to llm01"
-  value       = "ssh ${var.admin_username}@${azurerm_public_ip.gemma.ip_address}"
+  value       = "ssh ${var.admin_username}@${azurerm_public_ip.llm01.ip_address}"
 }
 
 output "llm01_fqdn" {
   description = "llm01 FQDN"
-  value       = azurerm_public_ip.gemma.fqdn
+  value       = azurerm_public_ip.llm01.fqdn
 }
 
 ###############################################################################
@@ -28,22 +28,22 @@ output "llm01_fqdn" {
 
 output "llm02_public_ip" {
   description = "llm02 public IP"
-  value       = azurerm_public_ip.phi.ip_address
+  value       = azurerm_public_ip.llm02.ip_address
 }
 
 output "llm02_private_ip" {
   description = "llm02 private IP (for VNet access)"
-  value       = azurerm_network_interface.phi.private_ip_address
+  value       = azurerm_network_interface.llm02.private_ip_address
 }
 
 output "llm02_ssh" {
   description = "SSH to llm02"
-  value       = "ssh ${var.admin_username}@${azurerm_public_ip.phi.ip_address}"
+  value       = "ssh ${var.admin_username}@${azurerm_public_ip.llm02.ip_address}"
 }
 
 output "llm02_fqdn" {
   description = "llm02 FQDN"
-  value       = azurerm_public_ip.phi.fqdn
+  value       = azurerm_public_ip.llm02.fqdn
 }
 
 ###############################################################################
@@ -71,22 +71,22 @@ output "workstation_fqdn" {
 
 output "vllm_large_llm_endpoint" {
   description = "Large LLM vLLM API endpoint"
-  value       = "http://${azurerm_network_interface.gemma.private_ip_address}:${var.vllm_port}/v1"
+  value       = "http://${azurerm_network_interface.llm01.private_ip_address}:${var.vllm_port}/v1"
 }
 
 output "vllm_small_llm_endpoint" {
   description = "Small LLM vLLM API endpoint"
-  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.phi_port}/v1"
+  value       = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.small_llm_port}/v1"
 }
 
 output "vllm_vision_llm_endpoint" {
   description = "Vision LLM vLLM API endpoint"
-  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.qwen_vl_port}/v1"
+  value       = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.vision_llm_port}/v1"
 }
 
 output "vllm_medium_llm_endpoint" {
   description = "Medium LLM vLLM API endpoint"
-  value       = "http://${azurerm_network_interface.phi.private_ip_address}:${var.devstral_port}/v1"
+  value       = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.medium_llm_port}/v1"
 }
 
 output "resource_group" {

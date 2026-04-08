@@ -76,7 +76,7 @@ write_files:
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/gpu-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-06-v7-gemma-optimized"
+    CLOUD_INIT_VERSION="2026-04-08-v10-llm01"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
