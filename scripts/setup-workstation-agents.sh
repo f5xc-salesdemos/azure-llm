@@ -249,6 +249,7 @@ curl -s http://localhost:3002/v1/map \
 4. Prefer authoritative sources (official docs, RFCs, CVE databases)
 5. If search results are insufficient, refine the query and search again
 6. Format output as structured markdown with a Sources section at the end
+7. NEVER use LaTeX notation ($\rightarrow$, $\alpha$, etc.) — use plain Unicode arrows (→, ←, ↔) and symbols instead. Output renders in a terminal, not a LaTeX viewer.
 PIWEBAGENT
 sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
