@@ -92,7 +92,7 @@ cat > "${UHOME}/.pi/agent/settings.json" <<'PICONF'
   "defaultModel": "__LARGE_LLM_MODEL__",
   "quietStartup": true,
   "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "packages": ["npm:@mjakl/pi-subagent"]
 }
 PICONF
