@@ -810,6 +810,10 @@ sed -i "s|__LARGE_LLM_BASE_URL__|${LARGE_LLM_BASE_URL}|g; s|__LARGE_LLM_MODEL__|
 sed -i "s|__MEDIUM_LLM_BASE_URL__|${MEDIUM_LLM_BASE_URL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__MEDIUM_LLM_CTX__|${MEDIUM_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
 sed -i "s|__SMALL_LLM_BASE_URL__|${SMALL_LLM_BASE_URL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g; s|__SMALL_LLM_CTX__|${SMALL_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
 
+# Reuse Pi's output-sanitizer extension (LaTeX → Unicode)
+mkdir -p "${UHOME}/.omp/agent/extensions"
+cp "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" "${UHOME}/.omp/agent/extensions/output-sanitizer.ts" 2>/dev/null || true
+
 # Reuse Pi's APPEND_SYSTEM.md (F5 domain context + query enrichment)
 # Then append omp-specific Firecrawl search instructions (omp's built-in web_search is disabled)
 cp "${UHOME}/.pi/agent/APPEND_SYSTEM.md" "${UHOME}/.omp/agent/APPEND_SYSTEM.md" 2>/dev/null || true
