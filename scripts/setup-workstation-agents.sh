@@ -76,7 +76,8 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "api": "openai-completions",
           "reasoning": true,
           "contextWindow": __LARGE_LLM_CTX__,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "compat": { "supportsDeveloperRole": false }
         }
       ]
     },
@@ -90,7 +91,8 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "api": "openai-completions",
           "reasoning": true,
           "contextWindow": __MEDIUM_LLM_CTX__,
-          "maxTokens": 4096
+          "maxTokens": 4096,
+          "compat": { "supportsDeveloperRole": false }
         }
       ]
     },
@@ -104,7 +106,8 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "api": "openai-completions",
           "reasoning": false,
           "contextWindow": __SMALL_LLM_CTX__,
-          "maxTokens": 4096
+          "maxTokens": 4096,
+          "compat": { "supportsDeveloperRole": false }
         }
       ]
     }
