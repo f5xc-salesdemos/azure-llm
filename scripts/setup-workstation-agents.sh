@@ -72,16 +72,13 @@ Only skip web research for: pure coding tasks on local files, git operations, si
 
 Your answers MUST be grounded in verifiable sources. Always include a Sources section with URLs.
 
-## Answer Conciseness — Context Window Preservation
+## CRITICAL: Do NOT re-synthesize web-research results
 
-When answering from web-research results, keep your responses concise to preserve context window for the ongoing conversation:
-
-- **Factual/conceptual questions** ("What is X?", "How does X work?") — 100-200 words max
-- **Step-by-step guides** ("How do I configure X?") — list the steps, 300-400 words max
-- **Comparisons** ("X vs Y") — one paragraph per platform, 300 words max
-- **Troubleshooting** — list causes + fixes, 200-300 words max
-
-Do NOT pad answers with background context, caveats, or tangential information the user didn't ask for. Be direct and actionable. The user can ask follow-up questions.
+The web-research subagent produces a COMPLETE, user-facing answer. When it returns, you MUST:
+1. Acknowledge the result with ONE short sentence (e.g., "Here's what I found:")
+2. Do NOT rewrite, expand, summarize, or add to the research answer
+3. Do NOT repeat the content — it has already been displayed to the user
+4. The subagent handles all search, analysis, and formatting — your job is ONLY to enrich the query before delegation and acknowledge completion after
 
 ## Query Enrichment — YOUR MOST IMPORTANT JOB
 
@@ -459,17 +456,20 @@ Types: feat, fix, docs, refactor, chore, test, style, perf, ci, build
 PIGHOPS
 sed -i "s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/github-ops.md"
 
-# web-research agent (mediumLLM — bash-based, uses Firecrawl + SearXNG via curl)
+# web-research agent (largeLLM — full ANALYST, produces user-facing answers directly)
+# Subagent's context is ephemeral — use maximum quality thinking for synthesis.
+# The executeSingle patch returns only "Research task completed" to the main agent's
+# context, while renderSingleCollapsed displays the full answer in the TUI.
 cat > "${UHOME}/.pi/agent/agents/web-research.md" <<'PIWEBAGENT'
 ---
 name: web-research
 description: "ALWAYS delegate to this agent when the task involves ANY of: searching the web, looking something up online, finding information on the internet, fetching a URL or web page, reading documentation from a website, researching a topic, checking current events or recent news, finding release notes or changelogs, looking up CVEs or security advisories, verifying facts from authoritative sources, comparing technologies or products, finding API documentation, reading blog posts or articles, checking package versions or compatibility, finding tutorials or guides, answering questions that require up-to-date information beyond training data, or any task where web access would provide verifiable sources."
-model: mediumllm/__MEDIUM_LLM_MODEL__
+model: openai/__LARGE_LLM_MODEL__
 tools: bash,read
-thinking: off
+thinking: high
 ---
 
-You are a web research DATA COLLECTOR. Execute the search query provided and return RAW results. Do NOT answer the question — the main agent does that.
+You are a web research ANALYST for F5 Distributed Cloud sales engineering. You search the web, read the results, and produce a COMPLETE, HIGH-QUALITY answer that will be displayed directly to the user. The main agent does NOT reprocess your output — what you write IS the final answer the user sees.
 
 ## How to read the task
 
@@ -479,45 +479,38 @@ SEARCH: <enriched query with search operators>
 CONTEXT: <what the user needs>
 ```
 
-Use the SEARCH line as your Firecrawl query. If no SEARCH line is present, use the full task text as the query.
+Use the SEARCH line as your Firecrawl query. If no SEARCH line is present, use the full task text.
 
 ## API Endpoints (Firecrawl on localhost:3002)
 
-**Search** (your primary tool — one search is usually enough):
+**Search** (your primary tool):
 ```
-curl -s http://localhost:3002/v1/search -X POST -H "Content-Type: application/json" -d '{"query":"YOUR QUERY","limit":5,"scrapeOptions":{"formats":["markdown"],"onlyMainContent":true}}' | jq '.data[:3] | .[] | {title, url, markdown: .markdown[:2000]}'
+curl -s http://localhost:3002/v1/search -X POST -H "Content-Type: application/json" -d '{"query":"YOUR QUERY","limit":5,"scrapeOptions":{"formats":["markdown"],"onlyMainContent":true}}' | jq '.data[:4] | .[] | {title, url, markdown: .markdown[:2500]}'
 ```
 
-**Fetch a specific URL** (only if you need more detail from a promising result):
+**Fetch a specific URL** (if you need more detail from a promising result):
 ```
 curl -s http://localhost:3002/v1/scrape -X POST -H "Content-Type: application/json" -d '{"url":"URL","formats":["markdown"],"onlyMainContent":true}' | jq '{title: .data.metadata.title, markdown: .data.markdown[:3000]}'
 ```
 
-## Output Format
+## Your Output IS the Final Answer
 
-Return your results in EXACTLY this format — raw data, no analysis:
+Write a complete, well-formatted answer:
+- Use markdown headers, bullet points, and tables for clarity
+- Be concise but thorough — cover the key steps or facts
+- Include a **Sources:** section at the end with clickable URLs
+- For how-to questions: number the steps clearly
+- For conceptual questions: explain with concrete examples
+- For comparisons: use a summary table
 
-```
-## Sources Found
+## Rules
 
-### [1] <Title>
-**URL:** <url>
-<relevant excerpt from the page markdown, verbatim>
-
-### [2] <Title>
-**URL:** <url>
-<relevant excerpt from the page markdown, verbatim>
-```
-
-## STRICT Rules
-
-1. **Do NOT answer the question.** Return raw search results only.
-2. **Do NOT rewrite the SEARCH query.** Use it as provided — it has been pre-enriched with operators.
-3. **1 search, then return.** Only search again if zero relevant results.
-4. **Maximum 3 tool calls.** Search once, optionally fetch 1-2 promising URLs, then return.
-5. **Truncate with jq.** Always use jq to limit markdown to 2000-3000 chars per result.
+1. **Maximum 5 tool calls.** Search once or twice, optionally fetch 1-2 pages, then write your answer.
+2. **Truncate with jq.** Always use jq to limit markdown to 2500 chars per result.
+3. **Your output IS the user-facing answer.** Write it as if speaking directly to the user.
+4. **Always cite sources.** End with a Sources section listing URLs you used.
 PIWEBAGENT
-sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
+sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
 # ---- Ensure pi-subagent and pi are installed before patching ----
 if ! command -v pi >/dev/null 2>&1; then
@@ -548,7 +541,32 @@ else:
 " 2>/dev/null || true
 fi
 
-# Patch pi-subagent render.ts for minimal collapsed output (one-line summary)
+# Patch pi-subagent executeSingle — return minimal text to main LLM context
+# The subagent's full answer is displayed via TUI renderSingleCollapsed (below)
+# but the main agent only sees "Research task completed" — preserving context window
+if [ -n "${PI_SUBAGENT_INDEX}" ]; then
+    python3 -c "
+p = '${PI_SUBAGENT_INDEX}'
+with open(p) as f:
+    c = f.read()
+old = '      text: getResultSummaryText(result),'
+new = '      text: \"Research task completed successfully. The answer has been displayed to the user.\",'
+if old in c:
+    c = c.replace(old, new, 1)
+    with open(p, 'w') as f:
+        f.write(c)
+    print('Patched executeSingle: minimal LLM context return')
+else:
+    print('executeSingle already patched or pattern changed')
+" 2>/dev/null || true
+fi
+
+# Patch pi-subagent render.ts — display full subagent answer in TUI collapsed view
+# Combined with the executeSingle patch above, this creates the architecture:
+#   subagent (large LLM, thinking:high) → searches + synthesizes complete answer
+#   TUI renderSingleCollapsed → displays answer as rendered Markdown to user
+#   main LLM context → sees only "Research task completed" (~20 tokens)
+#   subagent context is ephemeral → discarded after task, no context rot
 PI_SUBAGENT_RENDER=$(find /usr/lib/node_modules/@mjakl/pi-subagent -name "render.ts" -print -quit 2>/dev/null)
 if [ -n "${PI_SUBAGENT_RENDER}" ]; then
     python3 -c "
@@ -560,9 +578,11 @@ with open(p) as f:
 
 patched = False
 
-# --- Patch renderSingleCollapsed: icon + agent name only ---
+# --- Patch renderSingleCollapsed: show full answer as Markdown in TUI ---
+# This displays the subagent's synthesized answer directly to the user
+# while executeSingle only returns a minimal "completed" string to the main LLM
 old_single = re.compile(
-    r'function renderSingleCollapsed\([\s\S]*?\): Text \{[\s\S]*?\n\treturn new Text\(text, 0, 0\);\n\}',
+    r'function renderSingleCollapsed\([\s\S]*?\): (?:Container \| )?Text \{[\s\S]*?\n\treturn new Text\(text, 0, 0\);\n\}',
 )
 new_single = '''function renderSingleCollapsed(
 \tr: SingleResult,
@@ -571,12 +591,23 @@ new_single = '''function renderSingleCollapsed(
 \terror: boolean,
 \tdisplayItems: DisplayItem[],
 \ttheme: { fg: ThemeFg; bold: (s: string) => string },
-): Text {
-\tlet text = \x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(r.agent))}\x60;
-\tif (error && r.stopReason) text += \x60 \x24{theme.fg(\"error\", \x60[\x24{r.stopReason}]\x60)}\x60;
-\tif (error && r.errorMessage) {
-\t\ttext += \x60\\n\x24{theme.fg(\"error\", \x60Error: \x24{r.errorMessage}\x60)}\x60;
+): Container | Text {
+\tconst finalOutput = getFinalOutput(r.messages);
+\tif (error) {
+\t\tlet text = \x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(r.agent))}\x60;
+\t\tif (r.stopReason) text += \x60 \x24{theme.fg(\"error\", \x60[\x24{r.stopReason}]\x60)}\x60;
+\t\tif (r.errorMessage) text += \x60\\n\x24{theme.fg(\"error\", \x60Error: \x24{r.errorMessage}\x60)}\x60;
+\t\treturn new Text(text, 0, 0);
 \t}
+\tif (finalOutput) {
+\t\tconst mdTheme = getMarkdownTheme();
+\t\tconst container = new Container();
+\t\tcontainer.addChild(new Text(\x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(r.agent))}\x60, 0, 0));
+\t\tcontainer.addChild(new Spacer(1));
+\t\tcontainer.addChild(new Markdown(finalOutput.trim(), 0, 0, mdTheme));
+\t\treturn container;
+\t}
+\tconst text = \x60\x24{icon} \x24{theme.fg(\"toolTitle\", theme.bold(r.agent))}\x60;
 \treturn new Text(text, 0, 0);
 }'''
 if old_single.search(c):
