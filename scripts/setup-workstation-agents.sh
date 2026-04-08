@@ -354,7 +354,7 @@ PIWEBEXT
 cat > "${UHOME}/.pi/agent/agents/web-research.md" <<'PIWEBAGENT'
 ---
 name: web-research
-description: "ALWAYS delegate to this agent for web research: searching the internet, reading web pages or documentation, looking up CVEs or security advisories, fetching API references, researching technologies, and synthesizing information from multiple online sources."
+description: "ALWAYS delegate to this agent when the task involves ANY of: searching the web, looking something up online, finding information on the internet, fetching a URL or web page, reading documentation from a website, researching a topic, checking current events or recent news, finding release notes or changelogs, looking up CVEs or security advisories, verifying facts from authoritative sources, comparing technologies or products, finding API documentation, reading blog posts or articles, checking package versions or compatibility, finding tutorials or guides, answering questions that require up-to-date information beyond training data, or any task where web access would provide verifiable sources. This agent has web_search (SearXNG metasearch + Firecrawl scraping), web_fetch (single URL reader), and web_extract (LLM-powered structured extraction) tools."
 model: mediumllm/__MEDIUM_LLM_MODEL__
 tools: web_search,web_fetch,web_extract,bash,read
 ---
