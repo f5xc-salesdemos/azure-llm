@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block commits containing common secret patterns
+# Override with: git commit --no-verify
+
+set -euo pipefail
+
+PATTERNS=(
+  'hf_[a-zA-Z0-9]{20,}'    # Hugging Face tokens
+  'ghp_[a-zA-Z0-9]{36}'     # GitHub personal access tokens
+  'AKIA[0-9A-Z]{16}'        # AWS access key IDs
+  'sk-[a-zA-Z0-9]{20,}'     # OpenAI / Stripe secret keys
+)
+
+STAGED_DIFF=$(git diff --cached --diff-filter=ACM -U0 2>/dev/null || true)
+
+if [ -z "$STAGED_DIFF" ]; then
+  exit 0
+fi
+
+for pattern in "${PATTERNS[@]}"; do
+  if echo "$STAGED_DIFF" | grep -qE "$pattern"; then
+    echo "ERROR: Potential secret detected in staged changes."
+    echo "Pattern matched: $pattern"
+    echo ""
+    echo "Matches:"
+    echo "$STAGED_DIFF" | grep -E "$pattern" | head -5
+    echo ""
+    echo "If this is intentional, bypass with: git commit --no-verify"
+    exit 1
+  fi
+done

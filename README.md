@@ -199,7 +199,7 @@ PHASE 2 IN PROGRESS — Testing coding models for Claude Code replacement:
   If VM is gone, redeploy: fill subscription_id in terraform.tfvars, run ./deploy.sh
 - Benchmarks were running: Qwen3-Coder-30B-A3B then Gemma 4 26B-A4B on vLLM
 - Check results: ls /home/azureuser/benchmarks/results/run_*/
-- HF token: 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
+- HF token: (stored in secrets.auto.tfvars — never commit tokens to README)
 - Claude Code installed at /usr/bin/claude on VM
 
 CORRECT MODEL IDS (verified on HuggingFace):
