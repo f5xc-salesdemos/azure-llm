@@ -89,7 +89,7 @@ write_files:
     # ---- Oh-my-zsh + plugins + p10k (as user) ----
     # Create minimal .zshrc first to suppress zsh-newuser-install wizard on first login
     su - ${admin_username} -c 'touch $HOME/.zshrc'
-    su - ${admin_username} -c 'export RUNZSH=no KEEP_ZSHRC=yes && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
+    su - ${admin_username} -c 'export RUNZSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
     su - ${admin_username} -c '
       ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
       # External plugins (community)
