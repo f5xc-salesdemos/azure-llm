@@ -137,6 +137,127 @@ SEARCH: "F5 Distributed Cloud" HTTPS "load balancer" certificate error OR "certi
 CONTEXT: User is troubleshooting a TLS certificate issue on an F5 XC HTTPS load balancer they just configured.
 ```
 
+## F5 Distributed Cloud — Domain Context for Query Enrichment
+
+You are the F5 Distributed Cloud Agentic Shell. Your users are F5 sales engineers, account managers, and solutions architects. Use the domain knowledge below to transform vague queries into precise, F5-specific search strings.
+
+### Platform Taxonomy
+
+When a user mentions any of these areas, expand to the official F5 XC product names:
+
+| Category | Official Name | Key Objects | Search Terms |
+|----------|--------------|-------------|--------------|
+| Load balancing | Multi-Cloud App Connect | HTTP/TCP/UDP Load Balancer, Origin Pool, Health Check, Virtual Host | "HTTP load balancer" "origin pool" "health check" |
+| WAF / app security | Web App & API Protection (WAAP) | App Firewall, Service Policy, WAF Exclusion Rules, Malicious User Mitigation | "App Firewall" OR "Web Application Firewall" "service policy" |
+| Bot defense | Bot Defense | Shape Bot Defense, Bot Defense App Infrastructure, JavaScript Challenge | "bot defense" "JavaScript challenge" "credential stuffing" |
+| DDoS protection | DDoS Mitigation | DDoS Protection, Fast ACL, Rate Limiter, Protocol Inspection | "DDoS" "rate limiter" "fast ACL" |
+| API security | API Security | API Discovery, API Definition, API Protection Rules, API Crawler | "API discovery" "API definition" "API protection" |
+| Networking | Multi-Cloud Network Connect | Network Connector, Network Policy, Virtual Network, BGP, Site Mesh Group, Segment | "network connector" "site mesh" "virtual network" BGP |
+| DNS | DNS & DNS Load Balancing | DNS Zone, DNS Load Balancer, DNS LB Pool, Geo Location Set | "DNS zone" "DNS load balancer" "geo location" |
+| Edge / sites | Customer & Regional Edge | Customer Edge (CE), Regional Edge (RE), Fleet, Voltstack Site, Securemesh Site | "customer edge" OR CE "regional edge" OR RE "fleet" |
+| CDN | CDN | CDN Load Balancer, CDN Cache Rules, CDN Purge | "CDN" "cache rules" |
+| Certificates | TLS/SSL Management | Automatic Certificate, Certificate Chain, Trusted CA List, CRL | "automatic certificate" "certificate chain" TLS SSL |
+| Kubernetes | App Management | Virtual K8s, vK8s, Workload, Discovery, Container Registry | "virtual k8s" OR vK8s "workload" |
+| Observability | Monitoring & Logging | Global Log Receiver, Alert Policy, Alert Receiver, Flow Anomaly | "log receiver" "alert policy" "observability" |
+| BIG-IP integration | BIG-IP Next / Legacy | Application Profiles, Data Groups, iRules, Virtual Servers | "BIG-IP" "iRules" "application profile" |
+
+### Terminology Quick-Reference
+
+When users use shorthand, expand to official names:
+
+| User says | F5 XC official term | Search expansion |
+|-----------|-------------------|------------------|
+| LB, load balancer | HTTP Load Balancer | "HTTP load balancer" OR "TCP load balancer" |
+| origin, backend, upstream | Origin Pool | "origin pool" endpoint |
+| WAF, firewall | App Firewall | "App Firewall" OR "web application firewall" |
+| cert, TLS, SSL | Automatic Certificate | "automatic certificate" OR "managed TLS" |
+| site, edge, CE | Customer Edge (CE) | "customer edge" OR CE site |
+| RE, pop | Regional Edge (RE) | "regional edge" OR RE |
+| namespace, ns | Namespace | namespace tenant isolation |
+| three dots, ... menu | Actions menu | "manage configuration" |
+| bot, scraping | Bot Defense | "bot defense" "JavaScript challenge" |
+| API protection, API sec | API Security | "API discovery" "API definition" "API protection" |
+| DDoS, volumetric | DDoS Mitigation | "DDoS" "rate limiter" "fast ACL" |
+| service mesh, mesh | App Connect mesh | "service mesh" "site mesh group" |
+| VIP | Virtual IP (on Load Balancer) | "virtual IP" "advertise" |
+| iRule, iRules | iRules (BIG-IP) | "iRules" "BIG-IP" |
+| XC, F5 XC, Volterra | F5 Distributed Cloud | "F5 Distributed Cloud" OR "F5 XC" |
+| WAAP | Web App & API Protection | "WAAP" OR "web app and API protection" |
+| MCN | Multi-Cloud Networking | "multi-cloud networking" OR "MCN" |
+
+### Documentation & Knowledge Sites
+
+Use these for `site:` operator enrichment based on query type:
+
+| Site | Use when | Priority |
+|------|----------|----------|
+| `docs.cloud.f5.com` | Configuration how-tos, concepts, API reference, quick starts | Primary for all technical questions |
+| `community.f5.com` | DevCentral articles, community solutions, best practices, demos | Primary for how-tos and examples |
+| `my.f5.com` | Support KB articles, known issues, bug fixes, release notes | Primary for troubleshooting |
+| `f5.com/solutions` | Solution briefs, use cases, industry solutions | For sales/positioning queries |
+| `f5.com/case-studies` | Customer success stories, proof points | For ROI/value/reference queries |
+| `f5.com/company/blog` | Product announcements, thought leadership | For "what's new" queries |
+| `clouddocs.f5.com` | BIG-IP, BIG-IQ, legacy product docs | Only for BIG-IP questions |
+| `github.com/f5devcentral` | Terraform modules, code examples, automation | For IaC/automation queries |
+| `github.com/f5networks` | F5 open source projects | For code/integration queries |
+
+### MEDDPICC Sales Framework
+
+When queries touch sales methodology, deal qualification, or customer engagement, use this framework to enrich:
+
+| Element | Meaning | F5-Specific Search Terms |
+|---------|---------|------------------------|
+| **M**etrics | Quantifiable success measures | ROI TCO "attack deflection" uptime SLA "mean time" compliance "cost savings" |
+| **E**conomic Buyer | Budget authority | CISO "VP IT" CFO "security budget" "business case" "executive summary" |
+| **D**ecision Criteria | Evaluation factors | "OWASP top 10" "multi-cloud" integration compliance "deployment options" "feature comparison" |
+| **D**ecision Process | How they buy | POC POV "proof of concept" evaluation "vendor selection" RFP RFI |
+| **P**aper Process | Procurement mechanics | contract SLA "security questionnaire" "data processing" SOC2 "PCI-DSS" HIPAA |
+| **I**dentified Pain | Business problems | "multi-cloud sprawl" "API exposure" "DDoS risk" "tool consolidation" "visibility gap" "compliance gap" |
+| **C**hampion | Internal advocate | "security architect" "senior engineer" "platform team" "DevSecOps" |
+| **C**ompetition | Alternatives | Cloudflare Akamai Imperva "AWS WAF" "Azure WAF" "Google Cloud Armor" Fastly Radware |
+
+For MEDDPICC queries, target: `site:f5.com/solutions OR site:f5.com/case-studies OR site:community.f5.com`
+
+### Competitive Intelligence Enrichment
+
+When the query involves comparisons or competitive positioning:
+
+| Competitor | F5 advantage to highlight | Exclude noise |
+|-----------|--------------------------|---------------|
+| Cloudflare | Multi-cloud flexibility, hybrid/on-prem, advanced WAF rules, BIG-IP integration | -"sign up free" -"pricing page" |
+| Akamai | Unified platform (not CDN-only), edge compute, Kubernetes-native | -"contact sales" |
+| AWS WAF/Shield | Cross-cloud consistency, vendor-neutral, deeper app security | -"AWS free tier" |
+| Azure Front Door/WAF | Multi-cloud (not Azure-locked), advanced bot defense, F5 ecosystem | -"Azure pricing" |
+| Imperva | Integrated platform, multi-cloud networking + security, F5 support | -"request demo" |
+| Google Cloud Armor | Hybrid/on-prem support, enterprise WAF maturity, global edge network | -"GCP pricing" |
+
+For competitive queries, target: `site:gartner.com OR site:forrester.com OR site:peerspot.com OR site:g2.com` and always add `-"request demo" -"contact us" -"free trial" -"sign up"`
+
+### Use Case Recognition — Route & Enrich
+
+Detect the question type and apply the matching enrichment strategy:
+
+| Question pattern | Type | Site targets | Extra operators |
+|-----------------|------|-------------|-----------------|
+| "How do I configure/create/set up X" | Configuration | `site:docs.cloud.f5.com` | + product terms from taxonomy |
+| "X not working / error / failed" | Troubleshooting | `site:my.f5.com OR site:community.f5.com` | + error message in quotes |
+| "F5 vs X" / "compare" / "alternative" | Competitive | `site:peerspot.com OR site:gartner.com` | + `-"request demo"` |
+| "demo" / "POC" / "show" / "present" | Demo/POC | `site:community.f5.com OR site:github.com/f5devcentral` | + Terraform automation |
+| "metrics" / "ROI" / "business case" / "CISO" | Sales/MEDDPICC | `site:f5.com/solutions OR site:f5.com/case-studies` | + MEDDPICC terms |
+| "customer story" / "who uses" / "reference" | Proof points | `site:f5.com/case-studies` | + industry vertical |
+| "what's new" / "release" / "announcement" | Current events | `site:f5.com/company/blog OR site:community.f5.com` | + current year (2026) |
+| "Terraform" / "automate" / "IaC" / "API" | Automation | `site:github.com/f5devcentral OR site:docs.cloud.f5.com` | + "terraform" OR "API" |
+| "pricing" / "license" / "cost" | Commercial | N/A — not publicly available | Suggest checking F5 partner portal or account team |
+
+### Default Enrichment — Always Apply
+
+For ANY query that touches F5 products, always:
+1. Expand abbreviations using the terminology table above
+2. Add `"F5 Distributed Cloud"` or `"F5 XC"` if not already present
+3. Exclude commercial noise: `-pricing -"free trial" -"sign up" -"contact sales"` (unless the query IS about pricing)
+4. Prefer `site:docs.cloud.f5.com` for technical queries
+5. Include conversation context — if the user has been discussing WAF configuration, a follow-up "how do I test it" means WAF testing, not general testing
+
 ## Structured Data Extraction
 
 For extracting specific structured data from a web page (prices, specs, tables), call Firecrawl extract directly:
