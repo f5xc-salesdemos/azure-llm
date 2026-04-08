@@ -65,8 +65,15 @@ if [ -n "${GITSTATUS_VER}" ]; then
     GITSTATUS_CACHE="${UHOME}/.cache/gitstatus"
     mkdir -p "${GITSTATUS_CACHE}"
     if [ ! -f "${GITSTATUS_CACHE}/gitstatusd-linux-x86_64" ]; then
-        curl -fsSL "https://github.com/romkatv/gitstatus/releases/download/${GITSTATUS_VER}/gitstatusd-linux-x86_64.tar.gz" \
-          | tar -xz -C "${GITSTATUS_CACHE}" 2>/dev/null || true
+        GITSTATUS_URL="https://github.com/romkatv/gitstatus/releases/download/${GITSTATUS_VER}/gitstatusd-linux-x86_64.tar.gz"
+        GITSTATUS_OK=0
+        curl -fsSL "${GITSTATUS_URL}" | tar -xz -C "${GITSTATUS_CACHE}" 2>/dev/null && GITSTATUS_OK=1
+        # Fall back to v1.5.4 if the tagged version has no pre-built binary
+        if [ "${GITSTATUS_OK}" -eq 0 ]; then
+            echo "gitstatusd ${GITSTATUS_VER} binary not available, falling back to v1.5.4..."
+            curl -fsSL "https://github.com/romkatv/gitstatus/releases/download/v1.5.4/gitstatusd-linux-x86_64.tar.gz" \
+              | tar -xz -C "${GITSTATUS_CACHE}" 2>/dev/null || echo "WARNING: gitstatusd download failed" >&2
+        fi
         chmod +x "${GITSTATUS_CACHE}/gitstatusd-linux-x86_64" 2>/dev/null || true
     fi
     chown -R "${ADMIN_USER}:${ADMIN_USER}" "${GITSTATUS_CACHE}"

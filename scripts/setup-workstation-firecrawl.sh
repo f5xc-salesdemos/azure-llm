@@ -18,10 +18,30 @@ echo "=== Firecrawl Setup Started: $(date) ==="
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 
+# ---- Retry with exponential backoff (self-contained if not inherited) ----
+if ! declare -f retry_cmd >/dev/null 2>&1; then
+    retry_cmd() {
+        local max=${1}; shift; local delay=${1}; shift; local attempt=1
+        while true; do
+            echo "  [attempt ${attempt}/${max}] ${*}"
+            if "${@}"; then return 0; fi
+            if (( attempt >= max )); then echo "  FAILED after ${max} attempts: ${*}" >&2; return 1; fi
+            echo "  Retrying in ${delay}s..."; sleep "${delay}"; delay=$((delay * 2)); attempt=$((attempt + 1))
+        done
+    }
+fi
+
 # Validate required env vars
 : "${LLM_ADMIN_USER:?LLM_ADMIN_USER not set}"
 : "${MEDIUM_LLM_BASE_URL:?MEDIUM_LLM_BASE_URL not set}"
 : "${MEDIUM_LLM_MODEL:?MEDIUM_LLM_MODEL not set}"
+
+# ---- Ensure pnpm is available (don't depend on tools script) ----
+if ! command -v pnpm >/dev/null 2>&1; then
+    echo "pnpm not found, installing..."
+    retry_cmd 3 10 npm install -g pnpm
+fi
+echo "pnpm: $(pnpm --version)"
 
 # ============================================================
 # 1. APT prerequisites
@@ -176,7 +196,7 @@ fi
 if [ ! -d /opt/firecrawl/apps/api/dist ]; then
     echo "Building Firecrawl API..."
     cd /opt/firecrawl/apps/api
-    pnpm install --ignore-scripts
+    retry_cmd 3 15 pnpm install --ignore-scripts
 
     # Rust native bindings
     echo "Building firecrawl-rs native bindings (this takes ~2 minutes)..."
@@ -193,7 +213,7 @@ fi
 if [ ! -d /opt/firecrawl/apps/playwright-service-ts/dist ]; then
     echo "Building Playwright service..."
     cd /opt/firecrawl/apps/playwright-service-ts
-    pnpm install --ignore-scripts
+    retry_cmd 3 15 pnpm install --ignore-scripts
     npx tsc
 
     # Install Chromium browser

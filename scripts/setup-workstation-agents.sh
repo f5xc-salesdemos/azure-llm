@@ -5,6 +5,19 @@ set -euo pipefail
 exec > >(tee -a /var/log/workstation-agents-setup.log) 2>&1
 echo "=== Agent Config Started: $(date) ==="
 
+# ---- Retry with exponential backoff (self-contained if not inherited) ----
+if ! declare -f retry_cmd >/dev/null 2>&1; then
+    retry_cmd() {
+        local max=${1}; shift; local delay=${1}; shift; local attempt=1
+        while true; do
+            echo "  [attempt ${attempt}/${max}] ${*}"
+            if "${@}"; then return 0; fi
+            if (( attempt >= max )); then echo "  FAILED after ${max} attempts: ${*}" >&2; return 1; fi
+            echo "  Retrying in ${delay}s..."; sleep "${delay}"; delay=$((delay * 2)); attempt=$((attempt + 1))
+        done
+    }
+fi
+
 # Validate required env vars
 ADMIN_USER="${LLM_ADMIN_USER:?LLM_ADMIN_USER not set}"
 UHOME="/home/${ADMIN_USER}"
@@ -493,6 +506,16 @@ Return your results in EXACTLY this format — raw data, no analysis:
 5. **Truncate with jq.** Always use jq to limit markdown to 2000-3000 chars per result.
 PIWEBAGENT
 sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
+
+# ---- Ensure pi-subagent and pi are installed before patching ----
+if ! command -v pi >/dev/null 2>&1; then
+    echo "Pi not found, installing @mariozechner/pi-coding-agent..."
+    retry_cmd 3 15 npm install -g "@mariozechner/pi-coding-agent"
+fi
+if ! find /usr/lib/node_modules/@mjakl/pi-subagent -name "index.ts" -print -quit 2>/dev/null | grep -q .; then
+    echo "pi-subagent not found, installing..."
+    retry_cmd 3 15 npm install -g "@mjakl/pi-subagent"
+fi
 
 # Suppress noisy "Found N subagent(s)" startup notification from pi-subagent
 PI_SUBAGENT_INDEX=$(find /usr/lib/node_modules/@mjakl/pi-subagent -name "index.ts" -print -quit 2>/dev/null)
