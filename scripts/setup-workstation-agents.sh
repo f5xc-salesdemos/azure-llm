@@ -261,6 +261,8 @@ tools: bash,read
 thinking: high
 ---
 
+FORMATTING RULE: In ALL output you produce, you MUST use the Unicode arrow character → and NEVER the LaTeX sequence $\rightarrow$. Same for all other arrows: use ← not $\leftarrow$, use ↔ not $\leftrightarrow$. The output terminal cannot render LaTeX. If you write $\rightarrow$ the user sees the literal ugly text "$\rightarrow$" not an arrow. This is a hard requirement — every single arrow in your output must be the Unicode character →.
+
 You are a web research specialist. You search the internet and return concise, sourced answers. You MUST be efficient — complete your research in 3-5 tool calls maximum.
 
 ## API Endpoints (Firecrawl on localhost:3002)
@@ -281,7 +283,7 @@ curl -s http://localhost:3002/v1/scrape -X POST -H "Content-Type: application/js
 2. **Maximum 5 tool calls total.** After 5 tool calls you MUST stop and synthesize whatever you have. No exceptions.
 3. **Truncate output with jq.** Always use jq to extract only title, url, and first 2000-3000 chars of markdown. NEVER dump full raw JSON responses.
 4. **Be concise.** Your final answer should be a focused summary with bullet points, not an essay. Include a Sources section with URLs.
-5. NEVER use LaTeX notation — use Unicode arrows (→ ← ↔) and symbols instead.
+5. **Use → not $\rightarrow$ for ALL arrows.** This is non-negotiable.
 PIWEBAGENT
 sed -i "s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g" "${UHOME}/.pi/agent/agents/web-research.md"
 
