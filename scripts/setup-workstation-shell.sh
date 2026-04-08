@@ -57,7 +57,20 @@ curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/c
 
 # Theme
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM}/themes/powerlevel10k" 2>/dev/null || true
-[ -x "${ZSH_CUSTOM}/themes/powerlevel10k/gitstatus/install" ] && "${ZSH_CUSTOM}/themes/powerlevel10k/gitstatus/install" || true
+
+# Pre-download gitstatusd so p10k doesn't fetch it on first login
+# (suppresses noisy "[powerlevel10k] fetching gitstatusd .." message)
+GITSTATUS_VER=$(sed -n 's/^gitstatus_version="\(.*\)"/\1/p' "${ZSH_CUSTOM}/themes/powerlevel10k/gitstatus/build.info" 2>/dev/null)
+if [ -n "${GITSTATUS_VER}" ]; then
+    GITSTATUS_CACHE="${UHOME}/.cache/gitstatus"
+    mkdir -p "${GITSTATUS_CACHE}"
+    if [ ! -f "${GITSTATUS_CACHE}/gitstatusd-linux-x86_64" ]; then
+        curl -fsSL "https://github.com/romkatv/gitstatus/releases/download/${GITSTATUS_VER}/gitstatusd-linux-x86_64.tar.gz" \
+          | tar -xz -C "${GITSTATUS_CACHE}" 2>/dev/null || true
+        chmod +x "${GITSTATUS_CACHE}/gitstatusd-linux-x86_64" 2>/dev/null || true
+    fi
+    chown -R "${ADMIN_USER}:${ADMIN_USER}" "${GITSTATUS_CACHE}"
+fi
 
 # tmux plugin manager
 git clone --depth=1 https://github.com/tmux-plugins/tpm "${UHOME}/.tmux/plugins/tpm" 2>/dev/null || true
@@ -73,8 +86,12 @@ sed -i "s/^plugins=(.*/plugins=(zsh-syntax-highlighting zsh-autosuggestions zsh-
 sed -i "s/^# HYPHEN_INSENSITIVE=.*/HYPHEN_INSENSITIVE=\"true\"/" "${UHOME}/.zshrc" 2>/dev/null || true
 sed -i "s/^# COMPLETION_WAITING_DOTS=.*/COMPLETION_WAITING_DOTS=\"true\"/" "${UHOME}/.zshrc" 2>/dev/null || true
 sed -i "s/^# HIST_STAMPS=.*/HIST_STAMPS=\"yyyy-mm-dd\"/" "${UHOME}/.zshrc" 2>/dev/null || true
-# Suppress dotenv prompt (must go before oh-my-zsh.sh sourcing)
+# Suppress dotenv prompt and background job noise (must go before oh-my-zsh.sh sourcing)
 sed -i "/source.*oh-my-zsh.sh/i export ZSH_DOTENV_PROMPT=false" "${UHOME}/.zshrc" 2>/dev/null || true
+# Disable job notifications during plugin load (suppresses "[N] PID" from git-auto-fetch etc.)
+sed -i "/source.*oh-my-zsh.sh/i setopt NO_MONITOR" "${UHOME}/.zshrc" 2>/dev/null || true
+# Re-enable monitor mode after plugins have loaded
+sed -i "/source.*oh-my-zsh.sh/a setopt MONITOR" "${UHOME}/.zshrc" 2>/dev/null || true
 
 # Fix ownership for everything cloned as root
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.oh-my-zsh" "${UHOME}/.tmux" 2>/dev/null || true
