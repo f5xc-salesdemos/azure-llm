@@ -77,7 +77,11 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "reasoning": true,
           "contextWindow": __LARGE_LLM_CTX__,
           "maxTokens": 8192,
-          "compat": { "supportsDeveloperRole": false }
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "thinkingFormat": "qwen-chat-template"
+          }
         }
       ]
     },
@@ -92,7 +96,17 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "reasoning": true,
           "contextWindow": __MEDIUM_LLM_CTX__,
           "maxTokens": 4096,
-          "compat": { "supportsDeveloperRole": false }
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": true,
+            "reasoningEffortMap": {
+              "minimal": "none",
+              "low": "none",
+              "medium": "high",
+              "high": "high",
+              "xhigh": "high"
+            }
+          }
         }
       ]
     },
@@ -107,7 +121,10 @@ cat > "${UHOME}/.pi/agent/models.json" <<'PIMODELS'
           "reasoning": false,
           "contextWindow": __SMALL_LLM_CTX__,
           "maxTokens": 4096,
-          "compat": { "supportsDeveloperRole": false }
+          "compat": {
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false
+          }
         }
       ]
     }
