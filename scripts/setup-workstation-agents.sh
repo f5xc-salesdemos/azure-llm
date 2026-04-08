@@ -306,6 +306,41 @@ else:
 " 2>/dev/null || true
 fi
 
+# Output sanitizer extension — deterministically strips LaTeX from all LLM output
+mkdir -p "${UHOME}/.pi/agent/extensions"
+cat > "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" <<'PISANITIZER'
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const REPLACEMENTS: [RegExp, string][] = [
+  [/\$\\rightarrow\$/g, "→"], [/\$\\leftarrow\$/g, "←"],
+  [/\$\\leftrightarrow\$/g, "↔"], [/\$\\uparrow\$/g, "↑"],
+  [/\$\\downarrow\$/g, "↓"], [/\$\\to\$/g, "→"], [/\$\\gets\$/g, "←"],
+  [/\$\\alpha\$/g, "α"], [/\$\\beta\$/g, "β"], [/\$\\gamma\$/g, "γ"],
+  [/\$\\delta\$/g, "δ"], [/\$\\theta\$/g, "θ"], [/\$\\lambda\$/g, "λ"],
+  [/\$\\pi\$/g, "π"], [/\$\\sigma\$/g, "σ"], [/\$\\omega\$/g, "ω"],
+  [/\$\\geq\$/g, "≥"], [/\$\\leq\$/g, "≤"], [/\$\\neq\$/g, "≠"],
+  [/\$\\pm\$/g, "±"], [/\$\\times\$/g, "×"], [/\$\\div\$/g, "÷"],
+  [/\$\\infty\$/g, "∞"], [/\$\\in\$/g, "∈"], [/\$\\sum\$/g, "∑"],
+];
+
+function sanitize(text: string): string {
+  let r = text;
+  for (const [p, s] of REPLACEMENTS) r = r.replace(p, s);
+  return r;
+}
+
+export default function (pi: ExtensionAPI) {
+  pi.on("message_end", (event) => {
+    const msg = event.message as any;
+    if (msg.role !== "assistant" || !Array.isArray(msg.content)) return;
+    for (const block of msg.content) {
+      if (block.type === "text" && typeof block.text === "string")
+        block.text = sanitize(block.text);
+    }
+  });
+}
+PISANITIZER
+
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.pi"
 
 # ============================================================
