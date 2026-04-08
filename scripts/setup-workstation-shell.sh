@@ -13,13 +13,30 @@ ZSH_CUSTOM="${UHOME}/.oh-my-zsh/custom"
 sed -i 's|SHELL=/bin/sh|SHELL=/bin/zsh|' /etc/default/useradd
 chsh -s /usr/bin/zsh "${ADMIN_USER}"
 
-# ---- Oh-my-zsh + plugins + p10k (as user) ----
+# ---- Oh-my-zsh + plugins + p10k ----
+# Remove stale oh-my-zsh dir if owned by wrong user (fixes re-run races)
+if [ -d "${UHOME}/.oh-my-zsh" ] && [ "$(stat -c %U "${UHOME}/.oh-my-zsh")" != "${ADMIN_USER}" ]; then
+    rm -rf "${UHOME}/.oh-my-zsh"
+fi
+
 # Create minimal .zshrc to suppress zsh-newuser-install wizard
 touch "${UHOME}/.zshrc"
 chown "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.zshrc"
 
 # Install oh-my-zsh (writes its template .zshrc, replacing the empty one)
 su - "${ADMIN_USER}" -c 'export RUNZSH=no && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"' || true
+
+# Safety net: if installer failed to write template, write oh-my-zsh boilerplate
+if ! grep -q 'source.*oh-my-zsh.sh' "${UHOME}/.zshrc" 2>/dev/null; then
+    echo "WARNING: oh-my-zsh installer did not write template .zshrc, writing manually"
+    cat > "${UHOME}/.zshrc" << 'OMZRC'
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git)
+source $ZSH/oh-my-zsh.sh
+OMZRC
+    chown "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.zshrc"
+fi
 
 # Pre-install tfenv so zsh-tfenv plugin doesn't noisily clone on first login
 git clone --depth=1 https://github.com/tfutils/tfenv.git "${UHOME}/.tfenv" 2>/dev/null || true
