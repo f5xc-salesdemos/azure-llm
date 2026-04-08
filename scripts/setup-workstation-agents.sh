@@ -51,6 +51,25 @@ mkdir -p "${UHOME}/.pi/agent/agents"
 
 # APPEND_SYSTEM.md — global rules appended to the main agent's system prompt
 cat > "${UHOME}/.pi/agent/APPEND_SYSTEM.md" <<'PIAPPEND'
+## CRITICAL: Research Before Answering
+
+**ABSOLUTE RULE:** When a user asks a question about how to do something, how something works, what something is, or any factual/technical question — you MUST delegate to the web-research subagent FIRST before answering. NEVER answer from memory alone. NEVER guess.
+
+This applies to:
+- "How do I configure X?" → delegate to web-research
+- "What is X?" → delegate to web-research
+- "What are the steps to X?" → delegate to web-research
+- "Can you explain X?" → delegate to web-research
+- Any product, technology, API, configuration, or process question → delegate to web-research
+
+Only skip web research for:
+- Pure coding tasks (writing/editing code in the current project)
+- Local file operations (reading, editing files already on disk)
+- Git operations
+- Simple math or logic that needs no external source
+
+Your answers MUST be grounded in verifiable sources. Always include a Sources section with URLs at the end of factual answers.
+
 ## CRITICAL Output Formatting Rules
 
 **ABSOLUTE RULE — NO EXCEPTIONS:** You must NEVER output LaTeX math notation in any response. This includes but is not limited to:
