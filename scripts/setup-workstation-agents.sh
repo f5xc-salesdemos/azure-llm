@@ -746,6 +746,13 @@ disabledProviders:
   - kimi
   - cloudflare
   - cursor
+web_search:
+  enabled: false
+providers:
+  webSearch: synthetic
+exa:
+  enabled: false
+  enableSearch: false
 OMPCONF
 sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.omp/agent/config.yml"
 
@@ -804,7 +811,30 @@ sed -i "s|__MEDIUM_LLM_BASE_URL__|${MEDIUM_LLM_BASE_URL}|g; s|__MEDIUM_LLM_MODEL
 sed -i "s|__SMALL_LLM_BASE_URL__|${SMALL_LLM_BASE_URL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g; s|__SMALL_LLM_CTX__|${SMALL_LLM_CTX}|g" "${UHOME}/.omp/agent/models.yml"
 
 # Reuse Pi's APPEND_SYSTEM.md (F5 domain context + query enrichment)
+# Then append omp-specific Firecrawl search instructions (omp's built-in web_search is disabled)
 cp "${UHOME}/.pi/agent/APPEND_SYSTEM.md" "${UHOME}/.omp/agent/APPEND_SYSTEM.md" 2>/dev/null || true
+cat >> "${UHOME}/.omp/agent/APPEND_SYSTEM.md" <<'OMPWEB'
+
+## Web Search via Bash (omp-specific)
+
+The built-in web_search tool is disabled. Use bash with curl to search via our local Firecrawl:
+
+**Search:**
+```bash
+curl -s http://localhost:3002/v1/search -X POST -H "Content-Type: application/json" \
+  -d '{"query":"YOUR QUERY","limit":5,"scrapeOptions":{"formats":["markdown"],"onlyMainContent":true}}' \
+  | jq '.data[:4] | .[] | {title, url, markdown: .markdown[:2500]}'
+```
+
+**Fetch a URL:**
+```bash
+curl -s http://localhost:3002/v1/scrape -X POST -H "Content-Type: application/json" \
+  -d '{"url":"URL","formats":["markdown"],"onlyMainContent":true}' \
+  | jq '{title: .data.metadata.title, markdown: .data.markdown[:3000]}'
+```
+
+Always research before answering factual questions. Always cite sources with URLs.
+OMPWEB
 
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.omp"
 
