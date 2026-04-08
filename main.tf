@@ -394,6 +394,6 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     devstral_port          = var.devstral_port
     devstral_served_name   = var.devstral_served_name
     devstral_max_model_len = var.devstral_max_model_len
-    tools_script_b64       = base64encode(file("${path.module}/scripts/setup-workstation-tools.sh"))
+    tools_script_gzb64     = base64gzip(file("${path.module}/scripts/setup-workstation-tools.sh"))
   }))
 }

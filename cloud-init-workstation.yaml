@@ -12,8 +12,8 @@ write_files:
     '
 - path: /opt/setup-workstation-tools.sh
   permissions: '0755'
-  encoding: b64
-  content: ${tools_script_b64}
+  encoding: gzip+b64
+  content: ${tools_script_gzb64}
 - path: /opt/setup-workstation.sh
   permissions: '0755'
   content: |
