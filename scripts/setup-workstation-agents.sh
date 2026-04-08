@@ -69,20 +69,6 @@ Only skip web research for:
 - Simple math or logic that needs no external source
 
 Your answers MUST be grounded in verifiable sources. Always include a Sources section with URLs at the end of factual answers.
-
-## Structured Data Extraction
-
-When you need to extract specific structured data from a web page (prices, features, specs, tables, lists), you can call the Firecrawl extract endpoint directly via bash:
-
-```bash
-curl -s http://localhost:3002/v1/extract -X POST -H "Content-Type: application/json" \
-  -d '{"urls":["https://example.com"],"prompt":"Extract the product features","schema":{"type":"object","properties":{"features":{"type":"array","items":{"type":"string"}}}}}' | jq .
-```
-
-Use this when:
-- You need specific fields from a page (not full content)
-- You want data in a structured JSON format
-- You need to compare structured data across multiple URLs
 PIAPPEND
 
 # settings.json
