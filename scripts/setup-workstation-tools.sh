@@ -61,8 +61,8 @@ fi
 echo "deb [arch=${DPKG_ARCH} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
     > /etc/apt/sources.list.d/github-cli.list
 
-# Node.js repo (needed by group A)
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+# Node.js 24.x LTS repo (needed by group A)
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 
 apt-get update -y
 

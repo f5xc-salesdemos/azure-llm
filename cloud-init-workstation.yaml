@@ -37,7 +37,7 @@ write_files:
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/workstation-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-08-v13-ephemeral-subagent"
+    CLOUD_INIT_VERSION="2026-04-09-v14-gpu-resilient"
     echo "Cloud-init version: $${CLOUD_INIT_VERSION}"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
@@ -93,6 +93,10 @@ write_files:
     retry_cmd 3 10 apt-get install -y git curl wget unzip python3-pip zsh \
         build-essential pkg-config libssl-dev cmake musl-tools mold lld
 
+    # ---- Node.js 24.x LTS (needed for npm/pnpm before tools script runs) ----
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+    retry_cmd 3 10 apt-get install -y nodejs
+
     # ---- GitHub CLI ----
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
       | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -101,21 +105,35 @@ write_files:
     apt-get update
     retry_cmd 3 10 apt-get install -y gh
 
-    # ---- NVIDIA drivers (T4 for Chrome GPU rendering) ----
-    retry_cmd 3 5 wget -q -P /tmp https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-    dpkg -i /tmp/cuda-keyring_1.1-1_all.deb
-    apt-get update
-    retry_cmd 3 10 apt-get install -y cuda-drivers
+    # ---- NVIDIA drivers (conditional — only if GPU hardware is present) ----
+    if lspci | grep -qi nvidia; then
+        echo "GPU detected — installing NVIDIA drivers..."
+        {
+            retry_cmd 3 5 wget -q -P /tmp https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+            dpkg -i /tmp/cuda-keyring_1.1-1_all.deb
+            apt-get update
+            retry_cmd 3 10 apt-get install -y cuda-drivers
+        } || echo "WARNING: NVIDIA driver installation failed (non-fatal)" >&2
+    else
+        echo "No GPU detected — skipping NVIDIA driver installation"
+        # Disable nvidia-persistenced if previously installed (prevents failed service on non-GPU VMs)
+        if systemctl list-unit-files nvidia-persistenced.service >/dev/null 2>&1; then
+            systemctl stop nvidia-persistenced.service 2>/dev/null || true
+            systemctl disable nvidia-persistenced.service 2>/dev/null || true
+            systemctl mask nvidia-persistenced.service 2>/dev/null || true
+            echo "Masked nvidia-persistenced.service (no GPU present)"
+        fi
+    fi
 
     # ---- Upgrade npm to latest before any scripts use it ----
     echo "Upgrading npm to latest..."
-    retry_cmd 3 10 npm install -g npm@latest
-    echo "npm version: $(npm --version)"
+    retry_cmd 3 10 npm install -g npm@latest || echo "WARNING: npm upgrade failed (non-fatal)" >&2
+    echo "npm version: $(npm --version 2>/dev/null || echo 'not available')"
 
     # ---- Install pnpm globally (required by firecrawl, don't depend on tools script) ----
     echo "Installing pnpm..."
-    retry_cmd 3 10 npm install -g pnpm
-    echo "pnpm version: $(pnpm --version)"
+    retry_cmd 3 10 npm install -g pnpm || echo "WARNING: pnpm install failed (non-fatal)" >&2
+    echo "pnpm version: $(pnpm --version 2>/dev/null || echo 'not available')"
 
     # ---- Zig (cross-compilation linker, installed system-wide) ----
     if ! command -v zig >/dev/null 2>&1; then
@@ -181,6 +199,13 @@ write_files:
     FIRECRAWL_EXIT=0
     run_script "firecrawl" "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" || FIRECRAWL_EXIT=$$?
 
+    # ---- Export GPU detection result for downstream scripts ----
+    if lspci | grep -qi nvidia; then
+        echo "export GPU_PRESENT=true" >> /etc/profile.d/llm-endpoints.sh
+    else
+        echo "export GPU_PRESENT=false" >> /etc/profile.d/llm-endpoints.sh
+    fi
+
     # ---- Post-setup validation ----
     echo "=== Tool Validation Report ==="
     VALIDATION_PASS=0
@@ -194,6 +219,19 @@ write_files:
             VALIDATION_FAIL=$(($${VALIDATION_FAIL} + 1))
         fi
     done
+    # GPU-specific validation
+    if lspci | grep -qi nvidia; then
+        if command -v nvidia-smi >/dev/null 2>&1; then
+            echo "  [OK]   nvidia-smi: $(command -v nvidia-smi)"
+            nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null || true
+            VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
+        else
+            echo "  [MISS] nvidia-smi: not found (GPU present but drivers not installed)"
+            VALIDATION_FAIL=$(($${VALIDATION_FAIL} + 1))
+        fi
+    else
+        echo "  [SKIP] nvidia-smi: no GPU detected"
+    fi
     echo "Validation: $${VALIDATION_PASS} present, $${VALIDATION_FAIL} missing"
     echo "=== End Tool Validation ==="
 
