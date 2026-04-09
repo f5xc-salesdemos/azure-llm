@@ -894,11 +894,85 @@ exa:
 XCSHCONF
 sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.xcsh/agent/config.yml"
 
-# models.yml — identical to omp models
-cp "${UHOME}/.omp/agent/models.yml" "${UHOME}/.xcsh/agent/models.yml" 2>/dev/null || true
+# models.yml — render directly (don't depend on omp being installed first)
+cat > "${UHOME}/.xcsh/agent/models.yml" <<XCSHMODELS
+providers:
+  openai:
+    baseUrl: __LARGE_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __LARGE_LLM_MODEL__
+        name: Large LLM (vLLM)
+        api: openai-completions
+        reasoning: true
+        contextWindow: __LARGE_LLM_CTX__
+        maxTokens: 8192
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: false
+          thinkingFormat: qwen-chat-template
+  mediumllm:
+    baseUrl: __MEDIUM_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __MEDIUM_LLM_MODEL__
+        name: Medium LLM (vLLM)
+        api: openai-completions
+        reasoning: true
+        contextWindow: __MEDIUM_LLM_CTX__
+        maxTokens: 4096
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: true
+          reasoningEffortMap:
+            minimal: none
+            low: none
+            medium: high
+            high: high
+            xhigh: high
+  smallllm:
+    baseUrl: __SMALL_LLM_BASE_URL__
+    apiKey: local-vllm
+    models:
+      - id: __SMALL_LLM_MODEL__
+        name: Small LLM (vLLM)
+        api: openai-completions
+        reasoning: false
+        contextWindow: __SMALL_LLM_CTX__
+        maxTokens: 4096
+        compat:
+          supportsDeveloperRole: false
+          supportsReasoningEffort: false
+XCSHMODELS
+sed -i "s|__LARGE_LLM_BASE_URL__|${LARGE_LLM_BASE_URL}|g; s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__LARGE_LLM_CTX__|${LARGE_LLM_CTX}|g" "${UHOME}/.xcsh/agent/models.yml"
+sed -i "s|__MEDIUM_LLM_BASE_URL__|${MEDIUM_LLM_BASE_URL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__MEDIUM_LLM_CTX__|${MEDIUM_LLM_CTX}|g" "${UHOME}/.xcsh/agent/models.yml"
+sed -i "s|__SMALL_LLM_BASE_URL__|${SMALL_LLM_BASE_URL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g; s|__SMALL_LLM_CTX__|${SMALL_LLM_CTX}|g" "${UHOME}/.xcsh/agent/models.yml"
 
-# Reuse Pi's APPEND_SYSTEM.md + omp's Firecrawl search instructions
-cp "${UHOME}/.omp/agent/APPEND_SYSTEM.md" "${UHOME}/.xcsh/agent/APPEND_SYSTEM.md" 2>/dev/null || true
+# APPEND_SYSTEM.md — render from Pi's copy (Pi is always installed first)
+cp "${UHOME}/.pi/agent/APPEND_SYSTEM.md" "${UHOME}/.xcsh/agent/APPEND_SYSTEM.md" 2>/dev/null || true
+# Append Firecrawl search instructions for xcsh (same as omp)
+cat >> "${UHOME}/.xcsh/agent/APPEND_SYSTEM.md" <<'XCSHWEB'
+
+## Web Search via Bash (xcsh-specific)
+
+The built-in web_search tool is disabled. Use bash with curl to search via our local Firecrawl:
+
+**Search:**
+```bash
+curl -s http://localhost:3002/v1/search -X POST -H "Content-Type: application/json" \
+  -d '{"query":"YOUR QUERY","limit":5,"scrapeOptions":{"formats":["markdown"],"onlyMainContent":true}}' \
+  | jq '.data[:4] | .[] | {title, url, markdown: .markdown[:2500]}'
+```
+
+**Fetch a URL:**
+```bash
+curl -s http://localhost:3002/v1/scrape -X POST -H "Content-Type: application/json" \
+  -d '{"url":"URL","formats":["markdown"],"onlyMainContent":true}' \
+  | jq '{title: .data.metadata.title, markdown: .data.markdown[:3000]}'
+```
+
+Always research before answering factual questions. Always cite sources with URLs.
+XCSHWEB
 
 # Reuse Pi's output-sanitizer extension (LaTeX → Unicode)
 cp "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" "${UHOME}/.xcsh/agent/extensions/output-sanitizer.ts" 2>/dev/null || true
