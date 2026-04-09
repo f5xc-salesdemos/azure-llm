@@ -843,6 +843,62 @@ OMPWEB
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.omp"
 
 # ============================================================
+# 2c. XCSH config — F5-branded fork of oh-my-pi (identical config format)
+# ============================================================
+# Binary: xcsh (pre-built from GitHub releases or via bun install -g @xcsh/pi-coding-agent)
+# Config dir: ~/.xcsh/agent/ (separate from ~/.omp/ and ~/.pi/)
+# Blocked: waiting for f5xc-salesdemos/xcsh to publish releases (#5) and npm package (#6)
+# When available, install with:
+#   curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/xcsh/main/scripts/install.sh | sh
+# Config is identical to omp — just different directory paths.
+
+mkdir -p "${UHOME}/.xcsh/agent/agents" "${UHOME}/.xcsh/agent/extensions"
+
+# config.yml — identical to omp config
+cat > "${UHOME}/.xcsh/agent/config.yml" <<XCSHCONF
+defaultProvider: openai
+defaultModel: __LARGE_LLM_MODEL__
+defaultThinkingLevel: high
+hideThinkingBlock: true
+quietStartup: true
+collapseChangelog: true
+enabledModels:
+  - __LARGE_LLM_MODEL__
+  - __MEDIUM_LLM_MODEL__
+  - __SMALL_LLM_MODEL__
+disabledProviders:
+  - anthropic
+  - google
+  - groq
+  - mistral
+  - bedrock
+  - huggingface
+  - cerebras
+  - kimi
+  - cloudflare
+  - cursor
+web_search:
+  enabled: false
+providers:
+  webSearch: synthetic
+exa:
+  enabled: false
+  enableSearch: false
+XCSHCONF
+sed -i "s|__LARGE_LLM_MODEL__|${LARGE_LLM_MODEL}|g; s|__MEDIUM_LLM_MODEL__|${MEDIUM_LLM_MODEL}|g; s|__SMALL_LLM_MODEL__|${SMALL_LLM_MODEL}|g" "${UHOME}/.xcsh/agent/config.yml"
+
+# models.yml — identical to omp models
+cp "${UHOME}/.omp/agent/models.yml" "${UHOME}/.xcsh/agent/models.yml" 2>/dev/null || true
+
+# Reuse Pi's APPEND_SYSTEM.md + omp's Firecrawl search instructions
+cp "${UHOME}/.omp/agent/APPEND_SYSTEM.md" "${UHOME}/.xcsh/agent/APPEND_SYSTEM.md" 2>/dev/null || true
+
+# Reuse Pi's output-sanitizer extension (LaTeX → Unicode)
+cp "${UHOME}/.pi/agent/extensions/output-sanitizer.ts" "${UHOME}/.xcsh/agent/extensions/output-sanitizer.ts" 2>/dev/null || true
+
+chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.xcsh"
+
+# ============================================================
 # 3. Hermes config (vLLM/largeLLM)
 # ============================================================
 mkdir -p "${UHOME}/.hermes"/{sessions,logs,memories,skills,hooks,cron,image_cache,audio_cache}
