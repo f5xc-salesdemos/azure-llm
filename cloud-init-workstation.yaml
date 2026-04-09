@@ -90,7 +90,8 @@ write_files:
     # ---- Minimal bootstrap packages ----
     wait_for_apt
     retry_cmd 3 5 apt-get update -y
-    retry_cmd 3 10 apt-get install -y git curl wget unzip python3-pip zsh
+    retry_cmd 3 10 apt-get install -y git curl wget unzip python3-pip zsh \
+        build-essential pkg-config libssl-dev cmake musl-tools
 
     # ---- GitHub CLI ----
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -115,6 +116,25 @@ write_files:
     echo "Installing pnpm..."
     retry_cmd 3 10 npm install -g pnpm
     echo "pnpm version: $(pnpm --version)"
+
+    # ---- Zig (cross-compilation linker, installed system-wide) ----
+    if ! command -v zig >/dev/null 2>&1; then
+        echo "Installing Zig..."
+        ZIG_VER=0.14.0
+        retry_cmd 3 10 curl -fsSL "https://ziglang.org/download/$${ZIG_VER}/zig-linux-x86_64-$${ZIG_VER}.tar.xz" -o /tmp/zig.tar.xz
+        tar -xJf /tmp/zig.tar.xz -C /opt/
+        ln -sf "/opt/zig-linux-x86_64-$${ZIG_VER}/zig" /usr/local/bin/zig
+        rm -f /tmp/zig.tar.xz
+        echo "zig version: $(zig version)"
+    fi
+
+    # ---- Rust toolchain for admin user (not root) ----
+    if ! su - "$${LLM_ADMIN_USER}" -c 'command -v rustc' >/dev/null 2>&1; then
+        echo "Installing Rust for $${LLM_ADMIN_USER}..."
+        su - "$${LLM_ADMIN_USER}" -c 'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable' 2>&1 | tail -3
+        su - "$${LLM_ADMIN_USER}" -c 'source ~/.cargo/env && rustup target add x86_64-unknown-linux-musl && cargo install cargo-zigbuild' 2>&1 | tail -3
+        echo "Rust installed for $${LLM_ADMIN_USER}"
+    fi
 
     # ---- Download setup scripts from GitHub ----
     REPO_RAW="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts"
