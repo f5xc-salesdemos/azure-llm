@@ -688,17 +688,41 @@ const KNOWN: Record<string, string> = {
   "\\checkmark": "✓", "\\star": "★", "\\bullet": "•", "\\dag": "†",
 };
 
+/** Process the inner content of a LaTeX expression (between $ or $$ delimiters). */
+function processLatexInner(inner: string): string {
+  let r = inner;
+  // 1: Unwrap \text{...}, \mathrm{...}, \mathbf{...} → plain text
+  r = r.replace(/\\text\{([^}]*)\}/g, "$1");
+  r = r.replace(/\\mathrm\{([^}]*)\}/g, "$1");
+  r = r.replace(/\\mathbf\{([^}]*)\}/g, "$1");
+  r = r.replace(/\\mathit\{([^}]*)\}/g, "$1");
+  // 2: Unwrap \textbf{...} → **text**, \textit{...} → *text*
+  r = r.replace(/\\textbf\{([^}]*)\}/g, "**$1**");
+  r = r.replace(/\\textit\{([^}]*)\}/g, "*$1*");
+  // 3: \frac{a}{b} → a/b
+  r = r.replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, "$1/$2");
+  // 4: Known commands → Unicode
+  for (const [cmd, uni] of Object.entries(KNOWN)) {
+    const escaped = cmd.replace(/\\/g, "\\\\");
+    r = r.replace(new RegExp(escaped + "(?![a-zA-Z])", "g"), uni);
+  }
+  // 5: Spacing commands → space
+  r = r.replace(/\\(?:quad|qquad|;|,|:|\s)/g, " ");
+  // 6: Strip remaining \command sequences
+  r = r.replace(/\\([a-zA-Z]+)/g, (_, cmd) => cmd);
+  // 7: Clean up extra whitespace
+  r = r.replace(/\s{2,}/g, " ").trim();
+  return r;
+}
+
 function sanitize(text: string): string {
   let r = text;
-  // Pass 1: replace known $\command$ patterns with Unicode
-  for (const [cmd, uni] of Object.entries(KNOWN)) {
-    // Escape the backslash for regex: \\alpha -> \\\\alpha
-    const escaped = cmd.replace(/\\/g, "\\\\");
-    r = r.replace(new RegExp("\\$" + escaped + "\\$", "g"), uni);
-  }
-  // Pass 2: catch-all — strip any remaining $\command$ that we missed
-  // Matches $\anycommand$ and removes the $ delimiters and backslash
-  r = r.replace(/\$\\([a-zA-Z]+)\$/g, (_, cmd) => cmd);
+  // Pass 1: Process $$...$$ block-level expressions
+  r = r.replace(/\$\$([\s\S]*?)\$\$/g, (_, inner) => processLatexInner(inner));
+  // Pass 2: Process $...$ inline expressions (but not $$)
+  r = r.replace(/(?<!\$)\$(?!\$)((?:[^$\\]|\\.)+)\$/g, (_, inner) => processLatexInner(inner));
+  // Pass 3: Catch any remaining \text{} outside of $ delimiters
+  r = r.replace(/\\text\{([^}]*)\}/g, "$1");
   return r;
 }
 
