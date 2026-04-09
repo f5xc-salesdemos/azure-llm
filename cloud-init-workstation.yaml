@@ -199,6 +199,15 @@ write_files:
     FIRECRAWL_EXIT=0
     run_script "firecrawl" "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" || FIRECRAWL_EXIT=$$?
 
+    # ---- Download and run functional tests ----
+    echo "Downloading test-workstation.sh..."
+    retry_cmd 3 5 curl -fsSL --max-time 60 \
+      "$${REPO_RAW}/test-workstation.sh" -o "$${SCRIPTS_DIR}/test-workstation.sh"
+    chmod +x "$${SCRIPTS_DIR}/test-workstation.sh"
+
+    TEST_EXIT=0
+    run_script "tests" "$${SCRIPTS_DIR}/test-workstation.sh" "$${LLM_ADMIN_USER}" || TEST_EXIT=$$?
+
     # ---- Export GPU detection result for downstream scripts ----
     if lspci | grep -qi nvidia; then
         echo "export GPU_PRESENT=true" >> /etc/profile.d/llm-endpoints.sh
@@ -258,8 +267,8 @@ write_files:
     done
 
     echo "=== Setup Exit Codes ==="
-    echo "  tools=$${TOOLS_EXIT} shell=$${SHELL_EXIT} agents=$${AGENTS_EXIT} firecrawl=$${FIRECRAWL_EXIT}"
-    TOTAL_FAIL=$(($${TOOLS_EXIT} + $${SHELL_EXIT} + $${AGENTS_EXIT} + $${FIRECRAWL_EXIT}))
+    echo "  tools=$${TOOLS_EXIT} shell=$${SHELL_EXIT} agents=$${AGENTS_EXIT} firecrawl=$${FIRECRAWL_EXIT} tests=$${TEST_EXIT}"
+    TOTAL_FAIL=$(($${TOOLS_EXIT} + $${SHELL_EXIT} + $${AGENTS_EXIT} + $${FIRECRAWL_EXIT} + $${TEST_EXIT}))
     if [ "$${TOTAL_FAIL}" -ne 0 ]; then
         echo "WARNING: $${TOTAL_FAIL} non-zero exit code(s)" >&2
     fi
