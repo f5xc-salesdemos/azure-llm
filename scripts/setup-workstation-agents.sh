@@ -978,7 +978,7 @@ cat > "${UHOME}/.claude/settings.json" <<'SETTINGS'
 {
   "defaultMode": "bypassPermissions",
   "skipDangerousModePermissionPrompt": true,
-  "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*", "WebSearch", "WebFetch"] },
+  "permissions": { "allow": ["*"] },
   "model": "sonnet",
   "spinnerTipsEnabled": false,
   "terminalProgressBarEnabled": false,
