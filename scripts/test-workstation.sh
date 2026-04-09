@@ -103,9 +103,9 @@ run_test_as_user "opencode-ping" \
     'opencode run "respond with exactly one word: pong" 2>&1' \
     "pong"
 
-run_test "omp-render" \
-    "oh-my-posh print primary --config https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/jandedobbeleer.omp.json 2>&1" \
-    "."
+run_test_as_user "omp-ping" \
+    'omp -p "respond with exactly one word: pong" --no-tools --provider openai 2>&1' \
+    "pong"
 
 # ============================================================
 # SECTION 3: Web search (Firecrawl/SearXNG end-to-end)
@@ -118,6 +118,10 @@ run_test_as_user "claude-websearch" \
 
 run_test_as_user "pi-websearch" \
     'pi -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
+    "3\.[0-9]|\."
+
+run_test_as_user "omp-websearch" \
+    'omp -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
     "3\.[0-9]|\."
 
 # ============================================================

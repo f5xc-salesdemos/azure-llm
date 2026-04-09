@@ -99,6 +99,14 @@ ln -sf /usr/bin/batcat /usr/local/bin/bat
 sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen
 locale-gen en_US.UTF-8
 
+# Bun runtime (required by @oh-my-pi/pi-coding-agent / omp)
+if ! command -v bun >/dev/null 2>&1; then
+    echo "Installing Bun..."
+    curl -fsSL https://bun.sh/install | BUN_INSTALL=/opt/bun bash
+    ln -sf /opt/bun/bin/bun /usr/local/bin/bun
+    echo "bun version: $(bun --version)"
+fi
+
 echo "=== Phase 1: APT packages done ($(date)) ==="
 
 # ============================================================
@@ -111,7 +119,7 @@ declare -A GROUP_NAMES
 group_npm() {
     set -euo pipefail
     npm install -g \
-        pnpm opencode-ai "@mariozechner/pi-coding-agent" "@mjakl/pi-subagent" \
+        pnpm opencode-ai "@mariozechner/pi-coding-agent" "@oh-my-pi/pi-coding-agent" "@mjakl/pi-subagent" \
         prettier markdownlint-cli2 markdownlint-cli eslint "@biomejs/biome" \
         stylelint htmlhint textlint textlint-rule-terminology jscpd \
         "@coffeelint/cli" "@stoplight/spectral-cli" gplint asl-validator renovate \
@@ -360,13 +368,6 @@ group_binaries() {
         }; } &
         BPIDS+=($!)
     fi
-
-    { bin_install oh-my-posh || {
-        curl -fsSLo /usr/local/bin/oh-my-posh "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-${DPKG_ARCH}"
-        chmod +x /usr/local/bin/oh-my-posh
-        ln -sf /usr/local/bin/oh-my-posh /usr/local/bin/omp
-    }; } &
-    BPIDS+=($!)
 
     { bin_install tirith || {
         if [ "${DPKG_ARCH}" = "amd64" ]; then A="x86_64-unknown-linux-gnu"; else A="aarch64-unknown-linux-gnu"; fi
