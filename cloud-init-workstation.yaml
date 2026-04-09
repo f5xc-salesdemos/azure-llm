@@ -211,7 +211,7 @@ write_files:
     VALIDATION_PASS=0
     VALIDATION_FAIL=0
     # System-wide tools (checked as root)
-    for tool in zsh git curl gh nvim node npm pnpm opencode omp xcsh fzf bat rg fd jq yq kubectl helm terraform; do
+    for tool in zsh git curl gh nvim node npm pnpm opencode pi omp xcsh fzf bat rg fd jq yq kubectl helm terraform; do
         if command -v "$${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(command -v $${tool})"
             VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
@@ -221,7 +221,7 @@ write_files:
         fi
     done
     # User-local tools (installed in ~/.local/bin, checked as admin user)
-    for tool in claude hermes pi; do
+    for tool in claude hermes; do
         if su - "$${LLM_ADMIN_USER}" -c "command -v $${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(su - "$${LLM_ADMIN_USER}" -c "command -v $${tool}" 2>/dev/null)"
             VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
