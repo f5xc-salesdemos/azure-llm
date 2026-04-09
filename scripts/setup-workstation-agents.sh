@@ -843,14 +843,21 @@ OMPWEB
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.omp"
 
 # ============================================================
-# 2c. XCSH config — F5-branded fork of oh-my-pi (identical config format)
+# 2c. XCSH — F5-branded fork of oh-my-pi (identical config format)
 # ============================================================
-# Binary: xcsh (pre-built from GitHub releases or via bun install -g @xcsh/pi-coding-agent)
+# Binary: xcsh (pre-built from GitHub releases)
 # Config dir: ~/.xcsh/agent/ (separate from ~/.omp/ and ~/.pi/)
-# Blocked: waiting for f5xc-salesdemos/xcsh to publish releases (#5) and npm package (#6)
-# When available, install with:
-#   curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/xcsh/main/scripts/install.sh | sh
-# Config is identical to omp — just different directory paths.
+
+# Install xcsh binary from GitHub releases
+if ! command -v xcsh >/dev/null 2>&1; then
+    echo "Installing xcsh..."
+    XCSH_VER=$(curl -sf "https://api.github.com/repos/f5xc-salesdemos/xcsh/releases/latest" | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo "v14.0.3")
+    XCSH_BASE="https://github.com/f5xc-salesdemos/xcsh/releases/download/${XCSH_VER}"
+    retry_cmd 3 10 curl -fsSL --max-time 300 "${XCSH_BASE}/xcsh-linux-x64" -o /usr/local/bin/xcsh
+    chmod +x /usr/local/bin/xcsh
+    retry_cmd 3 10 curl -fsSL --max-time 300 "${XCSH_BASE}/pi_natives.linux-x64-modern.node" -o /usr/local/bin/pi_natives.linux-x64-modern.node
+    echo "xcsh installed: $(xcsh --version 2>/dev/null || echo 'unknown')"
+fi
 
 mkdir -p "${UHOME}/.xcsh/agent/agents" "${UHOME}/.xcsh/agent/extensions"
 
