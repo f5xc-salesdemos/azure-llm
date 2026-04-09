@@ -180,7 +180,7 @@ write_files:
     # ---- Summary ----
     # ---- Service validation ----
     echo "=== Service Validation ==="
-    for svc in redis-server rabbitmq-server postgresql searxng firecrawl-api firecrawl-playwright firecrawl-scrape-worker firecrawl-prefetch-worker firecrawl-extract-worker; do
+    for svc in redis-server rabbitmq-server postgresql searxng firecrawl-api firecrawl-playwright firecrawl-scrape-worker firecrawl-prefetch-worker firecrawl-extract-worker claude-code-proxy; do
         if systemctl is-active --quiet "$${svc}" 2>/dev/null; then
             echo "  [OK]   $${svc}: active"
         else

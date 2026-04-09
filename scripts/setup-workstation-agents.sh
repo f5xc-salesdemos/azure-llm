@@ -891,6 +891,63 @@ sed -i "s|__LARGE_LLM_BASE_URL__|${LARGE_LLM_BASE_URL}|g; s|__LARGE_LLM_MODEL__|
 chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.hermes"
 
 # ============================================================
+# 3b. Claude Code Proxy — Anthropic→OpenAI converter with Firecrawl web search
+# ============================================================
+# Intercepts web_search/web_fetch tool calls and executes them via local Firecrawl
+if [ ! -d /opt/claude-code-proxy ]; then
+    retry_cmd 3 10 git clone --depth=1 https://github.com/f5xc-salesdemos/claude-code-proxy.git /opt/claude-code-proxy
+fi
+cd /opt/claude-code-proxy
+git pull 2>/dev/null || true
+
+if [ ! -d /opt/claude-code-proxy/venv ]; then
+    python3 -m venv /opt/claude-code-proxy/venv
+fi
+/opt/claude-code-proxy/venv/bin/pip install -q -U pip 2>/dev/null
+retry_cmd 3 10 /opt/claude-code-proxy/venv/bin/pip install -q -r /opt/claude-code-proxy/requirements.txt
+
+# Proxy .env — points to vLLM backend + local Firecrawl for web search
+cat > /opt/claude-code-proxy/.env <<PROXYENV
+OPENAI_API_KEY=local-vllm
+OPENAI_BASE_URL=${LARGE_LLM_BASE_URL}
+BIG_MODEL=${LARGE_LLM_MODEL}
+MIDDLE_MODEL=${LARGE_LLM_MODEL}
+SMALL_MODEL=${LARGE_LLM_MODEL}
+SEARCH_PROVIDER=firecrawl
+FIRECRAWL_API_URL=http://localhost:3002
+HOST=127.0.0.1
+PORT=8082
+LOG_LEVEL=INFO
+REQUEST_TIMEOUT=120
+MAX_RETRIES=3
+MAX_TOKENS_LIMIT=8192
+MIN_TOKENS_LIMIT=100
+MODEL_REGISTRY_ENABLED=True
+PROXYENV
+
+# Systemd service
+cat > /etc/systemd/system/claude-code-proxy.service <<'PROXYUNIT'
+[Unit]
+Description=Claude Code Proxy (Anthropic→OpenAI with Firecrawl search)
+After=network.target firecrawl-api.service
+Wants=firecrawl-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/claude-code-proxy
+ExecStart=/opt/claude-code-proxy/venv/bin/python -m uvicorn src.main:app --host 127.0.0.1 --port 8082
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target
+PROXYUNIT
+
+systemctl daemon-reload
+systemctl enable --now claude-code-proxy
+
+# ============================================================
 # 4. Claude Code — install binary + settings.json + .claude.json
 # ============================================================
 # Install Claude Code natively if not already present
@@ -921,7 +978,7 @@ cat > "${UHOME}/.claude/settings.json" <<'SETTINGS'
 {
   "defaultMode": "bypassPermissions",
   "skipDangerousModePermissionPrompt": true,
-  "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*"] },
+  "permissions": { "allow": ["Bash", "Edit", "Write", "mcp__*", "WebSearch", "WebFetch"] },
   "model": "sonnet",
   "spinnerTipsEnabled": false,
   "terminalProgressBarEnabled": false,
@@ -929,7 +986,7 @@ cat > "${UHOME}/.claude/settings.json" <<'SETTINGS'
   "prefersReducedMotion": true,
   "companyAnnouncements": [],
   "env": {
-    "ANTHROPIC_BASE_URL": "__LARGE_LLM_BASE_URL_NOPATH__",
+    "ANTHROPIC_BASE_URL": "http://localhost:8082",
     "ANTHROPIC_API_KEY": "local-vllm",
     "ANTHROPIC_SMALL_FAST_MODEL": "__LARGE_LLM_MODEL__",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "__LARGE_LLM_MODEL__",
