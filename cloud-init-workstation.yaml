@@ -210,12 +210,23 @@ write_files:
     echo "=== Tool Validation Report ==="
     VALIDATION_PASS=0
     VALIDATION_FAIL=0
-    for tool in zsh git curl gh nvim node npm pnpm claude opencode pi omp xcsh hermes fzf bat rg fd jq yq kubectl helm terraform; do
+    # System-wide tools (checked as root)
+    for tool in zsh git curl gh nvim node npm pnpm opencode omp xcsh fzf bat rg fd jq yq kubectl helm terraform; do
         if command -v "$${tool}" >/dev/null 2>&1; then
             echo "  [OK]   $${tool}: $(command -v $${tool})"
             VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
         else
             echo "  [MISS] $${tool}: not found"
+            VALIDATION_FAIL=$(($${VALIDATION_FAIL} + 1))
+        fi
+    done
+    # User-local tools (installed in ~/.local/bin, checked as admin user)
+    for tool in claude hermes pi; do
+        if su - "$${LLM_ADMIN_USER}" -c "command -v $${tool}" >/dev/null 2>&1; then
+            echo "  [OK]   $${tool}: $(su - "$${LLM_ADMIN_USER}" -c "command -v $${tool}" 2>/dev/null)"
+            VALIDATION_PASS=$(($${VALIDATION_PASS} + 1))
+        else
+            echo "  [MISS] $${tool}: not found (user-local)"
             VALIDATION_FAIL=$(($${VALIDATION_FAIL} + 1))
         fi
     done
@@ -248,7 +259,7 @@ write_files:
 
     echo "=== Setup Exit Codes ==="
     echo "  tools=$${TOOLS_EXIT} shell=$${SHELL_EXIT} agents=$${AGENTS_EXIT} firecrawl=$${FIRECRAWL_EXIT}"
-    TOTAL_FAIL=$$(($${TOOLS_EXIT} + $${SHELL_EXIT} + $${AGENTS_EXIT} + $${FIRECRAWL_EXIT}))
+    TOTAL_FAIL=$(($${TOOLS_EXIT} + $${SHELL_EXIT} + $${AGENTS_EXIT} + $${FIRECRAWL_EXIT}))
     if [ "$${TOTAL_FAIL}" -ne 0 ]; then
         echo "WARNING: $${TOTAL_FAIL} non-zero exit code(s)" >&2
     fi

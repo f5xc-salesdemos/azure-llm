@@ -361,6 +361,13 @@ group_binaries() {
         BPIDS+=($!)
     fi
 
+    { bin_install oh-my-posh || {
+        curl -fsSLo /usr/local/bin/oh-my-posh "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-${DPKG_ARCH}"
+        chmod +x /usr/local/bin/oh-my-posh
+        ln -sf /usr/local/bin/oh-my-posh /usr/local/bin/omp
+    }; } &
+    BPIDS+=($!)
+
     { bin_install tirith || {
         if [ "${DPKG_ARCH}" = "amd64" ]; then A="x86_64-unknown-linux-gnu"; else A="aarch64-unknown-linux-gnu"; fi
         curl -fsSL "https://github.com/sheeki03/tirith/releases/latest/download/tirith-${A}.tar.gz" | tar -xz -C /usr/local/bin tirith
