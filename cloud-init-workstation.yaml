@@ -91,7 +91,7 @@ write_files:
     wait_for_apt
     retry_cmd 3 5 apt-get update -y
     retry_cmd 3 10 apt-get install -y git curl wget unzip python3-pip zsh \
-        build-essential pkg-config libssl-dev cmake musl-tools
+        build-essential pkg-config libssl-dev cmake musl-tools mold lld
 
     # ---- GitHub CLI ----
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
