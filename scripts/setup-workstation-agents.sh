@@ -747,9 +747,9 @@ disabledProviders:
   - cloudflare
   - cursor
 web_search:
-  enabled: false
+  enabled: true
 providers:
-  webSearch: synthetic
+  webSearch: firecrawl
 exa:
   enabled: false
   enableSearch: false
@@ -885,9 +885,9 @@ disabledProviders:
   - cloudflare
   - cursor
 web_search:
-  enabled: false
+  enabled: true
 providers:
-  webSearch: synthetic
+  webSearch: firecrawl
 exa:
   enabled: false
   enableSearch: false
