@@ -102,9 +102,14 @@ locale-gen en_US.UTF-8
 # Bun runtime (required by @oh-my-pi/pi-coding-agent / omp)
 if ! command -v bun >/dev/null 2>&1; then
     echo "Installing Bun..."
-    curl -fsSL https://bun.sh/install | BUN_INSTALL=/opt/bun bash
+    export HOME="${HOME:-/root}"
+    curl -fsSL https://bun.sh/install | BUN_INSTALL=/opt/bun bash || true
     ln -sf /opt/bun/bin/bun /usr/local/bin/bun
-    echo "bun version: $(bun --version)"
+    if command -v bun >/dev/null 2>&1; then
+        echo "bun version: $(bun --version)"
+    else
+        echo "WARNING: bun binary not found after install" >&2
+    fi
 fi
 
 echo "=== Phase 1: APT packages done ($(date)) ==="

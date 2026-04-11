@@ -21,10 +21,25 @@ fi
 # Validate required env vars
 ADMIN_USER="${LLM_ADMIN_USER:?LLM_ADMIN_USER not set}"
 UHOME="/home/${ADMIN_USER}"
-: "${LARGE_LLM_BASE_URL:?}" "${LARGE_LLM_MODEL:?}" "${LARGE_LLM_CTX:?}"
-: "${SMALL_LLM_BASE_URL:?}" "${SMALL_LLM_MODEL:?}" "${SMALL_LLM_CTX:?}"
-: "${MEDIUM_LLM_BASE_URL:?}" "${MEDIUM_LLM_MODEL:?}" "${MEDIUM_LLM_CTX:?}"
-: "${VISION_LLM_BASE_URL:?}" "${VISION_LLM_MODEL:?}" "${VISION_LLM_CTX:?}"
+
+# Default empty vars to safe placeholders — allows workstation-only deploys
+LARGE_LLM_BASE_URL="${LARGE_LLM_BASE_URL:-}"
+LARGE_LLM_MODEL="${LARGE_LLM_MODEL:-not-configured}"
+LARGE_LLM_CTX="${LARGE_LLM_CTX:-8192}"
+SMALL_LLM_BASE_URL="${SMALL_LLM_BASE_URL:-}"
+SMALL_LLM_MODEL="${SMALL_LLM_MODEL:-not-configured}"
+SMALL_LLM_CTX="${SMALL_LLM_CTX:-8192}"
+MEDIUM_LLM_BASE_URL="${MEDIUM_LLM_BASE_URL:-}"
+MEDIUM_LLM_MODEL="${MEDIUM_LLM_MODEL:-not-configured}"
+MEDIUM_LLM_CTX="${MEDIUM_LLM_CTX:-8192}"
+VISION_LLM_BASE_URL="${VISION_LLM_BASE_URL:-}"
+VISION_LLM_MODEL="${VISION_LLM_MODEL:-not-configured}"
+VISION_LLM_CTX="${VISION_LLM_CTX:-8192}"
+
+if [ -z "${LARGE_LLM_BASE_URL}" ]; then
+    echo "WARNING: LLM endpoint URLs are empty — running in workstation-only (dev/test) mode"
+    echo "         Agent configs will use placeholder values; LLM features will not work"
+fi
 
 # Strip /v1 suffix for ANTHROPIC_BASE_URL (Claude Code expects no /v1)
 LARGE_LLM_BASE_URL_NOPATH="${LARGE_LLM_BASE_URL%/v1}"
@@ -1508,10 +1523,14 @@ cat > /usr/local/bin/check-llm-servers <<'SCRIPT'
 #!/bin/bash
 source /etc/profile.d/llm-endpoints.sh 2>/dev/null || true
 echo "=== LLM Server Status ==="
-echo -n "LargeLLM (${LARGE_LLM_BASE_URL%/v1}):    "; curl -sf "${LARGE_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
-echo -n "SmallLLM (${SMALL_LLM_BASE_URL%/v1}):    "; curl -sf "${SMALL_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
-echo -n "VisionLLM (${VISION_LLM_BASE_URL%/v1}):   "; curl -sf "${VISION_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
-echo -n "MediumLLM (${MEDIUM_LLM_BASE_URL%/v1}):   "; curl -sf "${MEDIUM_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
+if [ -n "${LARGE_LLM_BASE_URL}" ]; then
+    echo -n "LargeLLM (${LARGE_LLM_BASE_URL%/v1}):    "; curl -sf "${LARGE_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
+    echo -n "SmallLLM (${SMALL_LLM_BASE_URL%/v1}):    "; curl -sf "${SMALL_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
+    echo -n "VisionLLM (${VISION_LLM_BASE_URL%/v1}):   "; curl -sf "${VISION_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
+    echo -n "MediumLLM (${MEDIUM_LLM_BASE_URL%/v1}):   "; curl -sf "${MEDIUM_LLM_BASE_URL%/v1}/health" && echo "UP" || echo "DOWN"
+else
+    echo "  [SKIP] LLM endpoints not configured (workstation-only mode)"
+fi
 SCRIPT
 chmod +x /usr/local/bin/check-llm-servers
 

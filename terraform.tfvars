@@ -5,7 +5,7 @@ ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
 # Deploy toggles — set false to skip provisioning
 llm01_deployed       = false
-llm02_deployed       = true
+llm02_deployed       = false
 llm03_deployed       = false
 workstation_deployed = true
 

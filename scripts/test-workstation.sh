@@ -65,64 +65,84 @@ run_test "claude-code-proxy" \
     "systemctl is-active claude-code-proxy" \
     "^active"
 
-LARGE_HEALTH="${LARGE_LLM_BASE_URL%/v1}/health"
-SMALL_HEALTH="${SMALL_LLM_BASE_URL%/v1}/health"
-VISION_HEALTH="${VISION_LLM_BASE_URL%/v1}/health"
-MEDIUM_HEALTH="${MEDIUM_LLM_BASE_URL%/v1}/health"
+if [ -n "${LARGE_LLM_BASE_URL:-}" ]; then
+    LARGE_HEALTH="${LARGE_LLM_BASE_URL%/v1}/health"
+    SMALL_HEALTH="${SMALL_LLM_BASE_URL%/v1}/health"
+    VISION_HEALTH="${VISION_LLM_BASE_URL%/v1}/health"
+    MEDIUM_HEALTH="${MEDIUM_LLM_BASE_URL%/v1}/health"
 
-run_test "vllm-large" \
-    "curl -so /dev/null -w '%{http_code}' ${LARGE_HEALTH}" \
-    "200"
+    run_test "vllm-large" \
+        "curl -so /dev/null -w '%{http_code}' ${LARGE_HEALTH}" \
+        "200"
 
-run_test "vllm-small" \
-    "curl -so /dev/null -w '%{http_code}' ${SMALL_HEALTH}" \
-    "200"
+    run_test "vllm-small" \
+        "curl -so /dev/null -w '%{http_code}' ${SMALL_HEALTH}" \
+        "200"
 
-run_test "vllm-vision" \
-    "curl -so /dev/null -w '%{http_code}' ${VISION_HEALTH}" \
-    "200"
+    run_test "vllm-vision" \
+        "curl -so /dev/null -w '%{http_code}' ${VISION_HEALTH}" \
+        "200"
 
-run_test "vllm-medium" \
-    "curl -so /dev/null -w '%{http_code}' ${MEDIUM_HEALTH}" \
-    "200"
+    run_test "vllm-medium" \
+        "curl -so /dev/null -w '%{http_code}' ${MEDIUM_HEALTH}" \
+        "200"
+else
+    echo "  [SKIP] vllm-large: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] vllm-small: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] vllm-vision: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] vllm-medium: LLM endpoints not configured (workstation-only mode)"
+fi
 
 # ============================================================
 # SECTION 2: Ping-pong (LLM backend connectivity)
 # ============================================================
 echo "--- Ping-pong ---"
 
-run_test_as_user "claude-ping" \
-    'claude -p "respond with exactly one word: pong" --max-turns 1 --allowedTools "" 2>&1' \
-    "pong"
+if [ -n "${LARGE_LLM_BASE_URL:-}" ]; then
+    run_test_as_user "claude-ping" \
+        'claude -p "respond with exactly one word: pong" --max-turns 1 --allowedTools "" 2>&1' \
+        "pong"
 
-run_test_as_user "pi-ping" \
-    'pi -p "respond with exactly one word: pong" --no-tools --provider openai 2>&1' \
-    "pong"
+    run_test_as_user "pi-ping" \
+        'pi -p "respond with exactly one word: pong" --no-tools --provider openai 2>&1' \
+        "pong"
 
-run_test_as_user "opencode-ping" \
-    'opencode run "respond with exactly one word: pong" 2>&1' \
-    "pong"
+    run_test_as_user "opencode-ping" \
+        'opencode run "respond with exactly one word: pong" 2>&1' \
+        "pong"
 
-run_test_as_user "omp-ping" \
-    'omp -p "respond with exactly one word: pong" --no-tools --provider openai 2>&1' \
-    "pong"
+    run_test_as_user "omp-ping" \
+        'omp -p "respond with exactly one word: pong" --no-tools --provider openai 2>&1' \
+        "pong"
+else
+    echo "  [SKIP] claude-ping: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] pi-ping: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] opencode-ping: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] omp-ping: LLM endpoints not configured (workstation-only mode)"
+fi
 
 # ============================================================
 # SECTION 3: Web search (Firecrawl/SearXNG end-to-end)
 # ============================================================
 echo "--- Web search ---"
 
-run_test_as_user "claude-websearch" \
-    'claude -p "Use web_search to find: what is the current latest stable Python version number? Reply with ONLY the version number." --dangerously-skip-permissions --max-turns 5 2>&1' \
-    "3\.[0-9]"
+if [ -n "${LARGE_LLM_BASE_URL:-}" ]; then
+    run_test_as_user "claude-websearch" \
+        'claude -p "Use web_search to find: what is the current latest stable Python version number? Reply with ONLY the version number." --dangerously-skip-permissions --max-turns 5 2>&1' \
+        "3\.[0-9]"
 
-run_test_as_user "pi-websearch" \
-    'pi -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
-    "3\.[0-9]|\."
+    run_test_as_user "pi-websearch" \
+        'pi -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
+        "3\.[0-9]|\."
 
-run_test_as_user "omp-websearch" \
-    'omp -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
-    "3\.[0-9]|\."
+    run_test_as_user "omp-websearch" \
+        'omp -p "Search the web for: what is the latest stable Python version number? Reply with ONLY the version." --provider openai 2>&1' \
+        "3\.[0-9]|\."
+else
+    echo "  [SKIP] claude-websearch: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] pi-websearch: LLM endpoints not configured (workstation-only mode)"
+    echo "  [SKIP] omp-websearch: LLM endpoints not configured (workstation-only mode)"
+fi
 
 # ============================================================
 # Summary

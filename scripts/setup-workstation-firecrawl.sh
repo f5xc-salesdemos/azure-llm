@@ -33,8 +33,13 @@ fi
 
 # Validate required env vars
 : "${LLM_ADMIN_USER:?LLM_ADMIN_USER not set}"
-: "${MEDIUM_LLM_BASE_URL:?MEDIUM_LLM_BASE_URL not set}"
-: "${MEDIUM_LLM_MODEL:?MEDIUM_LLM_MODEL not set}"
+MEDIUM_LLM_BASE_URL="${MEDIUM_LLM_BASE_URL:-}"
+MEDIUM_LLM_MODEL="${MEDIUM_LLM_MODEL:-not-configured}"
+
+if [ -z "${MEDIUM_LLM_BASE_URL}" ]; then
+    echo "WARNING: MEDIUM_LLM_BASE_URL not set — running in workstation-only (dev/test) mode"
+    echo "         Firecrawl scrape/crawl/search will work; extract (LLM) feature will not"
+fi
 
 # ---- Ensure pnpm is available (don't depend on tools script) ----
 if ! command -v pnpm >/dev/null 2>&1; then

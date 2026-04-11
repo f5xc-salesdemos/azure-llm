@@ -171,11 +171,11 @@ write_files:
         local exit_code=0
         if [ -x "$${script}" ]; then
             echo "Running $${name}..."
-            bash "$${script}" "$${@}" || exit_code=$$?
+            bash "$${script}" "$${@}" || exit_code=$${?}
             if [ "$${exit_code}" -ne 0 ]; then
                 echo "RETRY: $${name} failed (exit $${exit_code}), retrying in 30s..."
                 sleep 30
-                bash "$${script}" "$${@}" || exit_code=$$?
+                bash "$${script}" "$${@}" || exit_code=$${?}
                 if [ "$${exit_code}" -ne 0 ]; then
                     echo "ERROR: $${name} failed after retry (exit $${exit_code})" >&2
                 fi
@@ -188,16 +188,16 @@ write_files:
     }
 
     TOOLS_EXIT=0
-    run_script "tools" "$${SCRIPTS_DIR}/setup-workstation-tools.sh" "$${LLM_ADMIN_USER}" || TOOLS_EXIT=$$?
+    run_script "tools" "$${SCRIPTS_DIR}/setup-workstation-tools.sh" "$${LLM_ADMIN_USER}" || TOOLS_EXIT=$${?}
 
     SHELL_EXIT=0
-    run_script "shell" "$${SCRIPTS_DIR}/setup-workstation-shell.sh" || SHELL_EXIT=$$?
+    run_script "shell" "$${SCRIPTS_DIR}/setup-workstation-shell.sh" || SHELL_EXIT=$${?}
 
     AGENTS_EXIT=0
-    run_script "agents" "$${SCRIPTS_DIR}/setup-workstation-agents.sh" || AGENTS_EXIT=$$?
+    run_script "agents" "$${SCRIPTS_DIR}/setup-workstation-agents.sh" || AGENTS_EXIT=$${?}
 
     FIRECRAWL_EXIT=0
-    run_script "firecrawl" "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" || FIRECRAWL_EXIT=$$?
+    run_script "firecrawl" "$${SCRIPTS_DIR}/setup-workstation-firecrawl.sh" || FIRECRAWL_EXIT=$${?}
 
     # ---- Download and run functional tests ----
     echo "Downloading test-workstation.sh..."
@@ -206,7 +206,7 @@ write_files:
     chmod +x "$${SCRIPTS_DIR}/test-workstation.sh"
 
     TEST_EXIT=0
-    run_script "tests" "$${SCRIPTS_DIR}/test-workstation.sh" "$${LLM_ADMIN_USER}" || TEST_EXIT=$$?
+    run_script "tests" "$${SCRIPTS_DIR}/test-workstation.sh" "$${LLM_ADMIN_USER}" || TEST_EXIT=$${?}
 
     # ---- Export GPU detection result for downstream scripts ----
     if lspci | grep -qi nvidia; then
