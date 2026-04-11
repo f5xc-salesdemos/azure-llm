@@ -45,6 +45,7 @@ resource "azurerm_subnet" "this" {
 ###############################################################################
 
 resource "azurerm_network_security_group" "llm01" {
+  count               = var.llm01_deployed ? 1 : 0
   name                = "llm01-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -75,6 +76,7 @@ resource "azurerm_network_security_group" "llm01" {
 }
 
 resource "azurerm_public_ip" "llm01" {
+  count               = var.llm01_deployed ? 1 : 0
   name                = "llm01-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -85,6 +87,7 @@ resource "azurerm_public_ip" "llm01" {
 }
 
 resource "azurerm_network_interface" "llm01" {
+  count               = var.llm01_deployed ? 1 : 0
   name                = "llm01-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -94,16 +97,18 @@ resource "azurerm_network_interface" "llm01" {
     subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.10"
-    public_ip_address_id          = azurerm_public_ip.llm01.id
+    public_ip_address_id          = azurerm_public_ip.llm01[0].id
   }
 }
 
 resource "azurerm_network_interface_security_group_association" "llm01" {
-  network_interface_id      = azurerm_network_interface.llm01.id
-  network_security_group_id = azurerm_network_security_group.llm01.id
+  count                     = var.llm01_deployed ? 1 : 0
+  network_interface_id      = azurerm_network_interface.llm01[0].id
+  network_security_group_id = azurerm_network_security_group.llm01[0].id
 }
 
 resource "azurerm_linux_virtual_machine" "llm01" {
+  count                           = var.llm01_deployed ? 1 : 0
   name                            = "llm01"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
@@ -112,7 +117,7 @@ resource "azurerm_linux_virtual_machine" "llm01" {
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
-  network_interface_ids = [azurerm_network_interface.llm01.id]
+  network_interface_ids = [azurerm_network_interface.llm01[0].id]
 
   admin_ssh_key {
     username   = var.admin_username
@@ -150,6 +155,7 @@ resource "azurerm_linux_virtual_machine" "llm01" {
 ###############################################################################
 
 resource "azurerm_network_security_group" "llm02" {
+  count               = var.llm02_deployed ? 1 : 0
   name                = "llm02-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -205,6 +211,7 @@ resource "azurerm_network_security_group" "llm02" {
 }
 
 resource "azurerm_public_ip" "llm02" {
+  count               = var.llm02_deployed ? 1 : 0
   name                = "llm02-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -215,6 +222,7 @@ resource "azurerm_public_ip" "llm02" {
 }
 
 resource "azurerm_network_interface" "llm02" {
+  count               = var.llm02_deployed ? 1 : 0
   name                = "llm02-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -224,16 +232,18 @@ resource "azurerm_network_interface" "llm02" {
     subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.11"
-    public_ip_address_id          = azurerm_public_ip.llm02.id
+    public_ip_address_id          = azurerm_public_ip.llm02[0].id
   }
 }
 
 resource "azurerm_network_interface_security_group_association" "llm02" {
-  network_interface_id      = azurerm_network_interface.llm02.id
-  network_security_group_id = azurerm_network_security_group.llm02.id
+  count                     = var.llm02_deployed ? 1 : 0
+  network_interface_id      = azurerm_network_interface.llm02[0].id
+  network_security_group_id = azurerm_network_security_group.llm02[0].id
 }
 
 resource "azurerm_linux_virtual_machine" "llm02" {
+  count                           = var.llm02_deployed ? 1 : 0
   name                            = "llm02"
   resource_group_name             = azurerm_resource_group.this.name
   location                        = azurerm_resource_group.this.location
@@ -242,7 +252,7 @@ resource "azurerm_linux_virtual_machine" "llm02" {
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
-  network_interface_ids = [azurerm_network_interface.llm02.id]
+  network_interface_ids = [azurerm_network_interface.llm02[0].id]
 
   admin_ssh_key {
     username   = var.admin_username
@@ -295,10 +305,116 @@ resource "azurerm_linux_virtual_machine" "llm02" {
 }
 
 ###############################################################################
+# llm03 — PersonaPlex speech-to-speech server (1x H100 NVL 94GB)
+###############################################################################
+
+resource "azurerm_network_security_group" "llm03" {
+  count               = var.llm03_deployed ? 1 : 0
+  name                = "llm03-nsg"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+
+  security_rule {
+    name                       = "AllowSSH"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowPersonaPlex"
+    priority                   = 1010
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = tostring(var.llm03_port)
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_public_ip" "llm03" {
+  count               = var.llm03_deployed ? 1 : 0
+  name                = "llm03-pip"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = var.llm03_zone != "" ? [var.llm03_zone] : []
+  domain_name_label   = "llm03"
+}
+
+resource "azurerm_network_interface" "llm03" {
+  count               = var.llm03_deployed ? 1 : 0
+  name                = "llm03-nic"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+
+  ip_configuration {
+    name                          = "ipconfig1"
+    subnet_id                     = azurerm_subnet.this.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.0.13"
+    public_ip_address_id          = azurerm_public_ip.llm03[0].id
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "llm03" {
+  count                     = var.llm03_deployed ? 1 : 0
+  network_interface_id      = azurerm_network_interface.llm03[0].id
+  network_security_group_id = azurerm_network_security_group.llm03[0].id
+}
+
+resource "azurerm_linux_virtual_machine" "llm03" {
+  count                           = var.llm03_deployed ? 1 : 0
+  name                            = "llm03"
+  resource_group_name             = azurerm_resource_group.this.name
+  location                        = azurerm_resource_group.this.location
+  size                            = var.llm03_vm_size
+  zone                            = var.llm03_zone != "" ? var.llm03_zone : null
+  admin_username                  = var.admin_username
+  disable_password_authentication = true
+
+  network_interface_ids = [azurerm_network_interface.llm03[0].id]
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file(var.ssh_public_key_path)
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+    disk_size_gb         = var.llm03_disk_size
+  }
+
+  source_image_reference {
+    publisher = var.os_image.publisher
+    offer     = var.os_image.offer
+    sku       = var.os_image.sku
+    version   = var.os_image.version
+  }
+
+  custom_data = base64encode(templatefile("${path.module}/cloud-init-llm03.yaml", {
+    admin_username = var.admin_username
+    hf_token       = var.hf_token
+    model_id       = var.llm03_model_id
+    server_port    = var.llm03_port
+  }))
+}
+
+###############################################################################
 # Workstation VM — developer tools, T4 for Chrome/Playwright
 ###############################################################################
 
 resource "azurerm_network_security_group" "workstation" {
+  count               = var.workstation_deployed ? 1 : 0
   name                = "workstation-nsg"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -317,6 +433,7 @@ resource "azurerm_network_security_group" "workstation" {
 }
 
 resource "azurerm_public_ip" "workstation" {
+  count               = var.workstation_deployed ? 1 : 0
   name                = "workstation-pip"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -327,6 +444,7 @@ resource "azurerm_public_ip" "workstation" {
 }
 
 resource "azurerm_network_interface" "workstation" {
+  count               = var.workstation_deployed ? 1 : 0
   name                = "workstation-nic"
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
@@ -336,16 +454,18 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.12"
-    public_ip_address_id          = azurerm_public_ip.workstation.id
+    public_ip_address_id          = azurerm_public_ip.workstation[0].id
   }
 }
 
 resource "azurerm_network_interface_security_group_association" "workstation" {
-  network_interface_id      = azurerm_network_interface.workstation.id
-  network_security_group_id = azurerm_network_security_group.workstation.id
+  count                     = var.workstation_deployed ? 1 : 0
+  network_interface_id      = azurerm_network_interface.workstation[0].id
+  network_security_group_id = azurerm_network_security_group.workstation[0].id
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
+  count                           = var.workstation_deployed ? 1 : 0
   name                            = "xcsh"
   computer_name                   = "xcsh"
   resource_group_name             = azurerm_resource_group.this.name
@@ -355,7 +475,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   admin_username                  = var.admin_username
   disable_password_authentication = true
 
-  network_interface_ids = [azurerm_network_interface.workstation.id]
+  network_interface_ids = [azurerm_network_interface.workstation[0].id]
 
   admin_ssh_key {
     username   = var.admin_username
@@ -378,16 +498,16 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   custom_data = base64encode(templatefile("${path.module}/cloud-init-workstation.yaml", {
     admin_username      = var.admin_username
     hf_token            = var.hf_token
-    large_llm_base_url  = "http://${azurerm_network_interface.llm01.private_ip_address}:${var.vllm_port}/v1"
+    large_llm_base_url  = var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : ""
     large_llm_model     = var.llm01_served_name
     large_llm_ctx       = var.llm01_max_model_len
-    small_llm_base_url  = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.small_llm_port}/v1"
+    small_llm_base_url  = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.small_llm_port}/v1" : ""
     small_llm_model     = var.small_llm_served_name
     small_llm_ctx       = var.small_llm_max_model_len
-    vision_llm_base_url = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.vision_llm_port}/v1"
+    vision_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.vision_llm_port}/v1" : ""
     vision_llm_model    = var.vision_llm_served_name
     vision_llm_ctx      = var.vision_llm_max_model_len
-    medium_llm_base_url = "http://${azurerm_network_interface.llm02.private_ip_address}:${var.medium_llm_port}/v1"
+    medium_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.medium_llm_port}/v1" : ""
     medium_llm_model    = var.medium_llm_served_name
     medium_llm_ctx      = var.medium_llm_max_model_len
   }))

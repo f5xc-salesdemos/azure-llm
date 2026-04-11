@@ -58,6 +58,34 @@ variable "vllm_port" {
 }
 
 ###############################################################################
+# Per-VM deploy toggles (set false to skip provisioning)
+###############################################################################
+
+variable "llm01_deployed" {
+  description = "Deploy llm01 (large LLM server)"
+  type        = bool
+  default     = true
+}
+
+variable "llm02_deployed" {
+  description = "Deploy llm02 (small/medium/vision LLM server)"
+  type        = bool
+  default     = true
+}
+
+variable "llm03_deployed" {
+  description = "Deploy llm03 (PersonaPlex speech-to-speech server)"
+  type        = bool
+  default     = true
+}
+
+variable "workstation_deployed" {
+  description = "Deploy workstation VM"
+  type        = bool
+  default     = true
+}
+
+###############################################################################
 # llm01 — Large LLM inference server (4x A100 80GB)
 ###############################################################################
 
@@ -294,6 +322,40 @@ variable "medium_llm_cuda_devices" {
   description = "CUDA device IDs for medium LLM"
   type        = string
   default     = "1,3"
+}
+
+###############################################################################
+# llm03 — PersonaPlex speech-to-speech server (1x H100 NVL 94GB)
+###############################################################################
+
+variable "llm03_vm_size" {
+  description = "VM size for llm03 (PersonaPlex speech-to-speech)"
+  type        = string
+  default     = "Standard_NC40ads_H100_v5" # 1x H100 NVL 94GB, 40 vCPU, 320 GiB
+}
+
+variable "llm03_zone" {
+  description = "Availability zone for llm03"
+  type        = string
+  default     = "2"
+}
+
+variable "llm03_disk_size" {
+  description = "OS disk size in GB for llm03"
+  type        = number
+  default     = 256
+}
+
+variable "llm03_model_id" {
+  description = "HuggingFace model ID for PersonaPlex speech-to-speech"
+  type        = string
+  default     = "nvidia/personaplex-7b-v1"
+}
+
+variable "llm03_port" {
+  description = "Port for PersonaPlex WebSocket server"
+  type        = number
+  default     = 8998
 }
 
 ###############################################################################
