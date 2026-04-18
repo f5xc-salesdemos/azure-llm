@@ -421,6 +421,7 @@ async def run_test_case(
     model: str,
     test_case: dict,
     timeout: int,
+    **kwargs,
 ) -> TestResult:
     """Run a single test case and score the response."""
     category = test_case["category"]
@@ -451,13 +452,21 @@ async def run_test_case(
     ]
 
     url = f"{base_url}/chat/completions"
+    thinking = kwargs.get("thinking", False)
     payload = {
         "model": model,
         "messages": messages,
-        "max_tokens": test_case.get("max_tokens", 500),
-        "temperature": 0.3,
+        "max_tokens": test_case.get("max_tokens", 500) if not thinking else 4096,
+        "temperature": 1.0 if thinking else 0.3,
         "stream": False,
     }
+    if thinking:
+        payload.update({
+            "chat_template_kwargs": {"enable_thinking": True},
+            "top_p": 0.95,
+            "top_k": 20,
+            "presence_penalty": 1.5,
+        })
 
     t_start = time.perf_counter()
     try:
@@ -594,6 +603,10 @@ async def main():
         "--concurrency", type=int, default=4,
         help="Max concurrent requests (default: 4)",
     )
+    parser.add_argument(
+        "--thinking", action="store_true",
+        help="Enable thinking mode (uses recommended sampling: temp=1.0, top_p=0.95, top_k=20, presence_penalty=1.5)",
+    )
     args = parser.parse_args()
 
     categories = [c.strip() for c in args.categories.split(",")]
@@ -626,7 +639,7 @@ async def main():
 
     async def bounded_run(session, case):
         async with semaphore:
-            return await run_test_case(session, args.base_url, args.model, case, args.timeout)
+            return await run_test_case(session, args.base_url, args.model, case, args.timeout, thinking=args.thinking)
 
     t_start = time.perf_counter()
     async with aiohttp.ClientSession(connector=connector) as session:

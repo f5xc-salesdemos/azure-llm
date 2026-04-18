@@ -145,6 +145,10 @@ resource "azurerm_linux_virtual_machine" "llm01" {
     max_model_len          = var.llm01_max_model_len
     gpu_memory_utilization = var.llm01_gpu_memory_utilization
     tool_call_parser       = var.llm01_tool_call_parser
+    reasoning_parser       = var.llm01_reasoning_parser
+    hf_overrides           = var.llm01_hf_overrides
+    allow_long_context     = var.llm01_allow_long_context
+    extra_served_names     = var.llm01_extra_served_names
     tp_size                = var.llm01_tp_size
     vllm_port              = var.vllm_port
   }))
@@ -501,14 +505,14 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     large_llm_base_url  = var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : ""
     large_llm_model     = var.llm01_served_name
     large_llm_ctx       = var.llm01_max_model_len
-    small_llm_base_url  = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.small_llm_port}/v1" : ""
-    small_llm_model     = var.small_llm_served_name
-    small_llm_ctx       = var.small_llm_max_model_len
-    vision_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.vision_llm_port}/v1" : ""
-    vision_llm_model    = var.vision_llm_served_name
-    vision_llm_ctx      = var.vision_llm_max_model_len
-    medium_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.medium_llm_port}/v1" : ""
-    medium_llm_model    = var.medium_llm_served_name
-    medium_llm_ctx      = var.medium_llm_max_model_len
+    small_llm_base_url  = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.small_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
+    small_llm_model     = var.llm02_deployed ? var.small_llm_served_name : var.llm01_served_name
+    small_llm_ctx       = var.llm02_deployed ? var.small_llm_max_model_len : var.llm01_max_model_len
+    vision_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.vision_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
+    vision_llm_model    = var.llm02_deployed ? var.vision_llm_served_name : var.llm01_served_name
+    vision_llm_ctx      = var.llm02_deployed ? var.vision_llm_max_model_len : var.llm01_max_model_len
+    medium_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.medium_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
+    medium_llm_model    = var.llm02_deployed ? var.medium_llm_served_name : var.llm01_served_name
+    medium_llm_ctx      = var.llm02_deployed ? var.medium_llm_max_model_len : var.llm01_max_model_len
   }))
 }
