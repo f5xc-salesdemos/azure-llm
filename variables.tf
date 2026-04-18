@@ -143,6 +143,30 @@ variable "llm01_tool_call_parser" {
   default     = "gemma4"
 }
 
+variable "llm01_reasoning_parser" {
+  description = "vLLM reasoning parser for llm01"
+  type        = string
+  default     = "gemma4"
+}
+
+variable "llm01_hf_overrides" {
+  description = "JSON string for vLLM --hf-overrides (e.g. YaRN rope config for extended context)"
+  type        = string
+  default     = ""
+}
+
+variable "llm01_allow_long_context" {
+  description = "Set VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 for context lengths beyond model default"
+  type        = bool
+  default     = false
+}
+
+variable "llm01_extra_served_names" {
+  description = "Additional served-model-name aliases, comma-separated (for consolidated single-model mode)"
+  type        = string
+  default     = ""
+}
+
 ###############################################################################
 # llm02 — Small/Medium/Vision LLM server (4x A100 80GB, three models)
 ###############################################################################

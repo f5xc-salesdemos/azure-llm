@@ -76,12 +76,12 @@ write_files:
     #!/bin/bash
     set -euo pipefail
     exec > /var/log/gpu-setup.log 2>&1
-    CLOUD_INIT_VERSION="2026-04-08-v10-llm01"
+    CLOUD_INIT_VERSION="2026-04-18-v11-llm01-qwen36"
     echo "Cloud-init version: $CLOUD_INIT_VERSION"
     export DEBIAN_FRONTEND=noninteractive
     export NEEDRESTART_MODE=a
 
-    echo "=== Gemma GPU Server Setup Started: $(date) ==="
+    echo "=== LLM01 GPU Server Setup Started: $(date) ==="
 
     # ---- Wait for apt/dpkg locks ----
     wait_for_apt() {
@@ -165,24 +165,28 @@ write_files:
     #!/bin/bash
     echo "Starting vLLM: ${model_id} (TP=${tp_size}, ${max_model_len} ctx, ${tool_call_parser} parser, optimized)..."
     export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+%{ if allow_long_context ~}
+    export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+%{ endif ~}
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
       --model ${model_id} \
-      --served-model-name ${served_name} \
+      --served-model-name ${served_name}${extra_served_names != "" ? ",${extra_served_names}" : ""} \
       --tensor-parallel-size ${tp_size} \
       --max-model-len ${max_model_len} \
       --gpu-memory-utilization ${gpu_memory_utilization} \
       --enable-auto-tool-choice \
       --tool-call-parser ${tool_call_parser} \
-      --reasoning-parser gemma4 \
+      --reasoning-parser ${reasoning_parser} \
       --default-chat-template-kwargs '{"enable_thinking": true}' \
+%{ if hf_overrides != "" ~}
+      --hf-overrides '${hf_overrides}' \
+%{ endif ~}
       --async-scheduling \
       --enable-prefix-caching \
       --enable-chunked-prefill \
       --no-enable-log-requests \
       --disable-log-stats \
       --max-num-seqs 256 \
-      --mm-processor-kwargs '{"max_soft_tokens": 560}' \
-      --limit-mm-per-prompt '{"image": 4}' \
       --host 0.0.0.0 \
       --port ${vllm_port}
     SCRIPT
@@ -193,22 +197,26 @@ write_files:
     #!/bin/bash
     echo "Starting vLLM: ${model_id} (TP=${tp_size}, ${max_model_len} ctx, hermes parser fallback)..."
     export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+%{ if allow_long_context ~}
+    export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+%{ endif ~}
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
       --model ${model_id} \
-      --served-model-name ${served_name} \
+      --served-model-name ${served_name}${extra_served_names != "" ? ",${extra_served_names}" : ""} \
       --tensor-parallel-size ${tp_size} \
       --max-model-len ${max_model_len} \
       --gpu-memory-utilization ${gpu_memory_utilization} \
       --enable-auto-tool-choice \
       --tool-call-parser hermes \
+%{ if hf_overrides != "" ~}
+      --hf-overrides '${hf_overrides}' \
+%{ endif ~}
       --async-scheduling \
       --enable-prefix-caching \
       --enable-chunked-prefill \
       --no-enable-log-requests \
       --disable-log-stats \
       --max-num-seqs 256 \
-      --mm-processor-kwargs '{"max_soft_tokens": 560}' \
-      --limit-mm-per-prompt '{"image": 4}' \
       --host 0.0.0.0 \
       --port ${vllm_port}
     SCRIPT
@@ -245,6 +253,9 @@ write_files:
     Environment=TORCH_NCCL_AVOID_RECORD_STREAMS=1
     Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
     Environment=OMP_NUM_THREADS=1
+%{ if allow_long_context ~}
+    Environment=VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+%{ endif ~}
     ExecStart=/usr/local/bin/start-vllm
     Restart=on-failure
     RestartSec=30
@@ -267,7 +278,7 @@ write_files:
     JOURNAL
     systemctl restart systemd-journald
 
-    echo "=== Gemma GPU Server Setup Completed: $(date) ==="
+    echo "=== LLM01 GPU Server Setup Completed: $(date) ==="
     echo "Commands: start-vllm, start-vllm-hermes, check-vllm"
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}

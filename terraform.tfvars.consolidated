@@ -3,8 +3,8 @@ location            = "centralus"
 admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"
 
-# Deploy toggles — set false to skip provisioning
-llm01_deployed       = false
+# Consolidated mode: single Qwen 3.6 serves all roles
+llm01_deployed       = true
 llm02_deployed       = false
 llm03_deployed       = false
 workstation_deployed = true
