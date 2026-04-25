@@ -170,7 +170,7 @@ write_files:
 %{ endif ~}
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
       --model ${model_id} \
-      --served-model-name ${served_name}${extra_served_names != "" ? ",${extra_served_names}" : ""} \
+      --served-model-name ${served_name} ${replace(extra_served_names, ",", " ")} \
       --tensor-parallel-size ${tp_size} \
       --max-model-len ${max_model_len} \
       --gpu-memory-utilization ${gpu_memory_utilization} \
@@ -202,7 +202,7 @@ write_files:
 %{ endif ~}
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
       --model ${model_id} \
-      --served-model-name ${served_name}${extra_served_names != "" ? ",${extra_served_names}" : ""} \
+      --served-model-name ${served_name} ${replace(extra_served_names, ",", " ")} \
       --tensor-parallel-size ${tp_size} \
       --max-model-len ${max_model_len} \
       --gpu-memory-utilization ${gpu_memory_utilization} \

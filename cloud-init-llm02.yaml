@@ -1,8 +1,8 @@
 #cloud-config
-# llm02 — Small/Medium/Vision LLM server: 3 models on 4x A100 80GB
-#   GPU 0 (dedicated): small-llm (port ${small_llm_port}) — 128K ctx, speculative decoding
-#   GPU 1+3 (TP=2):    medium-llm (port ${medium_llm_port}) — 256K ctx
-#   GPU 2 (dedicated):  vision-llm (port ${vision_llm_port}) — multimodal
+# llm02 — Multi-model LLM server on 4x A100 80GB
+#   GPU ${small_llm_cuda_devices} (dedicated): small-llm (port ${small_llm_port}) — ${small_llm_max_model_len} ctx
+#   GPU ${medium_llm_cuda_devices} (TP=${medium_llm_tp_size}): medium-llm (port ${medium_llm_port}) — ${medium_llm_max_model_len} ctx
+#   GPU ${vision_llm_cuda_devices} (dedicated): vision-llm (port ${vision_llm_port}) — optional
 package_upgrade: true
 write_files:
 - path: /etc/needrestart/conf.d/99-cloud-init.conf
@@ -212,6 +212,7 @@ write_files:
     WantedBy=multi-user.target
     SYSTEMD
 
+%{ if vision_llm_model_id != "" ~}
     # ======================================================================
     # Model 2: vision-llm (port ${vision_llm_port}) — vision/multimodal
     # Dedicated GPU ${vision_llm_cuda_devices}
@@ -227,7 +228,7 @@ write_files:
       --max-model-len ${vision_llm_max_model_len} \
       --gpu-memory-utilization ${vision_llm_gpu_memory_utilization} \
       --enable-auto-tool-choice \
-      --tool-call-parser hermes \
+      --tool-call-parser ${vision_llm_tool_call_parser} \
       --async-scheduling \
       --enable-prefix-caching \
       --enable-chunked-prefill \
@@ -265,6 +266,7 @@ write_files:
     [Install]
     WantedBy=multi-user.target
     SYSTEMD
+%{ endif ~}
 
     # ======================================================================
     # Model 3: medium-llm (port ${medium_llm_port}) — coding agent / tool calling / API orchestration
@@ -274,20 +276,36 @@ write_files:
     #!/bin/bash
     echo "Starting vLLM: ${medium_llm_model_id} (TP=${medium_llm_tp_size}, ${medium_llm_max_model_len} ctx, port ${medium_llm_port}, GPU ${medium_llm_cuda_devices})..."
     export HF_TOKEN="$${HF_TOKEN:-$(cat /home/${admin_username}/.cache/huggingface/token 2>/dev/null)}"
+%{ if medium_llm_allow_long_context ~}
+    export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+%{ endif ~}
     exec /opt/vllm-env/bin/python -m vllm.entrypoints.openai.api_server \
       --model ${medium_llm_model_id} \
-      --served-model-name ${medium_llm_served_name} \
+      --served-model-name ${medium_llm_served_name} ${replace(medium_llm_extra_served_names, ",", " ")} \
       --tensor-parallel-size ${medium_llm_tp_size} \
       --max-model-len ${medium_llm_max_model_len} \
       --gpu-memory-utilization ${medium_llm_gpu_memory_utilization} \
       --enable-auto-tool-choice \
-      --tool-call-parser mistral \
-      --chat-template-content-format string \
+      --tool-call-parser ${medium_llm_tool_call_parser} \
+%{ if medium_llm_reasoning_parser != "" ~}
+      --reasoning-parser ${medium_llm_reasoning_parser} \
+      --default-chat-template-kwargs '{"enable_thinking": true}' \
+%{ endif ~}
+%{ if medium_llm_chat_template_content_format != "" ~}
+      --chat-template-content-format ${medium_llm_chat_template_content_format} \
+%{ endif ~}
+%{ if medium_llm_hf_overrides != "" ~}
+      --hf-overrides '${medium_llm_hf_overrides}' \
+%{ endif ~}
+%{ if medium_llm_enforce_eager ~}
+      --enforce-eager \
+%{ endif ~}
       --async-scheduling \
       --enable-prefix-caching \
       --enable-chunked-prefill \
       --no-enable-log-requests \
       --disable-log-stats \
+      --max-num-seqs 256 \
       --host 0.0.0.0 \
       --port ${medium_llm_port}
     SCRIPT
@@ -295,7 +313,7 @@ write_files:
 
     cat > /etc/systemd/system/vllm-devstral.service <<'SYSTEMD'
     [Unit]
-    Description=vLLM ${medium_llm_served_name} Coding Agent / Tool Calling (port ${medium_llm_port}, GPU ${medium_llm_cuda_devices} TP=${medium_llm_tp_size} 256K)
+    Description=vLLM ${medium_llm_served_name} (port ${medium_llm_port}, GPU ${medium_llm_cuda_devices} TP=${medium_llm_tp_size})
     After=network.target nvidia-persistenced.service vllm-phi.service
     Wants=nvidia-persistenced.service
 
@@ -308,6 +326,9 @@ write_files:
     Environment=VLLM_USE_V1=1
     Environment=OMP_NUM_THREADS=1
     Environment=CUDA_DEVICE_MAX_CONNECTIONS=1
+%{ if medium_llm_allow_long_context ~}
+    Environment=VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
+%{ endif ~}
     ExecStartPre=/bin/sleep 30
     ExecStart=/usr/local/bin/start-vllm-devstral
     Restart=on-failure
@@ -323,17 +344,22 @@ write_files:
     # ---- Health check ----
     cat > /usr/local/bin/check-vllm <<'SCRIPT'
     #!/bin/bash
-    echo "=== Sub-Agent Server Health Check ==="
-    echo -n "Phi      (GPU ${small_llm_cuda_devices}, :${small_llm_port}):     "; curl -sf http://localhost:${small_llm_port}/health && echo "OK" || echo "DOWN"
-    echo -n "Qwen VL  (GPU ${vision_llm_cuda_devices}, :${vision_llm_port}):     "; curl -sf http://localhost:${vision_llm_port}/health && echo "OK" || echo "DOWN"
-    echo -n "Devstral (GPU ${medium_llm_cuda_devices}, :${medium_llm_port}):  "; curl -sf http://localhost:${medium_llm_port}/health && echo "OK" || echo "DOWN"
+    echo "=== LLM02 Server Health Check ==="
+    echo -n "small-llm  (GPU ${small_llm_cuda_devices}, :${small_llm_port}):   "; curl -sf http://localhost:${small_llm_port}/health && echo "OK" || echo "DOWN"
+%{ if vision_llm_model_id != "" ~}
+    echo -n "vision-llm (GPU ${vision_llm_cuda_devices}, :${vision_llm_port}):   "; curl -sf http://localhost:${vision_llm_port}/health && echo "OK" || echo "DOWN"
+%{ endif ~}
+    echo -n "medium-llm (GPU ${medium_llm_cuda_devices}, :${medium_llm_port}): "; curl -sf http://localhost:${medium_llm_port}/health && echo "OK" || echo "DOWN"
     echo "=== GPU ==="
     nvidia-smi --query-gpu=index,name,memory.used,memory.total,temperature.gpu --format=csv,noheader
     SCRIPT
     chmod +x /usr/local/bin/check-vllm
 
     systemctl daemon-reload
-    systemctl enable vllm-phi.service vllm-qwenvl.service vllm-devstral.service
+    systemctl enable vllm-phi.service vllm-devstral.service
+%{ if vision_llm_model_id != "" ~}
+    systemctl enable vllm-qwenvl.service
+%{ endif ~}
 
     # ---- Journald retention ----
     mkdir -p /etc/systemd/journald.conf.d
@@ -344,9 +370,14 @@ write_files:
     JOURNAL
     systemctl restart systemd-journald
 
-    echo "=== Sub-Agent GPU Server Setup Completed: $(date) ==="
+    echo "=== LLM02 GPU Server Setup Completed: $(date) ==="
+%{ if vision_llm_model_id != "" ~}
     echo "Services: vllm-phi (:${small_llm_port}), vllm-qwenvl (:${vision_llm_port}), vllm-devstral (:${medium_llm_port})"
     echo "Commands: start-vllm-phi, start-vllm-qwenvl, start-vllm-devstral, check-vllm"
+%{ else ~}
+    echo "Services: vllm-phi (:${small_llm_port}), vllm-devstral (:${medium_llm_port})"
+    echo "Commands: start-vllm-phi, start-vllm-devstral, check-vllm"
+%{ endif ~}
 runcmd:
 - chown ${admin_username}:${admin_username} /home/${admin_username}
 - bash /opt/setup-gpu.sh

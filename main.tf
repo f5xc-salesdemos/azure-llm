@@ -277,34 +277,42 @@ resource "azurerm_linux_virtual_machine" "llm02" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-llm02.yaml", {
-    admin_username                    = var.admin_username
-    hf_token                          = var.hf_token
-    small_llm_model_id                = var.small_llm_model_id
-    small_llm_served_name             = var.small_llm_served_name
-    small_llm_max_model_len           = var.small_llm_max_model_len
-    small_llm_gpu_memory_utilization  = var.small_llm_gpu_memory_utilization
-    small_llm_tool_call_parser        = var.small_llm_tool_call_parser
-    small_llm_port                    = var.small_llm_port
-    small_llm_cuda_devices            = var.small_llm_cuda_devices
-    small_llm_speculative_model       = var.small_llm_speculative_model
-    small_llm_num_speculative_tokens  = var.small_llm_num_speculative_tokens
-    small_llm_ngram_prompt_lookup_min = var.small_llm_ngram_prompt_lookup_min
-    small_llm_ngram_prompt_lookup_max = var.small_llm_ngram_prompt_lookup_max
-    small_llm_enable_chunked_prefill  = var.small_llm_enable_chunked_prefill
-    small_llm_vllm_compile_level      = var.small_llm_vllm_compile_level
-    vision_llm_model_id               = var.vision_llm_model_id
-    vision_llm_served_name            = var.vision_llm_served_name
-    vision_llm_max_model_len          = var.vision_llm_max_model_len
-    vision_llm_gpu_memory_utilization = var.vision_llm_gpu_memory_utilization
-    vision_llm_port                   = var.vision_llm_port
-    vision_llm_cuda_devices           = var.vision_llm_cuda_devices
-    medium_llm_model_id               = var.medium_llm_model_id
-    medium_llm_served_name            = var.medium_llm_served_name
-    medium_llm_max_model_len          = var.medium_llm_max_model_len
-    medium_llm_gpu_memory_utilization = var.medium_llm_gpu_memory_utilization
-    medium_llm_port                   = var.medium_llm_port
-    medium_llm_tp_size                = var.medium_llm_tp_size
-    medium_llm_cuda_devices           = var.medium_llm_cuda_devices
+    admin_username                          = var.admin_username
+    hf_token                                = var.hf_token
+    small_llm_model_id                      = var.small_llm_model_id
+    small_llm_served_name                   = var.small_llm_served_name
+    small_llm_max_model_len                 = var.small_llm_max_model_len
+    small_llm_gpu_memory_utilization        = var.small_llm_gpu_memory_utilization
+    small_llm_tool_call_parser              = var.small_llm_tool_call_parser
+    small_llm_port                          = var.small_llm_port
+    small_llm_cuda_devices                  = var.small_llm_cuda_devices
+    small_llm_speculative_model             = var.small_llm_speculative_model
+    small_llm_num_speculative_tokens        = var.small_llm_num_speculative_tokens
+    small_llm_ngram_prompt_lookup_min       = var.small_llm_ngram_prompt_lookup_min
+    small_llm_ngram_prompt_lookup_max       = var.small_llm_ngram_prompt_lookup_max
+    small_llm_enable_chunked_prefill        = var.small_llm_enable_chunked_prefill
+    small_llm_vllm_compile_level            = var.small_llm_vllm_compile_level
+    vision_llm_model_id                     = var.vision_llm_model_id
+    vision_llm_served_name                  = var.vision_llm_served_name
+    vision_llm_max_model_len                = var.vision_llm_max_model_len
+    vision_llm_gpu_memory_utilization       = var.vision_llm_gpu_memory_utilization
+    vision_llm_port                         = var.vision_llm_port
+    vision_llm_cuda_devices                 = var.vision_llm_cuda_devices
+    medium_llm_model_id                     = var.medium_llm_model_id
+    medium_llm_served_name                  = var.medium_llm_served_name
+    medium_llm_max_model_len                = var.medium_llm_max_model_len
+    medium_llm_gpu_memory_utilization       = var.medium_llm_gpu_memory_utilization
+    medium_llm_port                         = var.medium_llm_port
+    medium_llm_tp_size                      = var.medium_llm_tp_size
+    medium_llm_cuda_devices                 = var.medium_llm_cuda_devices
+    medium_llm_tool_call_parser             = var.medium_llm_tool_call_parser
+    medium_llm_reasoning_parser             = var.medium_llm_reasoning_parser
+    medium_llm_hf_overrides                 = var.medium_llm_hf_overrides
+    medium_llm_allow_long_context           = var.medium_llm_allow_long_context
+    medium_llm_extra_served_names           = var.medium_llm_extra_served_names
+    medium_llm_enforce_eager                = var.medium_llm_enforce_eager
+    medium_llm_chat_template_content_format = var.medium_llm_chat_template_content_format
+    vision_llm_tool_call_parser             = var.vision_llm_tool_call_parser
   }))
 }
 
@@ -502,15 +510,15 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   custom_data = base64encode(templatefile("${path.module}/cloud-init-workstation.yaml", {
     admin_username      = var.admin_username
     hf_token            = var.hf_token
-    large_llm_base_url  = var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : ""
-    large_llm_model     = var.llm01_served_name
-    large_llm_ctx       = var.llm01_max_model_len
+    large_llm_base_url  = var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : (var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.medium_llm_port}/v1" : "")
+    large_llm_model     = var.llm01_deployed ? var.llm01_served_name : "large-llm"
+    large_llm_ctx       = var.llm01_deployed ? var.llm01_max_model_len : var.medium_llm_max_model_len
     small_llm_base_url  = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.small_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
     small_llm_model     = var.llm02_deployed ? var.small_llm_served_name : var.llm01_served_name
     small_llm_ctx       = var.llm02_deployed ? var.small_llm_max_model_len : var.llm01_max_model_len
-    vision_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.vision_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
-    vision_llm_model    = var.llm02_deployed ? var.vision_llm_served_name : var.llm01_served_name
-    vision_llm_ctx      = var.llm02_deployed ? var.vision_llm_max_model_len : var.llm01_max_model_len
+    vision_llm_base_url = var.llm02_deployed ? (var.vision_llm_model_id != "" ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.vision_llm_port}/v1" : "") : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
+    vision_llm_model    = var.llm02_deployed ? (var.vision_llm_model_id != "" ? var.vision_llm_served_name : "") : var.llm01_served_name
+    vision_llm_ctx      = var.llm02_deployed ? (var.vision_llm_model_id != "" ? var.vision_llm_max_model_len : 0) : var.llm01_max_model_len
     medium_llm_base_url = var.llm02_deployed ? "http://${azurerm_network_interface.llm02[0].private_ip_address}:${var.medium_llm_port}/v1" : (var.llm01_deployed ? "http://${azurerm_network_interface.llm01[0].private_ip_address}:${var.vllm_port}/v1" : "")
     medium_llm_model    = var.llm02_deployed ? var.medium_llm_served_name : var.llm01_served_name
     medium_llm_ctx      = var.llm02_deployed ? var.medium_llm_max_model_len : var.llm01_max_model_len

@@ -348,6 +348,54 @@ variable "medium_llm_cuda_devices" {
   default     = "1,3"
 }
 
+variable "medium_llm_tool_call_parser" {
+  description = "vLLM tool call parser for medium LLM"
+  type        = string
+  default     = "mistral"
+}
+
+variable "medium_llm_reasoning_parser" {
+  description = "vLLM reasoning parser for medium LLM (empty = disabled)"
+  type        = string
+  default     = ""
+}
+
+variable "medium_llm_hf_overrides" {
+  description = "JSON string for vLLM --hf-overrides on medium LLM"
+  type        = string
+  default     = ""
+}
+
+variable "medium_llm_allow_long_context" {
+  description = "Set VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 for medium LLM"
+  type        = bool
+  default     = false
+}
+
+variable "medium_llm_extra_served_names" {
+  description = "Additional served-model-name aliases for medium LLM, comma-separated"
+  type        = string
+  default     = ""
+}
+
+variable "medium_llm_enforce_eager" {
+  description = "Disable torch.compile and CUDA graphs for medium LLM (workaround for V1 engine IPC on some hardware)"
+  type        = bool
+  default     = false
+}
+
+variable "medium_llm_chat_template_content_format" {
+  description = "Chat template content format for medium LLM (empty = omit flag)"
+  type        = string
+  default     = "string"
+}
+
+variable "vision_llm_tool_call_parser" {
+  description = "vLLM tool call parser for vision LLM"
+  type        = string
+  default     = "hermes"
+}
+
 ###############################################################################
 # llm03 — PersonaPlex speech-to-speech server (1x H100 NVL 94GB)
 ###############################################################################
