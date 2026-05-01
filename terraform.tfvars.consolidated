@@ -1,4 +1,3 @@
-resource_group_name = "r-mordaseiwicz-xcsh"
 location            = "centralus"
 admin_username      = "azureuser"
 ssh_public_key_path = "~/.ssh/id_rsa.pub"

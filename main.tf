@@ -13,8 +13,12 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+data "azurerm_client_config" "current" {}
+
 locals {
-  subnet_cidr = "10.0.0.0/24"
+  subnet_cidr         = "10.0.0.0/24"
+  deploy_id           = substr(md5(data.azurerm_client_config.current.object_id), 0, 6)
+  resource_group_name = var.resource_group_name != "" ? var.resource_group_name : "llm-${local.deploy_id}"
 }
 
 ###############################################################################
@@ -22,7 +26,7 @@ locals {
 ###############################################################################
 
 resource "azurerm_resource_group" "this" {
-  name     = var.resource_group_name
+  name     = local.resource_group_name
   location = var.location
 }
 
@@ -83,7 +87,7 @@ resource "azurerm_public_ip" "llm01" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.llm01_zone != "" ? [var.llm01_zone] : []
-  domain_name_label   = "llm01"
+  domain_name_label   = "llm01-${local.deploy_id}"
 }
 
 resource "azurerm_network_interface" "llm01" {
@@ -222,7 +226,7 @@ resource "azurerm_public_ip" "llm02" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.llm02_zone != "" ? [var.llm02_zone] : []
-  domain_name_label   = "llm02"
+  domain_name_label   = "llm02-${local.deploy_id}"
 }
 
 resource "azurerm_network_interface" "llm02" {
@@ -359,7 +363,7 @@ resource "azurerm_public_ip" "llm03" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.llm03_zone != "" ? [var.llm03_zone] : []
-  domain_name_label   = "llm03"
+  domain_name_label   = "llm03-${local.deploy_id}"
 }
 
 resource "azurerm_network_interface" "llm03" {
@@ -452,7 +456,7 @@ resource "azurerm_public_ip" "workstation" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = var.workstation_zone != "" ? [var.workstation_zone] : []
-  domain_name_label   = "xcsh"
+  domain_name_label   = "xcsh-${local.deploy_id}"
 }
 
 resource "azurerm_network_interface" "workstation" {

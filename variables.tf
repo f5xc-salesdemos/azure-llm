@@ -8,8 +8,9 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  description = "Name of the Azure resource group"
+  description = "Resource group name (auto-generated from Azure identity if empty)"
   type        = string
+  default     = ""
 }
 
 variable "location" {
