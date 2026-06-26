@@ -155,7 +155,7 @@ write_files:
     fi
 
     # ---- Download setup scripts from GitHub ----
-    REPO_RAW="https://raw.githubusercontent.com/f5xc-salesdemos/azure-llm/main/scripts"
+    REPO_RAW="https://raw.githubusercontent.com/f5-sales-demo/azure-llm/main/scripts"
     SCRIPTS_DIR="/opt"
     for script in setup-workstation-tools.sh setup-workstation-shell.sh setup-workstation-agents.sh setup-workstation-firecrawl.sh; do
         echo "Downloading $${script}..."

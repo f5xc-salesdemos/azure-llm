@@ -52,7 +52,7 @@ git clone --depth=1 https://github.com/wbingli/zsh-claudecode-completion.git "${
 
 # Custom gh-clone-complete plugin (GitHub repo tab completion for git clone)
 mkdir -p "${ZSH_CUSTOM}/plugins/gh-clone-complete"
-curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/gh-clone-complete.plugin.zsh \
+curl -fsSL https://raw.githubusercontent.com/f5-sales-demo/devcontainer/main/configs/gh-clone-complete.plugin.zsh \
   -o "${ZSH_CUSTOM}/plugins/gh-clone-complete/gh-clone-complete.plugin.zsh" 2>/dev/null || true
 
 # Theme
@@ -84,7 +84,7 @@ git clone --depth=1 https://github.com/tmux-plugins/tpm "${UHOME}/.tmux/plugins/
 
 # _gog completion
 mkdir -p "${ZSH_CUSTOM}/completions"
-curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/_gog \
+curl -fsSL https://raw.githubusercontent.com/f5-sales-demo/devcontainer/main/configs/_gog \
   -o "${ZSH_CUSTOM}/completions/_gog" 2>/dev/null || true
 
 # Configure .zshrc
@@ -130,7 +130,7 @@ fi
 ZSHENV
 
 # ---- p10k config (download from devcontainer repo) ----
-curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/.p10k.zsh \
+curl -fsSL https://raw.githubusercontent.com/f5-sales-demo/devcontainer/main/configs/.p10k.zsh \
   -o "${UHOME}/.p10k.zsh" || true
 chown "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.p10k.zsh"
 
@@ -139,7 +139,7 @@ su - "${ADMIN_USER}" -c 'zsh -c "autoload -U compinit && compinit"' 2>/dev/null 
 
 # ---- Neovim plugins (lazy.nvim — as user) ----
 mkdir -p "${UHOME}/.config/nvim"
-curl -fsSL https://raw.githubusercontent.com/f5xc-salesdemos/devcontainer/main/configs/init.lua \
+curl -fsSL https://raw.githubusercontent.com/f5-sales-demo/devcontainer/main/configs/init.lua \
   -o "${UHOME}/.config/nvim/init.lua"
 LAZY_DIR="${UHOME}/.local/share/nvim/lazy/lazy.nvim"
 su - "${ADMIN_USER}" -c "
