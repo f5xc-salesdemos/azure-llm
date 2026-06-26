@@ -890,8 +890,8 @@ chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.omp"
 # Install xcsh binary from GitHub releases
 if ! command -v xcsh >/dev/null 2>&1; then
     echo "Installing xcsh..."
-    XCSH_VER=$(curl -sf "https://api.github.com/repos/f5xc-salesdemos/xcsh/releases/latest" | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo "v14.0.3")
-    XCSH_BASE="https://github.com/f5xc-salesdemos/xcsh/releases/download/${XCSH_VER}"
+    XCSH_VER=$(curl -sf "https://api.github.com/repos/f5-sales-demo/xcsh/releases/latest" | python3 -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo "v14.0.3")
+    XCSH_BASE="https://github.com/f5-sales-demo/xcsh/releases/download/${XCSH_VER}"
     retry_cmd 3 10 curl -fsSL --max-time 300 "${XCSH_BASE}/xcsh-linux-x64" -o /usr/local/bin/xcsh
     chmod +x /usr/local/bin/xcsh
     retry_cmd 3 10 curl -fsSL --max-time 300 "${XCSH_BASE}/pi_natives.linux-x64-modern.node" -o /usr/local/bin/pi_natives.linux-x64-modern.node
@@ -1071,7 +1071,7 @@ chown -R "${ADMIN_USER}:${ADMIN_USER}" "${UHOME}/.hermes"
 # ============================================================
 # Intercepts web_search/web_fetch tool calls and executes them via local Firecrawl
 if [ ! -d /opt/claude-code-proxy ]; then
-    retry_cmd 3 10 git clone --depth=1 https://github.com/f5xc-salesdemos/claude-code-proxy.git /opt/claude-code-proxy
+    retry_cmd 3 10 git clone --depth=1 https://github.com/f5-sales-demo/claude-code-proxy.git /opt/claude-code-proxy
 fi
 cd /opt/claude-code-proxy
 git pull 2>/dev/null || true

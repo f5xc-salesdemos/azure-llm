@@ -1,6 +1,6 @@
 #!/bin/bash
 # Full developer + security workstation setup (PARALLELIZED)
-# Mirrors the f5xc-salesdemos/devcontainer toolset for Azure VM workstations.
+# Mirrors the f5-sales-demo/devcontainer toolset for Azure VM workstations.
 # Downloaded and executed by cloud-init at provision time.
 #
 # Phase 1: APT packages (serial — must complete first)
